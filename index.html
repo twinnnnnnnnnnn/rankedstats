@@ -340,6 +340,42 @@ getUser("ANJOUU").then(u=>{if(!u?.uuid)return;anjouuUuid=String(u.uuid).replace(
 for(const [name,key] of [["MufatMCSR","mufatMcsrProfileUuid"],["honeyspots","honeyspotsProfileUuid"]])getUser(name).then(u=>{if(!u?.uuid)return;const id=String(u.uuid).replace(/-/g,"").toLowerCase();sharedEmoteUuids[name]=id;localStorage.setItem(key,id);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===id)renderProfile();refreshDecoratedLeaderboard();refreshDecoratedLeaderboard()}).catch(()=>{});
 getUser("chloeity").then(u=>{if(!u?.uuid)return;chloeityUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("chloeityProfileUuid",chloeityUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===chloeityUuid)renderProfile();refreshDecoratedLeaderboard();refreshDecoratedLeaderboard()}).catch(()=>{});
 function refreshDecoratedLeaderboard(){if(!$("ptab"))return;if(T.historical)renderHistorical(false);else if(T.lb)renderPT()}
+/* Lyxier-only DVD-style bouncing cards; transforms never affect document layout. */
+let lyxierBounceFrame=0,lyxierBounceItems=[],lyxierBounceLast=0;
+function stopLyxierBounce(){
+  if(lyxierBounceFrame)cancelAnimationFrame(lyxierBounceFrame);
+  lyxierBounceFrame=0;lyxierBounceLast=0;
+  for(const item of lyxierBounceItems)item.el.style.transform="";
+  lyxierBounceItems=[];
+}
+function startLyxierBounce(){
+  stopLyxierBounce();
+  const root=document.getElementById("out");
+  if(!root?.classList.contains("lyxier-profile")||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const cards=[...root.querySelectorAll(".card,.tile")];
+  lyxierBounceItems=cards.map((el,i)=>({el,x:0,y:0,vx:(i%2?1:-1)*(8+i%4*2),vy:(i%3?1:-1)*(6+i%3*2)}));
+  function frame(now){
+    if(!root.classList.contains("lyxier-profile")){stopLyxierBounce();return}
+    const dt=Math.min((now-(lyxierBounceLast||now))/1000,.05);lyxierBounceLast=now;
+    for(const item of lyxierBounceItems){
+      if(!item.el.isConnected)continue;
+      const rect=item.el.getBoundingClientRect();
+      const left=rect.left-item.x,top=rect.top-item.y;
+      const maxX=Math.min(24,Math.max(0,window.innerWidth-left-rect.width-8));
+      const minX=Math.max(-24,8-left);
+      const maxY=Math.min(20,Math.max(0,window.innerHeight-top-rect.height-8));
+      const minY=Math.max(-20,8-top);
+      item.x+=item.vx*dt;item.y+=item.vy*dt;
+      if(item.x>=maxX){item.x=maxX;item.vx=-Math.abs(item.vx)}
+      if(item.x<=minX){item.x=minX;item.vx=Math.abs(item.vx)}
+      if(item.y>=maxY){item.y=maxY;item.vy=-Math.abs(item.vy)}
+      if(item.y<=minY){item.y=minY;item.vy=Math.abs(item.vy)}
+      item.el.style.transform="translate3d("+item.x.toFixed(2)+"px,"+item.y.toFixed(2)+"px,0)";
+    }
+    lyxierBounceFrame=requestAnimationFrame(frame);
+  }
+  lyxierBounceFrame=requestAnimationFrame(frame);
+}
 function updateLyxierDecor(enabled){
   let layer=document.getElementById("lyxier-decor");
   if(!enabled){if(layer)layer.remove();return}
@@ -363,6 +399,7 @@ function showProfile(name){
   $("out").classList.remove("lyxier-profile");
   document.body.classList.remove("lyxier-profile-bg");
   updateLyxierDecor(false);
+  stopLyxierBounce();
   setTab("profile");$("q").value=name;lastName=name;
   if(io){io.disconnect();io=null}
   $("out").innerHTML='<div class="msg skel">Loading '+esc(name)+'…</div>';
@@ -460,6 +497,7 @@ function renderProfile(){
   $("out").classList.toggle("lyxier-profile",isLyxier);
   document.body.classList.toggle("lyxier-profile-bg",isLyxier);
   updateLyxierDecor(isLyxier);
+  if(isLyxier)requestAnimationFrame(()=>{if(P?.u===u)startLyxierBounce()});else stopLyxierBounce();
   $("out").classList.toggle("christmas-profile", isChristmasIsland);
   document.body.classList.toggle("christmas-profile-bg", isChristmasIsland);
   const st=P.st[P.mode];
@@ -755,6 +793,7 @@ async function showLeaderboard(view){
   $("out").classList.remove("lyxier-profile");
   document.body.classList.remove("lyxier-profile-bg");
   updateLyxierDecor(false);
+  stopLyxierBounce();
   setTab("lb");stopProfile();
   const req=++T.requestId;
   T.view=view==="all"?"all":view==="season"?String(T.currentSeason):String(view);
