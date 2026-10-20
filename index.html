@@ -390,7 +390,7 @@ function renderMatchRows(){
   if(!P||!P.st||!$("tb"))return;
   const list=P.st[P.mode].list;
   const rows=P.matchSort==="fastest"
-    ?list.filter(x=>x.result&&x.result.uuid===P.u.uuid&&Number(x.result.time)>0&&!x.decayed)
+    ?list.filter(x=>x.result&&x.result.uuid===P.u.uuid&&Number(x.result.time)>0&&!x.decayed&&!x.forfeited)
       .slice().sort((a,b)=>Number(a.result.time)-Number(b.result.time))
     :list;
   $("tb").innerHTML=rows.map(rowHTML).join("");
