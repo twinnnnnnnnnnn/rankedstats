@@ -42,6 +42,16 @@ button.go{background:var(--surface2);color:var(--text);border:1px solid var(--li
 #lyxier-decor{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
 #lyxier-decor img{position:absolute;width:clamp(65px,9vw,155px);height:auto;max-height:190px;object-fit:contain;opacity:.88;filter:drop-shadow(0 4px 10px rgba(0,0,0,.65));user-select:none}
 @media(max-width:700px){#lyxier-decor img{width:clamp(45px,12vw,85px);opacity:.7}}
+/* Lyxier-only unsettling atmosphere: dim vignette, faint red breathing, subtle card tension */
+body.lyxier-profile-bg::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 43%,transparent 22%,rgba(9,0,7,.38) 70%,rgba(0,0,0,.76) 100%);animation:lyxierVignette 9s ease-in-out infinite alternate}
+#out.lyxier-profile .hero{animation:lyxierPulse 7s ease-in-out infinite}
+#out.lyxier-profile .card:not(.hero){border-color:rgba(105,24,36,.42);box-shadow:0 5px 25px rgba(15,0,4,.26)}
+#out.lyxier-profile h1{text-shadow:0 0 9px rgba(190,14,32,.55),2px 2px 1px rgba(50,0,0,.7)}
+#out.lyxier-profile h2{text-shadow:0 0 10px rgba(125,6,26,.35)}
+#out.lyxier-profile .tile{border-color:rgba(118,19,35,.28)}
+@keyframes lyxierVignette{from{opacity:.68}to{opacity:1}}
+@keyframes lyxierPulse{0%,100%{box-shadow:0 0 16px rgba(160,0,25,.18),inset 0 0 22px rgba(90,0,15,.18)}50%{box-shadow:0 0 32px rgba(180,5,27,.42),inset 0 0 30px rgba(125,0,20,.28)}}
+@media(prefers-reduced-motion:reduce){body.lyxier-profile-bg::after,#out.lyxier-profile .hero{animation:none}}
 /* Lyxier-exclusive Halloween blood drips on the main player card */
 #out.lyxier-profile .hero{position:relative;isolation:isolate;overflow:hidden;border-color:rgba(169,12,30,.75);box-shadow:0 0 22px rgba(160,0,25,.22),inset 0 0 22px rgba(90,0,15,.18)}
 #out.lyxier-profile .hero::before{content:"";position:absolute;top:0;left:0;right:0;height:76px;pointer-events:none;z-index:2;background:linear-gradient(180deg,#65000b 0%,#a3081a 12%,#d01c2b 26%,#7e0010 100%);clip-path:polygon(0 0,100% 0,100% 14px,96% 14px,96% 29px,94.7% 40px,93.6% 29px,93.6% 14px,86% 14px,86% 48px,84.8% 61px,83.6% 48px,83.6% 14px,75% 14px,75% 26px,73.8% 35px,72.6% 26px,72.6% 14px,64% 14px,64% 40px,62.7% 53px,61.4% 40px,61.4% 14px,52% 14px,52% 22px,50.8% 31px,49.6% 22px,49.6% 14px,41% 14px,41% 55px,39.7% 70px,38.4% 55px,38.4% 14px,29% 14px,29% 31px,27.7% 42px,26.4% 31px,26.4% 14px,17% 14px,17% 45px,15.8% 58px,14.6% 45px,14.6% 14px,7% 14px,7% 25px,5.8% 36px,4.6% 25px,4.6% 14px,0 14px);filter:drop-shadow(0 3px 3px rgba(65,0,0,.5))}
