@@ -156,24 +156,11 @@ table.pt2 tbody tr:nth-child(3) td:first-child{color:#e7a36e;font-weight:850;tex
 
 #out.christmas-profile .card,#out.christmas-profile .tile{background:rgba(15,17,25,.82);backdrop-filter:blur(2px)}
 
-/* Small creator credit in the lower-right corner */
-.creator-info{position:fixed;right:14px;bottom:14px;z-index:80}
-.creator-info-button{width:30px;height:30px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--muted);font:700 14px/1 ui-monospace,monospace;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);display:grid;place-items:center}
-.creator-info-button:hover,.creator-info-button:focus-visible{color:var(--text);border-color:var(--accent2);outline:none}
-.creator-info-pop{position:absolute;right:0;bottom:39px;width:max-content;max-width:min(300px,calc(100vw - 32px));padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);box-shadow:0 10px 30px rgba(0,0,0,.3);font-size:12px;line-height:1.5;display:none}
-.creator-info.open .creator-info-pop{display:block}
 
 /* Optional all-black appearance; Default leaves the original theme untouched. */
 body.dark-everything{--bg:#000;--surface:#000;--surface2:#080808;--text:#f5f5f5;--muted:#a3a3a3;--line:#292929;--accent:#14b87a;--accent2:#777;--loss:#ff6b6f;--win:#2ee59d;background:#000}
 body.dark-everything::before{background:#000!important;background-image:none!important;animation:none!important}
 body.dark-everything.christmas-profile-bg::before{background:#000!important;background-image:none!important}
-
-/* Smooth profile scrolling: land on Elo history before continuing to matches. */
-html.profile-snap{scroll-behavior:smooth;scroll-snap-type:y proximity;scroll-padding-top:14px}
-html.profile-snap #out .hero,html.profile-snap #cardChart,html.profile-snap #cardTable{scroll-snap-align:start;scroll-margin-top:14px}
-.profile-reveal{opacity:0;transform:translateY(22px);transition:opacity .65s ease,transform .65s cubic-bezier(.2,.7,.2,1)}
-.profile-reveal.is-visible{opacity:1;transform:translateY(0)}
-@media(prefers-reduced-motion:reduce){html.profile-snap{scroll-behavior:auto;scroll-snap-type:none}.profile-reveal,.profile-reveal.is-visible{opacity:1;transform:none;transition:none}}
 
 
 /* Brief first-load splash screen */
@@ -212,10 +199,6 @@ html.profile-snap #out .hero,html.profile-snap #cardChart,html.profile-snap #car
 <footer class="ranked-footer"><div><strong>Play MCSR Ranked</strong><p>Ready to compete? Visit the official MCSR Ranked website to get started.</p></div><a href="https://mcsrranked.com/" target="_blank" rel="noopener noreferrer">Download Ranked ↗</a></footer>
 </div>
 <div id="modal" role="dialog" aria-modal="true" aria-label="Match details"></div>
-<div class="creator-info" id="creatorInfo">
-  <button class="creator-info-button" type="button" aria-label="About this website" aria-expanded="false" aria-controls="creatorInfoPop">i</button>
-  <div class="creator-info-pop" id="creatorInfoPop" role="status">made by himarimeow with some cuck coding involved</div>
-</div>
 
 <script>
 // Keep the splash visible for 2.5 seconds on each page load.
@@ -286,9 +269,9 @@ function info(x,uid){
 
 /* ---------- router ---------- */
 const PAGE=30;
-let P=null,pts=[],sel=null,selId=null,io=null,lastName="Feinberg",scrollRevealObserver=null;
+let P=null,pts=[],sel=null,selId=null,io=null,lastName="Feinberg";
 function setTab(v){[...document.querySelectorAll("#tabs button")].forEach(b=>b.classList.toggle("on",b.dataset.t===v))}
-function stopProfile(){P=null;document.documentElement.classList.remove("profile-snap");if(scrollRevealObserver){scrollRevealObserver.disconnect();scrollRevealObserver=null}if(io){io.disconnect();io=null}}
+function stopProfile(){P=null;if(io){io.disconnect();io=null}}
 const go=h=>{if(location.hash===h)route();else location.hash=h};
 function route(){
   closeModal();if(lio){lio.disconnect();lio=null}
@@ -305,7 +288,6 @@ window.addEventListener("hashchange",route);
 
 /* ---------- profile ---------- */
 function showProfile(name){
-  document.documentElement.classList.add("profile-snap");
   // Reset profile-only country styling immediately so it cannot leak between profiles.
   $("out").classList.remove("christmas-profile");
   document.body.classList.remove("christmas-profile-bg");
@@ -401,7 +383,7 @@ function renderProfile(){
   document.body.classList.toggle("christmas-profile-bg", isChristmasIsland);
   const st=P.st[P.mode];
   $("tb").innerHTML=st.list.map(rowHTML).join("");
-  renderTiles();layout();sentUI();refreshGraph();setupIO();setupProfileScrollEffects();
+  renderTiles();layout();sentUI();refreshGraph();setupIO();
   if(!st.list.length&&!st.done&&!st.p&&!st.err)loadMore(P.mode);
 }
 function sentUI(){
@@ -410,16 +392,6 @@ function sentUI(){
   s.textContent=st.err?"Couldn’t load more — click to retry":st.done?(st.list.length?"End of list · "+st.list.length+" matches":"No "+(P.mode==="ranked"?"ranked":"private room")+" matches found"):"Loading more…";
   s.dataset.retry=st.err?"1":"";
   const c=$("cnt2");if(c)c.textContent=st.list.length+" loaded"+(st.done?"":" · scroll for more");
-}
-function setupProfileScrollEffects(){
-  if(scrollRevealObserver){scrollRevealObserver.disconnect();scrollRevealObserver=null}
-  const targets=[$("cardChart"),$("cardTable"),$("tiles"),document.querySelector("#out .hero")].filter(Boolean);
-  targets.forEach(el=>{el.classList.add("profile-reveal");el.classList.remove("is-visible")});
-  if(!("IntersectionObserver" in window)||window.matchMedia("(prefers-reduced-motion: reduce)").matches){targets.forEach(el=>el.classList.add("is-visible"));return}
-  scrollRevealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
-    if(entry.isIntersecting){entry.target.classList.add("is-visible");scrollRevealObserver.unobserve(entry.target)}
-  }),{threshold:.08,rootMargin:"0px 0px -5% 0px"});
-  targets.forEach(el=>scrollRevealObserver.observe(el));
 }
 function setupIO(){
   if(io){io.disconnect();io=null}
@@ -547,7 +519,7 @@ function select(i,fromChart){
   sel=i;selId=pts[i].id;mark();showDetail(i);
   document.querySelectorAll("tr.sel").forEach(r=>r.classList.remove("sel"));
   const row=document.querySelector(`tr[data-id="${pts[i].id}"]`);
-  if(row){row.classList.add("sel");const sc=$("sc");if(fromChart&&sc&&sc.offsetParent)sc.scrollTo({top:row.offsetTop-sc.clientHeight/2+row.clientHeight/2,behavior:"smooth"})}
+  if(row){row.classList.add("sel");const sc=$("sc");if(fromChart&&sc&&sc.offsetParent)sc.scrollTo({top:row.offsetTop-sc.clientHeight/2+row.clientHeight/2,behavior:"auto"})}
 }
 
 /* ---------- match modal: splits + VODs ---------- */
@@ -848,10 +820,7 @@ $("modal").addEventListener("click",e=>{
   const tr=e.target.closest("tr.sp");
   if(tr){tr.querySelectorAll("td[data-seek]").forEach(td=>seekVod(td.dataset.u,+td.dataset.seek))}
 });
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();const ci=document.getElementById("creatorInfo");if(ci){ci.classList.remove("open");ci.querySelector("button")?.setAttribute("aria-expanded","false")}}});
-const creatorInfo=document.getElementById("creatorInfo");
-creatorInfo?.querySelector("button")?.addEventListener("click",()=>{const opened=creatorInfo.classList.toggle("open");creatorInfo.querySelector("button").setAttribute("aria-expanded",String(opened))});
-document.addEventListener("click",e=>{if(creatorInfo&&!creatorInfo.contains(e.target)){creatorInfo.classList.remove("open");creatorInfo.querySelector("button")?.setAttribute("aria-expanded","false")}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 
 
 // Persistent website settings: font and background.
