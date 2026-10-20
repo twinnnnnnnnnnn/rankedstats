@@ -484,8 +484,10 @@ async function setFull(v){
 
 /* ---------- elo graph ---------- */
 function buildPoints(list,u){
-  if(u.eloRate==null)return[];
-  let cur=u.eloRate;const a=[];
+  const historical=Number(P?.profileSeason)&&Number(P.profileSeason)!==T.currentSeason;
+  const startingElo=historical?(u.seasonResult?.last?.eloRate??null):u.eloRate;
+  if(startingElo==null)return[];
+  let cur=startingElo;const a=[];
   list.forEach(x=>{const c=me(x,u.uuid);if(c&&c.change!=null){a.push({id:x.id,m:x,elo:cur,before:cur-c.change});cur-=c.change}});
   a.reverse();
   return[{base:true,elo:a.length?a[0].before:cur}].concat(a);
