@@ -15,6 +15,9 @@ body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,system-
 /* Full-page animated gradient is the default background, not a panel background. */
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(-45deg,#100817,#261032,#4b1764,#8a2c12,#d15b16,#392046,#100817);background-size:400% 400%;animation:ambientGradient 22s ease infinite;will-change:background-position}
 @keyframes ambientGradient{0%{background-position:0% 50%}25%{background-position:50% 100%}50%{background-position:100% 50%}75%{background-position:50% 0%}100%{background-position:0% 50%}}
+body.lyxier-profile-bg::before{background-image:linear-gradient(rgba(10,12,20,.24),rgba(10,12,20,.30)),url("https://femboy.beauty/XJpHkj");background-size:cover;background-position:center center;background-repeat:no-repeat;animation:none;will-change:auto}
+#out.lyxier-profile .card,#out.lyxier-profile .tile{background:rgba(15,17,25,.82);backdrop-filter:blur(2px)}
+body.dark-everything.lyxier-profile-bg::before{background:#000!important;background-image:none!important}
 body.christmas-profile-bg{background:transparent}
 body.christmas-profile-bg::before{background-image:linear-gradient(rgba(10,12,20,.24),rgba(10,12,20,.30)),url("https://femboy.beauty/CjusRP");background-size:cover;background-position:center center;background-repeat:no-repeat;animation:none;will-change:auto}
 @media(prefers-reduced-motion:reduce){body::before{animation:none}}
@@ -324,6 +327,8 @@ function showProfile(name){
   // Reset profile-only country styling immediately so it cannot leak between profiles.
   $("out").classList.remove("christmas-profile");
   document.body.classList.remove("christmas-profile-bg");
+  $("out").classList.remove("lyxier-profile");
+  document.body.classList.remove("lyxier-profile-bg");
   setTab("profile");$("q").value=name;lastName=name;
   if(io){io.disconnect();io=null}
   $("out").innerHTML='<div class="msg skel">Loading '+esc(name)+'…</div>';
@@ -417,6 +422,9 @@ function renderProfile(){
   startTwitchStatus(twitch);
   const country=String(u.country||"").trim().toUpperCase();
   const isChristmasIsland=country==="CX" || /christmas island/i.test(cname(country));
+  const isLyxier=String(u.nickname||"").toLowerCase()==="lyxier";
+  $("out").classList.toggle("lyxier-profile",isLyxier);
+  document.body.classList.toggle("lyxier-profile-bg",isLyxier);
   $("out").classList.toggle("christmas-profile", isChristmasIsland);
   document.body.classList.toggle("christmas-profile-bg", isChristmasIsland);
   const st=P.st[P.mode];
@@ -709,6 +717,8 @@ async function showLeaderboard(view){
   // Leaderboards must never inherit a Christmas Island profile background.
   $("out").classList.remove("christmas-profile");
   document.body.classList.remove("christmas-profile-bg");
+  $("out").classList.remove("lyxier-profile");
+  document.body.classList.remove("lyxier-profile-bg");
   setTab("lb");stopProfile();
   const req=++T.requestId;
   T.view=view==="all"?"all":view==="season"?String(T.currentSeason):String(view);
