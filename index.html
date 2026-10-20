@@ -302,7 +302,7 @@ let chloeityUuid=localStorage.getItem("chloeityProfileUuid")||"";
 let anjouuUuid=localStorage.getItem("anjouuProfileUuid")||"";
 let bbidddUuid=localStorage.getItem("bbidddProfileUuid")||"";
 let feinbergUuid=localStorage.getItem("feinbergProfileUuid")||"";
-getUser("Feinberg").then(u=>{if(!u?.uuid)return;feinbergUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("feinbergProfileUuid",feinbergUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===feinbergUuid)renderProfile()}).catch(()=>{});
+getUser("Feinberg").then(u=>{if(!u?.uuid)return;feinbergUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("feinbergProfileUuid",feinbergUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===feinbergUuid)renderProfile();refreshDecoratedLeaderboard();refreshDecoratedLeaderboard()}).catch(()=>{});
 function profileDecoration(u){
   const id=String(u.uuid||"").replace(/-/g,"").toLowerCase();
   if(Object.values(sharedEmoteUuids).includes(id)&&id)return " "+SHARED_EMOTE;
@@ -314,10 +314,11 @@ function profileDecoration(u){
   return PROFILE_DECORATIONS[id]||"";
 }
 // Resolve the initial nickname once and keep its UUID for future name changes.
-getUser("bbiddd").then(u=>{if(!u?.uuid)return;bbidddUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("bbidddProfileUuid",bbidddUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===bbidddUuid)renderProfile()}).catch(()=>{});
-getUser("ANJOUU").then(u=>{if(!u?.uuid)return;anjouuUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("anjouuProfileUuid",anjouuUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===anjouuUuid)renderProfile()}).catch(()=>{});
-for(const [name,key] of [["MufatMCSR","mufatMcsrProfileUuid"],["honeyspots","honeyspotsProfileUuid"]])getUser(name).then(u=>{if(!u?.uuid)return;const id=String(u.uuid).replace(/-/g,"").toLowerCase();sharedEmoteUuids[name]=id;localStorage.setItem(key,id);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===id)renderProfile()}).catch(()=>{});
-getUser("chloeity").then(u=>{if(!u?.uuid)return;chloeityUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("chloeityProfileUuid",chloeityUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===chloeityUuid)renderProfile()}).catch(()=>{});
+getUser("bbiddd").then(u=>{if(!u?.uuid)return;bbidddUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("bbidddProfileUuid",bbidddUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===bbidddUuid)renderProfile();refreshDecoratedLeaderboard();refreshDecoratedLeaderboard()}).catch(()=>{});
+getUser("ANJOUU").then(u=>{if(!u?.uuid)return;anjouuUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("anjouuProfileUuid",anjouuUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===anjouuUuid)renderProfile();refreshDecoratedLeaderboard();refreshDecoratedLeaderboard()}).catch(()=>{});
+for(const [name,key] of [["MufatMCSR","mufatMcsrProfileUuid"],["honeyspots","honeyspotsProfileUuid"]])getUser(name).then(u=>{if(!u?.uuid)return;const id=String(u.uuid).replace(/-/g,"").toLowerCase();sharedEmoteUuids[name]=id;localStorage.setItem(key,id);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===id)renderProfile();refreshDecoratedLeaderboard();refreshDecoratedLeaderboard()}).catch(()=>{});
+getUser("chloeity").then(u=>{if(!u?.uuid)return;chloeityUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("chloeityProfileUuid",chloeityUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===chloeityUuid)renderProfile();refreshDecoratedLeaderboard();refreshDecoratedLeaderboard()}).catch(()=>{});
+function refreshDecoratedLeaderboard(){if(!$("ptab"))return;if(T.historical)renderHistorical(false);else if(T.lb)renderPT()}
 /* ---------- profile ---------- */
 function showProfile(name){
   // Reset profile-only country styling immediately so it cannot leak between profiles.
@@ -807,7 +808,7 @@ function renderHistorical(fetchStats=true){
   el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr><th>#</th>${cols.map(([key,label])=>`<th data-k="${key}" class="${key==="name"?"":"num"}">${label}${k===key?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${shown.map((r,i)=>{
     const u=r.u,st=r.stats||{},waiting=!r.stats;
     const cell=(v,fn)=>`<td class="num">${waiting?"…":f(v,fn)}</td>`;
-    return `<tr><td class="mut">${k==="elo"&&!T.country&&d===-1?(r.rank??i+1):i+1}</td><td><span class="who">${flag(u.country)?`<span title="${esc(cname(u.country))}">${flag(u.country)}</span>`:""}<img class="head" alt="" loading="lazy" src="https://mc-heads.net/avatar/${enc(u.uuid)}/24"><a href="#${enc(u.nickname)}" class="${isSupporter(u)?"supporter-name":""}">${esc(u.nickname)}</a>${isSupporter(u)?` <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:""}</span></td><td class="num"><span class="who">${icon(r.elo,22)}${f(r.elo)}</span></td>${cell(st.wr,x=>x.toFixed(1)+"%")}${cell(st.games)}${cell(st.wins)}${cell(st.pb,fmtP)}${cell(st.avg,fmtP)}</tr>`;
+    return `<tr><td class="mut">${k==="elo"&&!T.country&&d===-1?(r.rank??i+1):i+1}</td><td><span class="who">${flag(u.country)?`<span title="${esc(cname(u.country))}">${flag(u.country)}</span>`:""}<img class="head" alt="" loading="lazy" src="https://mc-heads.net/avatar/${enc(u.uuid)}/24"><a href="#${enc(u.nickname)}" class="${isSupporter(u)?"supporter-name":""}">${esc(u.nickname)}</a>${profileDecoration(u)}${isSupporter(u)?` <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:""}</span></td><td class="num"><span class="who">${icon(r.elo,22)}${f(r.elo)}</span></td>${cell(st.wr,x=>x.toFixed(1)+"%")}${cell(st.games)}${cell(st.wins)}${cell(st.pb,fmtP)}${cell(st.avg,fmtP)}</tr>`;
   }).join("")}</tbody></table>`;
   $("pstat").textContent=shown.length+" / "+rows.length+" players";
   $("lbsent").textContent=T.shown>=rows.length?"End of leaderboard · "+rows.length+" players":"Scroll for more";
@@ -827,7 +828,7 @@ function renderPT(){
   el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr><th>#</th>${cols.map(c=>`<th class="${c[2]}" data-k="${c[0]}">${c[1]}${k===c[0]?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${sorted.map((r,i)=>{
     const s=r[v]||{},bad=r.state!=="d",wait=`<span class="mut">${r.state==="e"?"×":"…"}</span>`;
     const c=(x,f,cls)=>`<td class="num ${cls||""}">${bad?wait:x!=null?f(x):"—"}</td>`;
-    return `<tr><td class="mut">${i+1}</td><td><span class="who">${flag(r.country)?`<span title="${esc(cname(r.country))}">${flag(r.country)}</span>`:""}<img class="head" alt="" width="24" height="24" loading="lazy" src="https://mc-heads.net/avatar/${enc(r.uuid||r.name)}/24"><a href="#${enc(r.name)}">${esc(r.name)}</a></span></td>`+
+    return `<tr><td class="mut">${i+1}</td><td><span class="who">${flag(r.country)?`<span title="${esc(cname(r.country))}">${flag(r.country)}</span>`:""}<img class="head" alt="" width="24" height="24" loading="lazy" src="https://mc-heads.net/avatar/${enc(r.uuid||r.name)}/24"><a href="#${enc(r.name)}">${esc(r.name)}</a>${r.uuid?profileDecoration({uuid:r.uuid}):""}</span></td>`+
       `<td class="num"><span class="who">${bad?wait:icon(r.elo,22)+(r.elo!=null?r.elo:"—")}</span></td>`+
       c(s.wr,x=>x.toFixed(1)+"%")+c(s.games,x=>x)+c(s.wins,x=>x)+
       c(s.pb,fmtP,s.pb!=null&&s.pb===bpb?"best":"")+c(s.avg,fmtP,s.avg!=null&&s.avg===bavg?"best":"")+`</tr>`}).join("")}</tbody></table>`;
