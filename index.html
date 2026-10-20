@@ -119,6 +119,7 @@ table.pt2 td.num{text-align:right}table.pt2 th.num{text-align:right}
 .hero h1 .profile-rank.podium-1{color:#ffd76a;text-shadow:0 0 5px rgba(255,215,106,.95),0 0 14px rgba(255,190,45,.85),0 0 28px rgba(245,158,11,.55);font-weight:850}
 .hero h1 .profile-rank.podium-2{color:#dce4ef;text-shadow:0 0 5px rgba(235,242,255,.95),0 0 14px rgba(203,213,225,.8),0 0 28px rgba(148,163,184,.55);font-weight:850}
 .hero h1 .profile-rank.podium-3{color:#e7a36e;text-shadow:0 0 5px rgba(255,190,135,.95),0 0 14px rgba(231,163,110,.85),0 0 28px rgba(205,127,50,.55);font-weight:850}
+.profile-custom-emote{height:1.15em;width:auto;max-width:2em;vertical-align:-.16em;object-fit:contain}
 /* One continuous podium gradient per row; transparent cells prevent the gradient from restarting in every column. */
 table.pt2 tbody tr:nth-child(1){background:linear-gradient(105deg,rgba(255,207,64,.30) 0%,rgba(245,158,11,.16) 48%,rgba(245,158,11,.07) 100%)}
 table.pt2 tbody tr:nth-child(2){background:linear-gradient(105deg,rgba(226,232,240,.26) 0%,rgba(148,163,184,.14) 48%,rgba(148,163,184,.06) 100%)}
@@ -289,6 +290,16 @@ $("logo").onclick=e=>{e.preventDefault();go("#!lb/season")};
 $("f").addEventListener("submit",e=>{e.preventDefault();const v=$("q").value.trim();if(v)go("#"+enc(v))});
 window.addEventListener("hashchange",route);
 
+const PROFILE_DECORATIONS={};
+const BBIDDD_EMOTE='<img class="profile-custom-emote" src="https://cdn.7tv.app/emote/01KP6XX8J1J115JJEZE01P0SBE/2x.webp" alt="7TV emote" title="7TV emote">';
+let bbidddUuid=localStorage.getItem("bbidddProfileUuid")||"";
+function profileDecoration(u){
+  const id=String(u.uuid||"").replace(/-/g,"").toLowerCase();
+  if(id===bbidddUuid)return " "+BBIDDD_EMOTE;
+  return PROFILE_DECORATIONS[id]||"";
+}
+// Resolve the initial nickname once and keep its UUID for future name changes.
+getUser("bbiddd").then(u=>{if(!u?.uuid)return;bbidddUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("bbidddProfileUuid",bbidddUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===bbidddUuid)renderProfile()}).catch(()=>{});
 /* ---------- profile ---------- */
 function showProfile(name){
   // Reset profile-only country styling immediately so it cannot leak between profiles.
@@ -376,7 +387,7 @@ function renderProfile(){
   const socials=(twitch||discord)?`<div class="social-links">${twitch?`<a class="social-link" href="${esc(twitchUrl)}" target="_blank" rel="noopener noreferrer" title="Open ${esc(twitch)} on Twitch"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M4 2 1.5 6v15h5v3h4l3-3h4l5-5V2H4zm16 13-3 3h-5l-3 3v-3H4V4h16v11zM9 7h2v6H9zm5 0h2v6h-2z"/></svg><span class="social-name">${esc(twitch)}</span><span class="twitch-live-dot" data-twitch-live-dot aria-label="Live on Twitch" title="Live on Twitch"></span><span class="twitch-live-label" data-twitch-live-label>LIVE</span></a>`:""}${discord?`<button type="button" class="social-link discord" data-copy-discord="${esc(discord)}" title="Click to copy Discord username"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M19.7 5.2A18.4 18.4 0 0 0 15.2 3.8l-.6 1.2a16.8 16.8 0 0 0-5.2 0l-.6-1.2a18.3 18.3 0 0 0-4.5 1.4C1.4 9.4.6 13.5 1 17.6a18.5 18.5 0 0 0 5.5 2.8l1.2-2a11.8 11.8 0 0 1-1.9-.9l.5-.4a13.1 13.1 0 0 0 11.4 0l.5.4a12.4 12.4 0 0 1-1.9.9l1.2 2a18.4 18.4 0 0 0 5.5-2.8c.5-4.8-.8-8.9-3.3-12.4ZM8.6 14.7c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.8 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg><span class="social-name" data-discord-label>${esc(discord)}</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg></button>`:""}</div>`:"";
   $("out").innerHTML=
   `<section class="hero"><img class="avatar" alt="" src="https://mc-heads.net/avatar/${esc(uid)}/84">
-   <div><h1>${(historicalSeason?seasonStanding.eloRank:u.eloRank)!=null?`<span class="profile-rank ${[1,2,3].includes(Number(historicalSeason?seasonStanding.eloRank:u.eloRank))?`podium-${historicalSeason?seasonStanding.eloRank:u.eloRank}`:""}">#${historicalSeason?seasonStanding.eloRank:u.eloRank}</span> `:""}${flag(u.country)?flag(u.country)+" ":""}${supporterName(u,u.nickname)}${String(u.nickname||"").toLowerCase()==="feinberg"?` <span class="profile-suffix">(loves vegetables)</span>`:""}</h1>${socials}<div class="sub">${u.country?`<span class="pill">${esc(cname(u.country))}</span>`:""}${pl("All-time matches",nz(at("playedMatches")))}${pl("Wins",nz(at("wins")))}${pl("Completions",nz(atc))}${pl("PB",fmtP(at("bestTime")))}${pl("Average",atc&&att!=null?fmtP(att/atc):"—")}</div></div>
+   <div><h1>${(historicalSeason?seasonStanding.eloRank:u.eloRank)!=null?`<span class="profile-rank ${[1,2,3].includes(Number(historicalSeason?seasonStanding.eloRank:u.eloRank))?`podium-${historicalSeason?seasonStanding.eloRank:u.eloRank}`:""}">#${historicalSeason?seasonStanding.eloRank:u.eloRank}</span> `:""}${flag(u.country)?flag(u.country)+" ":""}${supporterName(u,u.nickname)}${String(u.uuid||"").replace(/-/g,"").toLowerCase()==="3c8757790ab0400b8b9e3936e0dd535b"?" 🐶":""}${profileDecoration(u)}${String(u.nickname||"").toLowerCase()==="feinberg"?` <span class="profile-suffix">(loves vegetables)</span>`:""}</h1>${socials}<div class="sub">${u.country?`<span class="pill">${esc(cname(u.country))}</span>`:""}${pl("All-time matches",nz(at("playedMatches")))}${pl("Wins",nz(at("wins")))}${pl("Completions",nz(atc))}${pl("PB",fmtP(at("bestTime")))}${pl("Average",atc&&att!=null?fmtP(att/atc):"—")}</div></div>
    <div class="elo"><div class="mut" style="font-size:12px;margin-bottom:5px">${historicalSeason?"End-of-season Elo":"Current Elo"}</div><div class="n t-${tier}">${elo!=null?elo.toLocaleString():"—"}</div><div class="r">${elo!=null?icon(elo,26):""}<span>${elo!=null?r.n:"Not available"} · Peak Elo ${peak!=null?peak.toLocaleString():"—"}</span></div></div></section>
    <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
    <div class="tiles" id="tiles"></div>
