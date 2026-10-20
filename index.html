@@ -204,9 +204,30 @@ body.dark-everything.christmas-profile-bg::before{background:#000!important;back
 @keyframes splashFadeOut{to{opacity:0;visibility:hidden}}
 @media(prefers-reduced-motion:reduce){#loadingSplash{animation:none}#loadingSplash .loading-dot{animation:none;opacity:1}}
 
+/* Random image apparitions over the default gradient only */
+#gradient-appearances{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+#gradient-appearances img{position:absolute;width:clamp(100px,17vw,260px);max-height:35vh;object-fit:contain;opacity:0;animation:gradientApparition 15s ease-in-out infinite;filter:drop-shadow(0 5px 15px rgba(0,0,0,.45))}
+@keyframes gradientApparition{0%,12%,38%,100%{opacity:0}18%,31%{opacity:.8}}
+body.lyxier-profile-bg #gradient-appearances,body.christmas-profile-bg #gradient-appearances,body.dark-everything #gradient-appearances{display:none}
+body:has(#out.lyxier-profile) #gradient-appearances,body:has(#out.christmas-profile) #gradient-appearances{display:none}
+.wrap{position:relative;z-index:1}
+@media(prefers-reduced-motion:reduce){#gradient-appearances img{animation:none!important}}
 </style>
 </head>
 <body>
+<div id="gradient-appearances" aria-hidden="true"></div>
+<script>
+(function(){
+  const layer=document.getElementById("gradient-appearances");
+  for(let i=0;i<5;i++){
+    const img=document.createElement("img");img.src="https://femboy.beauty/nYUvsb";img.alt="";
+    img.style.left=(5+Math.random()*72)+"%";img.style.top=(5+Math.random()*65)+"%";
+    img.style.animationDelay=(-Math.random()*15)+"s";img.style.animationDuration=(12+Math.random()*11)+"s";
+    layer.appendChild(img);
+  }
+})();
+</script>
+
 <div id="loadingSplash" role="status" aria-live="polite" aria-label="Loading website">
   <img src="https://femboy.beauty/qnWWeD" alt="" fetchpriority="high">
   <div class="loading-label"><span>loading</span><span class="loading-dot">.</span><span class="loading-dot">.</span><span class="loading-dot">.</span></div>
