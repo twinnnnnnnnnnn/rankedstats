@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCSR Ranked · Stats</title>
+<style>
+:root{--bg:#f4f5f9;--surface:#fff;--surface2:#eceef5;--text:#14162a;--muted:#6a6f8c;--line:#dfe2ee;--accent:#14b87a;--accent2:#6d5dfc;--loss:#e5484d;--win:#14b87a;--r:18px}
+@media (prefers-color-scheme:dark){:root{--bg:#0b0c14;--surface:#141626;--surface2:#1c1f35;--text:#eceefc;--muted:#8a8fb0;--line:#262a44;--loss:#ff6b6f;--win:#2ee59d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;isolation:isolate;position:relative;min-height:100vh}
+/* Full-page animated gradient is the default background, not a panel background. */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(-45deg,#080b1c,#172554,#312e81,#581c87,#0f766e,#111827);background-size:400% 400%;animation:ambientGradient 22s ease infinite;will-change:background-position}
+@keyframes ambientGradient{0%{background-position:0% 50%}25%{background-position:50% 100%}50%{background-position:100% 50%}75%{background-position:50% 0%}100%{background-position:0% 50%}}
+body.christmas-profile-bg{background:transparent}
+body.christmas-profile-bg::before{background-image:linear-gradient(rgba(10,12,20,.24),rgba(10,12,20,.30)),url("https://femboy.beauty/SK8LdC");background-size:cover;background-position:center center;background-repeat:no-repeat;animation:none;will-change:auto}
+@media(prefers-reduced-motion:reduce){body::before{animation:none}}
+@media(max-width:700px){body.christmas-profile-bg::before{background-attachment:scroll}}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
+nav{display:flex;align-items:center;gap:12px;padding:6px 0 22px;flex-wrap:wrap}
+.logo{margin-right:auto;display:flex;align-items:center}.logo img{width:46px;height:46px;border-radius:10px;image-rendering:pixelated;display:block;transition:transform .15s}.logo:hover img{transform:scale(1.06)}
+form{display:flex;gap:8px}
+input[type=text],button,select{background:var(--surface);border:1px solid var(--line);color:var(--text);border-radius:calc(var(--r)*.6);padding:9px 14px;font:inherit}
+input[type=text]{width:220px;max-width:100%}
+input:focus-visible,button:focus-visible,select:focus-visible{outline:2px solid var(--accent2);outline-offset:1px}
+button{cursor:pointer}
+button.go{background:linear-gradient(90deg,var(--accent2),var(--accent));color:#fff;border:0;font-weight:600}
+.tabs{display:flex;gap:3px;background:var(--surface2);padding:3px;border-radius:calc(var(--r)*.7)}
+.tabs button{border:0;background:none;padding:7px 14px;color:var(--muted);font-weight:600}
+.tabs button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.ri{vertical-align:middle;object-fit:contain;flex:none;image-rendering:pixelated}
+.who{display:inline-flex;align-items:center;gap:6px}.supporter-name{background:linear-gradient(90deg,#fff0a6,#ffc928,#fff4bd,#d99a00,#fff0a6);background-size:220% 100%;animation:supporterGold 3.5s linear infinite;-webkit-background-clip:text;background-clip:text;color:transparent!important;font-weight:800}.supporter-pick{display:inline-block;color:#f4c542;font-size:1.02em;line-height:1;filter:drop-shadow(0 0 4px rgba(255,190,35,.35));vertical-align:-.04em}.hero h1 .supporter-name{display:inline-block}@keyframes supporterGold{to{background-position:220% 0}}@media(prefers-reduced-motion:reduce){.supporter-name{animation:none}}.head{width:24px;height:24px;border-radius:5px;image-rendering:pixelated;flex:none;background:var(--surface2)}
+.hero{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;background:linear-gradient(135deg,var(--surface),var(--surface2));border:1px solid var(--line);border-radius:calc(var(--r)*1.15);padding:24px}
+.avatar{width:84px;height:84px;border-radius:calc(var(--r)*.9);image-rendering:pixelated;background:var(--surface2)}
+h1{margin:0;font-size:28px;letter-spacing:-.02em}
+.sub{color:var(--muted);font-size:14px;display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.pill{background:var(--surface2);border:1px solid var(--line);border-radius:99px;padding:2px 10px;font-size:12.5px;color:var(--muted)}
+.elo{text-align:right}
+.elo .n{font-size:46px;font-weight:800;letter-spacing:-.03em;line-height:1;background:linear-gradient(90deg,var(--accent2),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+.elo .r{color:var(--muted);font-size:13px;margin-top:6px;display:flex;gap:6px;align-items:center;justify-content:flex-end}
+.elo .n{background-size:200% 100%;animation:eloflow 4s linear infinite}
+@keyframes eloflow{to{background-position:200% 0}}
+.elo .n.t-netherite{background-image:linear-gradient(90deg,#9b4dff,#ff3df0,#c084fc,#7b2cff,#9b4dff)}
+.elo .n.t-diamond{background-image:linear-gradient(90deg,#4fb8ff,#2ee6d6,#87ceeb,#1fd1c4,#4fb8ff)}
+.elo .n.t-emerald{background-image:linear-gradient(90deg,#b6ff3b,#12d67a,#7dff6b,#0fbf6d,#b6ff3b)}
+.elo .n.t-gold{background-image:linear-gradient(90deg,#ffe14a,#f5a800,#fff08a,#e69500,#ffe14a)}
+.elo .n.t-iron{background-image:linear-gradient(90deg,#c9ced8,#f4f6fa,#9aa3b2,#e2e6ee,#c9ced8)}
+.elo .n.t-coal{background-image:linear-gradient(90deg,#5c616c,#7d828d,#4a4e57,#5c616c);animation:none}
+@media(prefers-reduced-motion:reduce){.elo .n{animation:none}}
+.pill b{color:var(--text);font-weight:600}.pill{cursor:default}
+.bar{display:flex;gap:12px;align-items:center;margin:14px 0 0;flex-wrap:wrap}
+.bar .seg{flex:1;max-width:340px}
+.seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+.seg button{width:100%;min-width:0;white-space:nowrap}
+.social-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.social-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:7px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);text-decoration:none;font-weight:600;cursor:pointer;max-width:100%}
+.social-link:hover{border-color:var(--accent2);background:var(--surface2)}
+.social-link svg{width:19px;height:19px;flex:none}
+.social-link .social-name{overflow-wrap:anywhere}
+.social-link.discord{font:inherit;font-weight:600}
+.twitch-live-dot{display:none;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.15);flex:none;vertical-align:middle}.twitch-live-dot.is-live{display:inline-block}.twitch-live-label{display:none;color:#ef4444;font-size:11px;font-weight:800;letter-spacing:.06em}.twitch-live-label.is-live{display:inline}
+@media(max-width:520px){.social-link{flex:1 1 auto}}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;transition:transform .15s,border-color .15s}
+.tile:hover{transform:translateY(-2px);border-color:var(--accent2)}
+.tile .l{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.tile .v{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-top:2px}
+.tile .d{font-size:12.5px;color:var(--muted)}
+.main{display:grid;gap:14px;grid-template-columns:1fr}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0;margin-bottom:0}
+.card h2{margin:0 0 12px;font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.card h2 span{text-transform:none;letter-spacing:0;font-weight:400}
+.chartbox{position:relative;touch-action:pan-y}
+svg{display:block;width:100%;height:auto;cursor:crosshair}
+#tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.18);min-width:170px;opacity:0;transition:opacity .08s;z-index:5;transform:translate(-50%,-112%)}
+#tip b{display:block;font-size:14px;margin-bottom:2px}
+#tip .m{color:var(--muted);font-size:12px}
+#detail{margin-top:12px;padding:12px 14px;border:1px dashed var(--line);border-radius:calc(var(--r)*.7);font-size:14px;color:var(--muted)}
+#detail.on{border:1px solid var(--accent2);color:var(--text);background:var(--surface2)}
+.mini{padding:4px 10px;font-size:13px;margin-top:8px;border-color:var(--accent2)}
+.scroll{overflow:auto;max-height:520px;position:relative}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+th{position:sticky;top:0;background:var(--surface);text-align:left;color:var(--muted);font-weight:500;font-size:12px;padding:6px 10px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;z-index:1}
+td{padding:10px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+tr.pt{cursor:pointer}tr.pt:hover td,tr.hl td{background:var(--surface2)}
+tr.sel td{background:color-mix(in srgb,var(--accent2) 18%,transparent)}
+td a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--muted)}
+.mut{color:var(--muted)}
+.res{font-weight:700;border-radius:6px;padding:2px 8px;font-size:12px}
+.res.w{background:color-mix(in srgb,var(--win) 18%,transparent);color:var(--win)}
+.res.l{background:color-mix(in srgb,var(--loss) 18%,transparent);color:var(--loss)}
+.res.d{background:var(--surface2);color:var(--muted)}
+.up{color:var(--win)}.down{color:var(--loss)}
+.msg{text-align:center;padding:60px 20px;color:var(--muted)}
+.skel{animation:p 1.2s infinite}@keyframes p{50%{opacity:.4}}
+.sent{text-align:center;color:var(--muted);padding:14px;font-size:13px}
+.sent[data-retry="1"]{cursor:pointer;color:var(--loss)}
+.country-flag{display:inline-block;vertical-align:-.12em;width:21px;height:16px;flex:none;background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:2px;box-shadow:0 0 0 1px rgba(128,128,128,.2)}
+h1 .country-flag{width:28px;height:21px;vertical-align:-.08em;margin-right:5px}
+/* players table */
+.ptools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.ptools .sp{flex:1}
+table.pt2 th[data-k]{cursor:pointer;user-select:none}
+table.pt2 th[data-k]:hover{color:var(--text)}
+table.pt2 td.best{color:var(--win);font-weight:700}
+table.pt2 td.num{text-align:right}table.pt2 th.num{text-align:right}
+/* match modal */
+#modal{position:fixed;inset:0;background:rgba(5,6,12,.62);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px;z-index:40}
+#modal.open{display:flex}
+.mbox{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:calc(var(--r)*1.1);width:min(980px,100%);padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.mbox .x{position:absolute;top:10px;right:10px;padding:0 6px;font-size:12px;line-height:1.6;z-index:2;font-family:ui-monospace,Menlo,Consolas,monospace}
+.mbox h2{margin:0 0 4px;font-size:20px;padding-right:50px}
+.pcs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:14px 0}
+.pc{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:calc(var(--r)*.7);background:var(--surface2)}
+.pc.winner{border-color:var(--win)}
+.pc img.hd{width:44px;height:44px;border-radius:8px;image-rendering:pixelated}
+.pc b{display:flex;align-items:center;gap:6px}
+.sec3{margin-top:18px}
+.sec3>h3{margin:0 0 8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.vods{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.vodbox{border:1px solid var(--line);border-radius:calc(var(--r)*.7);padding:10px;background:var(--surface2)}
+.vodbox.none{color:var(--muted);display:flex;justify-content:space-between;gap:10px}
+.vh{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:14px}
+.vh a{color:var(--accent2);text-decoration:none}
+.vodbox iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:#000;display:block}
+.vodbox .msg{padding:24px 10px;font-size:13px}
+.mbox table{min-width:0}
+.mbox td.f{color:var(--win);font-weight:700}
+.mbox tr.sp{cursor:pointer}.mbox tr.sp:hover td{background:var(--surface2)}
+.hint{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+@media(max-width:860px){.hero{grid-template-columns:auto 1fr}.elo{grid-column:1/-1;text-align:left}.elo .r{justify-content:flex-start}form{width:100%}input[type=text]{flex:1;width:auto}}
+.ranked-footer{margin-top:38px;padding:22px 20px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.ranked-footer strong{font-size:16px}.ranked-footer p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.ranked-footer a{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:10px;background:linear-gradient(90deg,var(--accent2),var(--accent));color:white;text-decoration:none;font-weight:700;white-space:nowrap}
+.ranked-footer a:hover{filter:brightness(1.1)}
+
+#out.christmas-profile .card,#out.christmas-profile .tile{background:rgba(15,17,25,.82);backdrop-filter:blur(2px)}
+
+/* Small creator credit in the lower-right corner */
+.creator-info{position:fixed;right:14px;bottom:14px;z-index:80}
+.creator-info-button{width:30px;height:30px;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--muted);font:700 14px/1 ui-monospace,monospace;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.2);display:grid;place-items:center}
+.creator-info-button:hover,.creator-info-button:focus-visible{color:var(--text);border-color:var(--accent2);outline:none}
+.creator-info-pop{position:absolute;right:0;bottom:39px;width:max-content;max-width:min(300px,calc(100vw - 32px));padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--text);box-shadow:0 10px 30px rgba(0,0,0,.3);font-size:12px;line-height:1.5;display:none}
+.creator-info.open .creator-info-pop{display:block}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <a class="logo" id="logo" href="#!lb/season" aria-label="Ranked – season leaderboard"><img alt="Ranked" src="data:image/png;base64,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"></a>
+  <div class="tabs" id="tabs"><button data-t="lb">Leaderboard</button><button data-t="profile">Profile</button></div>
+  <form id="f"><input id="q" type="text" placeholder="Player name or UUID" aria-label="Player"><button class="go">Search</button></form>
+</nav>
+<div id="out"></div>
+<footer class="ranked-footer"><div><strong>Play MCSR Ranked</strong><p>Ready to compete? Visit the official MCSR Ranked website to get started.</p></div><a href="https://mcsrranked.com/" target="_blank" rel="noopener noreferrer">Download Ranked ↗</a></footer>
+</div>
+<div id="modal" role="dialog" aria-modal="true" aria-label="Match details"></div>
+<div class="creator-info" id="creatorInfo">
+  <button class="creator-info-button" type="button" aria-label="About this website" aria-expanded="false" aria-controls="creatorInfoPop">i</button>
+  <div class="creator-info-pop" id="creatorInfoPop" role="status">made by himarimeow with some cuck coding involved</div>
+</div>
+
+<script>
+const API="https://api.mcsrranked.com";
+const $=id=>document.getElementById(id);
+const enc=encodeURIComponent;
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=ms=>{if(ms==null||isNaN(ms))return"—";const s=Math.round(ms/1000);return Math.floor(s/60)+":"+("0"+s%60).slice(-2)};
+const fmtP=ms=>{if(ms==null||isNaN(ms))return"—";const t=Math.round(ms),m=Math.floor(t/60000),s=Math.floor(t%60000/1000),c=t%1000;return m+":"+("0"+s).slice(-2)+"."+("00"+c).slice(-3)};
+const pct=(a,b)=>b?(a/b*100).toFixed(1)+"%":"—";
+const cname=c=>{try{return new Intl.DisplayNames(["en"],{type:"region"}).of(String(c).toUpperCase())||c}catch(e){return c}};
+const ago=t=>{if(!t)return"";const hours=Math.max(0,Math.floor((Date.now()/1000-t)/3600));const d=Math.floor(hours/24);return d<2?Math.max(1,hours)+"h ago":d<30?d+"d ago":Math.floor(d/30)+"mo ago"};
+const get=(url,t)=>{t=t||0;return fetch(url).then(r=>r.json()).then(j=>{
+  if(j.status!=="success"){const m=String(j.data||"Request failed");
+    if(t<3&&/too many|rate/i.test(m))return new Promise(r=>setTimeout(r,4000*(t+1))).then(()=>get(url,t+1));
+    throw new Error(m)}
+  return j.data})};
+
+/* ---------- rank icons (embedded from rank_icons.zip) ---------- */
+const ICN={Coal1:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAbUExURSQuNWdyf5uwsoCPmRsZK0dMWThBSQ8EFAAAAFbrYTsAAAAJdFJOU///////////AFNPeBIAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCA1LjEuMTITAUd0AAAAuGVYSWZJSSoACAAAAAUAGgEFAAEAAABKAAAAGwEFAAEAAABSAAAAKAEDAAEAAAACAAAAMQECABEAAABaAAAAaYcEAAEAAABsAAAAAAAAAGAAAAABAAAAYAAAAAEAAABQYWludC5ORVQgNS4xLjEyAAADAACQBwAEAAAAMDIzMAGgAwABAAAAAQAAAAWgBAABAAAAlgAAAAAAAAACAAEAAgAEAAAAUjk4AAIABwAEAAAAMDEwMAAAAADZp5qVybcLXwAAAEVJREFUKFN1ylEKwDAIA9BkVZv7n3gwUVah+YovQiMFPdwAHAueE8BF+1rBov8BTkek5IdF3QUIHKCNnaXBBqjuO3QGSC+4fgcnpx1+aAAAAABJRU5ErkJggg==",Coal2:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAbUExURSQuNWdyf4CPmZuwshsZK0dMWThBSQ8EFAAAACjVeZEAAAAJdFJOU///////////AFNPeBIAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCA1LjEuMTITAUd0AAAAuGVYSWZJSSoACAAAAAUAGgEFAAEAAABKAAAAGwEFAAEAAABSAAAAKAEDAAEAAAACAAAAMQECABEAAABaAAAAaYcEAAEAAABsAAAAAAAAAGAAAAABAAAAYAAAAAEAAABQYWludC5ORVQgNS4xLjEyAAADAACQBwAEAAAAMDIzMAGgAwABAAAAAQAAAAWgBAABAAAAlgAAAAAAAAACAAEAAgAEAAAAUjk4AAIABwAEAAAAMDEwMAAAAADZp5qVybcLXwAAAFJJREFUKFN1zVEOwCAIA9AWUHr/E2/R4JyJfJUHAeiogjW4AfifGBw20gQDjTFlAGFswQWOxoYeXiBGf/tvQxbo2G/IErl/kTJyhgJVf4dVB0gPhzYG0P/KsRAAAAAASUVORK5CYII=",Coal3:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAbUExURZuwsoCPmSQuNWdyfxsZK0dMWThBSQ8EFAAAADR7atEAAAAJdFJOU///////////AFNPeBIAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCA1LjEuMTITAUd0AAAAuGVYSWZJSSoACAAAAAUAGgEFAAEAAABKAAAAGwEFAAEAAABSAAAAKAEDAAEAAAACAAAAMQECABEAAABaAAAAaYcEAAEAAABsAAAAAAAAAGAAAAABAAAAYAAAAAEAAABQYWludC5ORVQgNS4xLjEyAAADAACQBwAEAAAAMDIzMAGgAwABAAAAAQAAAAWgBAABAAAAlgAAAAAAAAACAAEAAgAEAAAAUjk4AAIABwAEAAAAMDEwMAAAAADZp5qVybcLXwAAAF5JREFUKFNdj1ECgCAIQ2VD4f4nzlykxQ/jwRRaKiqXMJhEAYISD5h1EQFDK88CBhpdZAHC2F2eGzR0dgxfTU34mPWeSHMMnG+kBeL8JRkenz0m+W46Pb9b3ryFIvMCaggGlxTnv4IAAAAASUVORK5CYII=",Iron1:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAbUExURS0/Pll3boCZkqjEttzq5cfYyhMhHf///wAAAGC6g+4AAAAJdFJOU///////////AFNPeBIAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCA1LjEuMTITAUd0AAAAuGVYSWZJSSoACAAAAAUAGgEFAAEAAABKAAAAGwEFAAEAAABSAAAAKAEDAAEAAAACAAAAMQECABEAAABaAAAAaYcEAAEAAABsAAAAAAAAAGAAAAABAAAAYAAAAAEAAABQYWludC5ORVQgNS4xLjEyAAADAACQBwAEAAAAMDIzMAGgAwABAAAAAQAAAAWgBAABAAAAlgAAAAAAAAACAAEAAgAEAAAAUjk4AAIABwAEAAAAMDEwMAAAAADZp5qVybcLXwAAAFNJREFUKFNdzVEOgDAIA9ACbnL/E4uMYoSfrY8mwMcQelEfyNhA/wAxVvKBXMtkN0DXHaIpCRZZq5IgGlnR8ArzAd9x9uQC33XjAxYIztzQM8D9AXNLBqaHx4kmAAAAAElFTkSuQmCC",Iron2:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAbUExURS0/Pll3bqjEtoCZktzq5cfYyhMhHf///wAAAK+zp3UAAAAJdFJOU///////////AFNPeBIAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCA1LjEuMTITAUd0AAAAuGVYSWZJSSoACAAAAAUAGgEFAAEAAABKAAAAGwEFAAEAAABSAAAAKAEDAAEAAAACAAAAMQECABEAAABaAAAAaYcEAAEAAABsAAAAAAAAAGAAAAABAAAAYAAAAAEAAABQYWludC5ORVQgNS4xLjEyAAADAACQBwAEAAAAMDIzMAGgAwABAAAAAQAAAAWgBAABAAAAlgAAAAAAAAACAAEAAgAEAAAAUjk4AAIABwAEAAAAMDEwMAAAAADZp5qVybcLXwAAAF9JREFUKFNdjVEOwDAIQlFW5/1PPKvVZPULHgTh1zWY4AjIP1EQmqoAISrgAIE8S8XkAILrDULbnQAKDc+o7JlsCMMT3dgb6XsjOhZvMz/A1WogroAbrEQDbz9g7gLuHzmhBkHCPiXVAAAAAElFTkSuQmCC",Iron3:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAbUExURajEtll3bi0/PoCZktzq5cfYyhMhHf///wAAABHu/ogAAAAJdFJOU///////////AFNPeBIAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCA1LjEuMTITAUd0AAAAuGVYSWZJSSoACAAAAAUAGgEFAAEAAABKAAAAGwEFAAEAAABSAAAAKAEDAAEAAAACAAAAMQECABEAAABaAAAAaYcEAAEAAABsAAAAAAAAAGAAAAABAAAAYAAAAAEAAABQYWludC5ORVQgNS4xLjEyAAADAACQBwAEAAAAMDIzMAGgAwABAAAAAQAAAAWgBAABAAAAlgAAAAAAAAACAAEAAgAEAAAAUjk4AAIABwAEAAAAMDEwMAAAAADZp5qVybcLXwAAAGVJREFUKFNFjlEWgEAIAlVq8/4nDhXLj8RpHmU5s3uDh08QQHigk4AFQm4vCrZKARZct/npGgIE7ocEpxwCC+MNKqW34eCNWKM6+t4OOoef7fcCaWcKKvaTigSB1E9wBL79h5nMFxvDBgmDgAfMAAAAAElFTkSuQmCC",Gold1:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAbUExURbJkEffEMfrqLv/3nf/6reKRBHYzDP///wAAABUSPWEAAAAJdFJOU///////////AFNPeBIAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCA1LjEuMTITAUd0AAAAuGVYSWZJSSoACAAAAAUAGgEFAAEAAABKAAAAGwEFAAEAAABSAAAAKAEDAAEAAAACAAAAMQECABEAAABaAAAAaYcEAAEAAABsAAAAAAAAAGAAAAABAAAAYAAAAAEAAABQYWludC5ORVQgNS4xLjEyAAADAACQBwAEAAAAMDIzMAGgAwABAAAAAQAAAAWgBAABAAAAlgAAAAAAAAACAAEAAgAEAAAAUjk4AAIABwAEAAAAMDEwMAAAAADZp5qVybcLXwAAAFlJREFUKFNdjkESwCAIAwMK8v8XFyyxUzmou4mjiGsoTtAHyJVA/wJj0uytWMwpAJlrqMBLIa/L0GQTQ5rdUEmGdaOWSiumCM9/vNwivN/4BAsUQT7izCUiHlWOBnSgnTCWAAAAAElFTkSuQmCC",Gold2:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAbUExURbJkEffEMfrqLv/3nf/6reKRBHYzDP///wAAABUSPWEAAAAJdFJOU///////////AFNPeBIAAAAJcEhZcwAADsIAAA7CARUoSoAAAAAZdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCA1LjEuMTITAUd0AAAAuGVYSWZJSSoACAAAAAUAGgEFAAEAAABKAAAAGwEFAAEAAABSAAAAKAEDAAEAAAACAAAAMQECABEAAABaAAAAaYcEAAEAAABsAAAAAAAAAPJ2AQDoAwAA8nYBAOgDAABQYWludC5ORVQgNS4xLjEyAAADAACQBwAEAAAAMDIzMAGgAwABAAAAAQAAAAWgBAABAAAAlgAAAAAAAAACAAEAAgAEAAAAUjk4AAIABwAEAAAAMDEwMAAAAACDfy8cctDT3wAAAGBJREFUKFNdjlESwEAEQxNb6v4nLmp1ur7kySTgx2wwh17A/4UQsLYXCNYlkAFMTbXyBAB43UsIswIQLgmtVAQphzA0tB2ZkVdMRrRY/GFfS3isOzZwy7yaBr71gJkDuD8oPgYk76kGsAAAAABJRU5ErkJggg==",Gold3:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAeUExURfrqLvfEMbJkEeKRBP/3nf/6rXYzDP////TGPQAAAO9Un4EAAAAKdFJOU////////////wCyzCzPAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQBQYWludC5ORVQgNS4xLjEyEwFHdAAAALhlWElmSUkqAAgAAAAFABoBBQABAAAASgAAABsBBQABAAAAUgAAACgBAwABAAAAAgAAADEBAgARAAAAWgAAAGmHBAABAAAAbAAAAAAAAABgAAAAAQAAAGAAAAABAAAAUGFpbnQuTkVUIDUuMS4xMgAAAwAAkAcABAAAADAyMzABoAMAAQAAAAEAAAAFoAQAAQAAAJYAAAAAAAAAAgABAAIABAAAAFI5OAACAAcABAAAADAxMDAAAAAA2aealcm3C18AAABrSURBVChTVY9BEsAgCAOTYGn9/4cbQadTDhDCiorZceoRFFtsI0RFqW1QOEgZ0LignjkHV89IrlMwLl73AJX52DDKAffBUKIJ0L2iidqxpjo7Vkq/w3jpykzfUWobkcrfS438//LVT3TM+QI8gQZT4TbUWAAAAABJRU5ErkJggg==",Emerald1:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAeUExURQ1mPm3bg5Dbr1nWVf///wg/PM332h+oOwp/VAAAALp4FuYAAAAKdFJOU////////////wCyzCzPAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQBQYWludC5ORVQgNS4xLjEyEwFHdAAAALhlWElmSUkqAAgAAAAFABoBBQABAAAASgAAABsBBQABAAAAUgAAACgBAwABAAAAAgAAADEBAgARAAAAWgAAAGmHBAABAAAAbAAAAAAAAABgAAAAAQAAAGAAAAABAAAAUGFpbnQuTkVUIDUuMS4xMgAAAwAAkAcABAAAADAyMzABoAMAAQAAAAEAAAAFoAQAAQAAAJYAAAAAAAAAAgABAAIABAAAAFI5OAACAAcABAAAADAxMDAAAAAA2aealcm3C18AAABkSURBVChTXcwLDsAgCAPQAg7s/S88wE+WkWjoEwR/deA+7AbyfQEIzdPWYBgqsOcAMVxMOhegskdKUa4OV3HXaRYpPRHmqjP2RF0xK1fbkP9H5iUNDyv1xlphw6oNPPnCrR+QL51SBxvzZgcFAAAAAElFTkSuQmCC",Emerald2:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAeUExURQ1mPm3bg5Dbr1nWVf///wg/PM332h+oOwp/VAAAALp4FuYAAAAKdFJOU////////////wCyzCzPAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQBQYWludC5ORVQgNS4xLjEyEwFHdAAAALhlWElmSUkqAAgAAAAFABoBBQABAAAASgAAABsBBQABAAAAUgAAACgBAwABAAAAAgAAADEBAgARAAAAWgAAAGmHBAABAAAAbAAAAAAAAABgAAAAAQAAAGAAAAABAAAAUGFpbnQuTkVUIDUuMS4xMgAAAwAAkAcABAAAADAyMzABoAMAAQAAAAEAAAAFoAQAAQAAAJYAAAAAAAAAAgABAAIABAAAAFI5OAACAAcABAAAADAxMDAAAAAA2aealcm3C18AAABrSURBVChTXY4BDsAgCAMLKMj/P7zC1CyrMaEHRZE/HXAbbyHg6aoBkFDebjYwDBXY3EASw8VksmqA8h4kNcLocBV3XWZB0hNhrrpiT9SOWOXPDr4yg74CG8ws14kGTBF8flrqbumAqx/IfAB5Egbb0H0FdAAAAABJRU5ErkJggg==",Emerald3:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAeUExURc332pDbrw1mPm3bg1nWVf///wg/PB+oOwp/VAAAAHZgrakAAAAKdFJOU////////////wCyzCzPAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAAGXRFWHRTb2Z0d2FyZQBQYWludC5ORVQgNS4xLjEyEwFHdAAAALhlWElmSUkqAAgAAAAFABoBBQABAAAASgAAABsBBQABAAAAUgAAACgBAwABAAAAAgAAADEBAgARAAAAWgAAAGmHBAABAAAAbAAAAAAAAABgAAAAAQAAAGAAAAABAAAAUGFpbnQuTkVUIDUuMS4xMgAAAwAAkAcABAAAADAyMzABoAMAAQAAAAEAAAAFoAQAAQAAAJYAAAAAAAAAAgABAAIABAAAAFI5OAACAAcABAAAADAxMDAAAAAA2aealcm3C18AAABtSURBVChTTY4LDsAgCEMpMJD7X3jF31ZjbF+wKrV0zmOgWGYDU67pJlAtBbde4PrA1GMDK33E3IKuAbSzJEmwWYQRJoLhniFrIl2AkWtiduTovDv6lUhmkgOiOsUFvEXw+ymF7pva4J6fWap6AWLzBq2Nq2A9AAAAAElFTkSuQmCC",Diamond1:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAhUExURQpbYNX/9v///6H76Ert2Szg2Biblw5HPiDFtRuJkQAAACPUVCIAAAALdFJOU/////////////8ASk8B8gAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIDUuMS4xMhMBR3QAAAC4ZVhJZklJKgAIAAAABQAaAQUAAQAAAEoAAAAbAQUAAQAAAFIAAAAoAQMAAQAAAAIAAAAxAQIAEQAAAFoAAABphwQAAQAAAGwAAAAAAAAAYAAAAAEAAABgAAAAAQAAAFBhaW50Lk5FVCA1LjEuMTIAAAMAAJAHAAQAAAAwMjMwAaADAAEAAAABAAAABaAEAAEAAACWAAAAAAAAAAIAAQACAAQAAABSOTgAAgAHAAQAAAAwMTAwAAAAANmnmpXJtwtfAAAAYUlEQVQoU13MSw7AIAgEUP4i9z9whYJJy4I4b4gQvxm4RT8Avw0Q01S1iEX7Jnf2iGyrAUiQWVx2CgQwqp9sril5ccTMVP29SDmt7MoFAVvF64eGWD65IdbkgZh84c4PIh4l/QgkT6ZMLQAAAABJRU5ErkJggg==",Diamond2:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAhUExURQpbYBibl9X/9iDFtf///6H76Ert2Szg2A5HPhuJkQAAAIML7kUAAAALdFJOU/////////////8ASk8B8gAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIDUuMS4xMhMBR3QAAAC4ZVhJZklJKgAIAAAABQAaAQUAAQAAAEoAAAAbAQUAAQAAAFIAAAAoAQMAAQAAAAIAAAAxAQIAEQAAAFoAAABphwQAAQAAAGwAAAAAAAAAYAAAAAEAAABgAAAAAQAAAFBhaW50Lk5FVCA1LjEuMTIAAAMAAJAHAAQAAAAwMjMwAaADAAEAAAABAAAABaAEAAEAAACWAAAAAAAAAAIAAQACAAQAAABSOTgAAgAHAAQAAAAwMTAwAAAAANmnmpXJtwtfAAAAbklEQVQoU13NRwIEIQgEQILE/z94CauH6ZMUCJCfXHiNfSAQ4LwWGI4c0AdatRoB/wG7TyTo/asAjpKIsoYPgJBx1cjW0hMliGjGO1E7pLoafHfU1TDl8LnbkOpc9VxdSPSY+cpCZu+bXHj5QOYP7HMHsGrQknMAAAAASUVORK5CYII=",Diamond3:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAhUExURUrt2SDFtQpbYBibl9X/9v///6H76Czg2A5HPhuJkQAAAPc49zgAAAALdFJOU/////////////8ASk8B8gAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIDUuMS4xMhMBR3QAAAC4ZVhJZklJKgAIAAAABQAaAQUAAQAAAEoAAAAbAQUAAQAAAFIAAAAoAQMAAQAAAAIAAAAxAQIAEQAAAFoAAABphwQAAQAAAGwAAAAAAAAAYAAAAAEAAABgAAAAAQAAAFBhaW50Lk5FVCA1LjEuMTIAAAMAAJAHAAQAAAAwMjMwAaADAAEAAAABAAAABaAEAAEAAACWAAAAAAAAAAIAAQACAAQAAABSOTgAAgAHAAQAAAAwMTAwAAAAANmnmpXJtwtfAAAAc0lEQVQoU0WOWQLEIAhDw1JA7n/gYbGdfGh4BBS5eu/XENOaC4SVZdwC4sce3l6fqBquO1VAuq9qEj2FzkPNQDhRGYBNnaoW8hOYRBERcadJ9A6rLg7dHf3qcVDnL0gEVb1/HZASZ/KlBTn7Rhd899+sMn+v6Ac2krBtuwAAAABJRU5ErkJggg==",Netherite:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAqUExURU8ocqhkvDQaURgNKy0bSdt/0IhOowoADx0JOlU3d0Ypdfeq4jUlTwAAAOYfWlsAAAAOdFJOU/////////////////8ARcDcyAAAAAlwSFlzAAAOwwAADsMBx2+oZAAAABl0RVh0U29mdHdhcmUAUGFpbnQuTkVUIDUuMS4xMhMBR3QAAAC4ZVhJZklJKgAIAAAABQAaAQUAAQAAAEoAAAAbAQUAAQAAAFIAAAAoAQMAAQAAAAIAAAAxAQIAEQAAAFoAAABphwQAAQAAAGwAAAAAAAAAYAAAAAEAAABgAAAAAQAAAFBhaW50Lk5FVCA1LjEuMTIAAAMAAJAHAAQAAAAwMjMwAaADAAEAAAABAAAABaAEAAEAAACWAAAAAAAAAAIAAQACAAQAAABSOTgAAgAHAAQAAAAwMTAwAAAAANmnmpXJtwtfAAAAbUlEQVQoUzWOCQ7AIAgEOUSrLf//blnAjUZnslHIK/fMC5OTxOYWyayjDDXbbBOUbDzXgz6WTAuzTxiIoRvMRxSGhsqZ9torOw0aYdhkf9XwMpdDRGdpc/4SczxLi3OONs0QZZpTIHgvc0XH/QcJnAgqluhMxAAAAABJRU5ErkJggg==",Unrated:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAASUExURQAAABYWFj09Pf///yYmJgAAAB9L6EsAAAAGdFJOU///////ALO/pL8AAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAZdEVYdFNvZnR3YXJlAFBhaW50Lk5FVCA1LjEuMTITAUd0AAAAuGVYSWZJSSoACAAAAAUAGgEFAAEAAABKAAAAGwEFAAEAAABSAAAAKAEDAAEAAAACAAAAMQECABEAAABaAAAAaYcEAAEAAABsAAAAAAAAAGAAAAABAAAAYAAAAAEAAABQYWludC5ORVQgNS4xLjEyAAADAACQBwAEAAAAMDIzMAGgAwABAAAAAQAAAAWgBAABAAAAlgAAAAAAAAACAAEAAgAEAAAAUjk4AAIABwAEAAAAMDEwMAAAAADZp5qVybcLXwAAAFBJREFUKFNdjtsOADAEQ+v2/788pLaMh2oPEYhVA+6ABvJPIDqkG8TMSEozqytJCsTVxc2bgBnW+jYm80Ym5gZFeIEgyf9HEZoBtz8ztUDEAQi1A+c69CKGAAAAAElFTkSuQmCC"};
+const BANDS=[[0,"Coal 1"],[400,"Coal 2"],[500,"Coal 3"],[600,"Iron 1"],[700,"Iron 2"],[800,"Iron 3"],[900,"Gold 1"],[1000,"Gold 2"],[1100,"Gold 3"],[1200,"Emerald 1"],[1300,"Emerald 2"],[1400,"Emerald 3"],[1500,"Diamond 1"],[1650,"Diamond 2"],[1800,"Diamond 3"],[2000,"Netherite"]];
+function rk(e){if(e==null)return{n:"Unrated",k:"Unrated"};let b=BANDS[0];for(const x of BANDS)if(e>=x[0])b=x;return{n:b[1],k:b[1].replace(" ","")}}
+function icon(e,s){const r=rk(e);s=s||22;return `<img class="ri" width="${s}" height="${s}" src="${ICN[r.k]}" alt="${r.n}" title="${r.n}${e!=null?" · "+e:""}" loading="lazy" onerror="this.style.visibility='hidden'">`}
+
+/* ---------- country display ---------- */
+function flag(code){
+  const c=String(code||"").trim().toLowerCase();
+  if(!/^[a-z]{2}$/.test(c))return "";
+  return `<span class="country-flag" role="img" aria-label="${esc(cname(c))} flag" title="${esc(cname(c))}" style="background-image:url('https://flagcdn.com/${c}.svg')"></span>`;
+}
+function countryCode(u){return String(u&&u.country||"").toUpperCase()}
+// The API has used different supporter-related field names across versions; only mark explicit supporter data.
+function isSupporter(u){
+  if(!u||typeof u!=="object")return false;
+  const keys=["supporterTier","supporter_tier","supporterLevel","supporter_level","supporterStatus","supporter_status","isSupporter","is_supporter","supporter","supporterBadge","supporter_badge"];
+  for(const k of keys){if(!(k in u))continue;const v=u[k];if(v===true||(typeof v==="number"&&v>0)||(typeof v==="string"&&/^(yes|true|active|supporter|tier\s*[1-9]|[1-9])$/i.test(v.trim())))return true;if(v&&typeof v==="object"&&(v.active===true||v.enabled===true||v.tier||v.level||v.name))return true;}
+  return false;
+}
+function supporterName(u,name){return isSupporter(u)?`<span class="supporter-name">${esc(name||u.nickname||"—")}</span> <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:esc(name||u.nickname||"—")}
+function countryOptions(){
+  const countries=[];
+  for(let a=65;a<=90;a++)for(let b=65;b<=90;b++){
+    const c=String.fromCharCode(a,b),n=cname(c);
+    if(n!==c&&n&&!/Unknown Region/i.test(n))countries.push({code:c,name:n});
+  }
+  countries.sort((a,b)=>a.name.localeCompare(b.name,"en",{sensitivity:"base"}));
+  return '<option value="">All countries</option>'+countries.map(({code,name})=>
+    `<option value="${code}" ${T.country===code?"selected":""}>${esc(name)}</option>`).join("");
+}
+/* ---------- data layer ---------- */
+const MT={ranked:2,private:3};
+const UC={},MC={};
+function getUser(n){const k=String(n).toLowerCase();if(!UC[k]){UC[k]=get(API+"/users/"+enc(n));UC[k].catch(()=>{delete UC[k]})}return UC[k]}
+function fetchMatches(who,type,before,count,sort,season){return get(API+"/users/"+enc(who)+"/matches?count="+count+"&type="+type+(before?"&before="+before:"")+(sort?"&sort="+sort:"")+(season?"&season="+season:""))}
+const Q=[];let running=0;
+function enqueue(fn){Q.push(fn);pump()}
+function pump(){while(running<3&&Q.length){running++;Q.shift()().then(()=>{},()=>{}).then(()=>{running--;pump()})}}
+const stat=(u,scope,k)=>{const o=u.statistics&&u.statistics[scope];return o&&o[k]&&o[k].ranked!=null?o[k].ranked:null};
+
+function me(x,uid){return(x.changes||[]).find(c=>c.uuid===uid)}
+function info(x,uid){
+  const opp=(x.players||[]).find(p=>p.uuid!==uid)||{},c=me(x,uid)||{};
+  const dec=!!x.decayed,draw=!x.result||!x.result.uuid,won=!draw&&x.result.uuid===uid;
+  return{opp,c,draw,won,dec,res:dec?"DECAY":draw?"DRAW":won?"WIN":"LOSS",time:x.result&&x.result.time>0?fmt(x.result.time):"—",change:c.change,
+    seed:String((x.seed&&x.seed.overworld)||"—").replace(/_/g," "),bastion:String((x.seed&&x.seed.nether)||"").replace(/_/g," ")}
+}
+
+/* ---------- router ---------- */
+const PAGE=30;
+let P=null,pts=[],sel=null,selId=null,io=null,lastName="Feinberg";
+function setTab(v){[...document.querySelectorAll("#tabs button")].forEach(b=>b.classList.toggle("on",b.dataset.t===v))}
+function stopProfile(){P=null;if(io){io.disconnect();io=null}}
+const go=h=>{if(location.hash===h)route();else location.hash=h};
+function route(){
+  closeModal();if(lio){lio.disconnect();lio=null}
+  const raw=location.hash.slice(1);
+  const dec=s=>{try{return decodeURIComponent(s)}catch(e){return s}};
+  if(!raw||raw.indexOf("!lb")===0||raw.indexOf("!players")===0){const p=raw.split("/");return showLeaderboard(p[1]||"season")}
+  showProfile(dec(raw));
+}
+$("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.t==="profile")go("#"+enc(lastName));else go("#!lb/season")};
+$("logo").onclick=e=>{e.preventDefault();go("#!lb/season")};
+$("f").addEventListener("submit",e=>{e.preventDefault();const v=$("q").value.trim();if(v)go("#"+enc(v))});
+window.addEventListener("hashchange",route);
+
+/* ---------- profile ---------- */
+function showProfile(name){
+  // Reset profile-only country styling immediately so it cannot leak between profiles.
+  $("out").classList.remove("christmas-profile");
+  document.body.classList.remove("christmas-profile-bg");
+  setTab("profile");$("q").value=name;lastName=name;
+  if(io){io.disconnect();io=null}
+  $("out").innerHTML='<div class="msg skel">Loading '+esc(name)+'…</div>';
+  const tok={name};P=tok;
+  getUser(name).then(u=>{
+    if(P!==tok)return;
+    const mk=()=>({list:[],done:false,p:null,err:null});
+    Object.assign(tok,{u,baseUser:u,mode:"ranked",full:false,profileSeason:"current",st:{ranked:mk(),private:mk()}});
+    sel=null;selId=null;renderProfile();
+  }).catch(e=>{if(P===tok)$("out").innerHTML='<div class="msg">Couldn’t load “'+esc(name)+'”.<br>'+esc(e.message)+'</div>'});
+}
+function privTiles(list,uid){
+  const wins=list.filter(x=>x.result&&x.result.uuid===uid),ts=wins.map(x=>x.result.time).filter(t=>t>0);
+  const best=ts.length?Math.min(...ts):null,avg=ts.length?ts.reduce((a,b)=>a+b,0)/ts.length:null;
+  return[["Matches loaded",list.length,P.st.private.done?"all loaded":"scroll for more"],["Wins",wins.length,pct(wins.length,list.length)+" win rate"],["Best time",fmt(best),"fastest win loaded"],["Avg. finish",fmt(avg),ts.length+" wins timed"],["With VOD",list.filter(x=>x.vod&&x.vod.length).length,"streamed matches"]];
+}
+function renderTiles(){
+  const t=$("tiles");if(!t||!P||!P.u)return;
+  const u=P.u,s=(u.statistics&&u.statistics.season)||{};
+  const g=k=>s[k]&&s[k].ranked!=null?s[k].ranked:null;
+  let tiles;
+  if(P.mode==="ranked"){
+    const played=g("playedMatches"),wins=g("wins"),loses=g("loses"),forf=g("forfeits"),comp=g("completions");
+    const draws=g("draws")!=null?g("draws"):Math.max(0,(played||0)-(wins||0)-(loses||0));
+    const avg=comp?g("completionTime")/comp:null,ws=g("currentWinStreak"),bws=g("highestWinStreak");
+    tiles=[["Win rate",pct(wins,played),(wins||0)+"W · "+(loses||0)+"L · "+draws+"D"],["Matches",played!=null?played:"—","this season"],["Best time",fmt(g("bestTime")),"season PB"],["Avg. finish",fmt(avg),(comp||0)+" completions"],["Win streak",ws!=null?ws:"—","best "+(bws!=null?bws:"—")],["Forfeit rate",pct(forf,played),(forf||0)+" forfeits"]];
+  }else tiles=privTiles(P.st.private.list,u.uuid);
+  t.innerHTML=tiles.map(x=>`<div class="tile"><div class="l">${esc(x[0])}</div><div class="v">${esc(x[1])}</div><div class="d">${esc(x[2])}</div></div>`).join("");
+}
+function rowHTML(x){
+  const u=P.u,i=info(x,u.uuid),r=P.mode==="ranked",opp=i.opp,vod=x.vod&&x.vod.length;
+  const ch=i.change;
+  // In private-room matches, summarize large lobbies as winner + other players.
+  const roomPlayers=x.players||[];
+  const roomWinner=!r&&roomPlayers.length>2&&x.result&&x.result.uuid?roomPlayers.find(p=>p.uuid===x.result.uuid):null;
+  const shownOpp=roomWinner||opp;
+  const roomExtra=roomWinner?Math.max(0,roomPlayers.length-2):0;
+  return `<tr class="pt" data-id="${x.id}"><td><span class="res ${i.draw||i.dec?"d":i.won?"w":"l"}">${i.res}</span></td>`+
+  `<td><span class="who">${icon(shownOpp.eloRate,18)}<a href="#${enc(shownOpp.nickname||"")}">${esc(shownOpp.nickname||"—")}</a>${roomWinner?` <span class="mut" title="${roomExtra} additional player${roomExtra===1?"":"s"}">+${roomExtra}</span>`:""}</span></td>`+
+  (r?`<td>${opp.eloRate!=null?opp.eloRate:"—"}</td>`:"")+
+  `<td>${i.time}</td>`+
+  (r?`<td class="${ch>0?"up":"down"}">${ch==null?"—":(ch>0?"+":"")+ch}</td>`:"")+
+  `<td class="mut">${esc(i.seed)}</td><td>${vod?"📺":""}</td><td class="mut">${ago(x.date)}</td></tr>`;
+}
+let twitchStatusTimer=null;
+function startTwitchStatus(login){
+  if(twitchStatusTimer){clearInterval(twitchStatusTimer);twitchStatusTimer=null;}
+  const dot=document.querySelector("[data-twitch-live-dot]"),label=document.querySelector("[data-twitch-live-label]");
+  if(!login||!dot)return;
+  const setLive=live=>{const d=document.querySelector("[data-twitch-live-dot]"),l=document.querySelector("[data-twitch-live-label]");if(d)d.classList.toggle("is-live",!!live);if(l)l.classList.toggle("is-live",!!live);};
+  const check=async()=>{
+    try{const response=await fetch("/api/twitch-live?login="+encodeURIComponent(login.replace(/^@/,"")),{headers:{Accept:"application/json"},cache:"no-store"});if(!response.ok)throw new Error("Twitch status unavailable");const data=await response.json();setLive(data.live===true);}
+    catch(_){setLive(false);}
+  };
+  check();twitchStatusTimer=setInterval(check,60000);
+}
+
+function renderProfile(){
+  const u=P.u,uid=u.uuid,sn=(u.statistics&&u.statistics.season)||{};
+  const at=k=>stat(u,"total",k),atc=at("completions"),att=at("completionTime");
+  const nz=x=>x!=null?x.toLocaleString():"—";
+  const pl=(l,v)=>`<span class="pill">${l} <b>${v}</b></span>`;
+  const selectedSeason=Number(P.profileSeason)||T.currentSeason;
+  const historicalSeason=selectedSeason!==T.currentSeason;
+  const seasonStanding=u.seasonResult||{};
+  // Historical profiles must never fall back to the live/current-season Elo.
+  const elo=historicalSeason?(seasonStanding.last?.eloRate??null):u.eloRate;
+  const peak=seasonStanding.highest??seasonStanding.highestEloRate??null;
+  const r=rk(elo),rkd=P.mode==="ranked";
+  const tier=elo!=null?rk(elo).n.split(" ")[0].toLowerCase():"none";
+  const connections=u.connections||{};
+  const twitch=connections.twitch&&typeof connections.twitch==="object"?String(connections.twitch.name||"").trim():"";
+  const discord=connections.discord&&typeof connections.discord==="object"?String(connections.discord.name||"").trim():"";
+  const twitchUrl=twitch?"https://www.twitch.tv/"+encodeURIComponent(twitch.replace(/^@/,"")):"";
+  const socials=(twitch||discord)?`<div class="social-links">${twitch?`<a class="social-link" href="${esc(twitchUrl)}" target="_blank" rel="noopener noreferrer" title="Open ${esc(twitch)} on Twitch"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M4 2 1.5 6v15h5v3h4l3-3h4l5-5V2H4zm16 13-3 3h-5l-3 3v-3H4V4h16v11zM9 7h2v6H9zm5 0h2v6h-2z"/></svg><span class="social-name">${esc(twitch)}</span><span class="twitch-live-dot" data-twitch-live-dot aria-label="Live on Twitch" title="Live on Twitch"></span><span class="twitch-live-label" data-twitch-live-label>LIVE</span></a>`:""}${discord?`<button type="button" class="social-link discord" data-copy-discord="${esc(discord)}" title="Click to copy Discord username"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M19.7 5.2A18.4 18.4 0 0 0 15.2 3.8l-.6 1.2a16.8 16.8 0 0 0-5.2 0l-.6-1.2a18.3 18.3 0 0 0-4.5 1.4C1.4 9.4.6 13.5 1 17.6a18.5 18.5 0 0 0 5.5 2.8l1.2-2a11.8 11.8 0 0 1-1.9-.9l.5-.4a13.1 13.1 0 0 0 11.4 0l.5.4a12.4 12.4 0 0 1-1.9.9l1.2 2a18.4 18.4 0 0 0 5.5-2.8c.5-4.8-.8-8.9-3.3-12.4ZM8.6 14.7c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.8 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg><span class="social-name" data-discord-label>${esc(discord)}</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg></button>`:""}</div>`:"";
+  $("out").innerHTML=
+  `<section class="hero"><img class="avatar" alt="" src="https://mc-heads.net/avatar/${esc(uid)}/84">
+   <div><h1>${flag(u.country)?flag(u.country)+" ":""}${supporterName(u,u.nickname)}</h1>${socials}<div class="sub">${u.country?`<span class="pill">${esc(cname(u.country))}</span>`:""}${(historicalSeason?(seasonStanding.last?.eloRank??null):u.eloRank)!=null?`<span class="pill">Rank #${historicalSeason?seasonStanding.eloRank:u.eloRank}</span>`:""}${pl("All-time matches",nz(at("playedMatches")))}${pl("Wins",nz(at("wins")))}${pl("Completions",nz(atc))}${pl("PB",fmtP(at("bestTime")))}${pl("Average",atc&&att!=null?fmtP(att/atc):"—")}</div></div>
+   <div class="elo"><div class="mut" style="font-size:12px;margin-bottom:5px">${historicalSeason?"End-of-season Elo":"Current Elo"}</div><div class="n t-${tier}">${elo!=null?elo.toLocaleString():"—"}</div><div class="r">${elo!=null?icon(elo,26):""}<span>${elo!=null?r.n:"Not available"} · Peak Elo ${peak!=null?peak.toLocaleString():"—"}</span></div></div></section>
+   <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select><div class="seg" id="pm"><button data-pm="ranked" class="${rkd?"on":""}">Ranked</button><button data-pm="private" class="${rkd?"":"on"}">Private rooms</button></div></div>
+   <div class="tiles" id="tiles"></div>
+   <div class="main">
+    <div class="card" id="cardChart"><h2>Elo history <span id="gsub"></span><span class="seg" id="gm" style="min-width:210px"><button data-g="recent" class="${P.full?"":"on"}">Recent 50</button><button data-g="full" class="${P.full?"on":""}">Full season</button></span></h2><div id="gArea"></div></div>
+    <div class="card" id="cardTable"><h2>${rkd?"Ranked matches":"Private room matches"} <span id="cnt2"></span></h2><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th>${rkd?"<th>Opp. Elo</th>":""}<th>Time</th>${rkd?"<th>Elo</th>":""}<th>Overworld</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div><div class="hint">Click a match for splits and VODs.</div></div>
+   </div>`;
+  startTwitchStatus(twitch);
+  const country=String(u.country||"").trim().toUpperCase();
+  const isChristmasIsland=country==="CX" || /christmas island/i.test(cname(country));
+  $("out").classList.toggle("christmas-profile", isChristmasIsland);
+  document.body.classList.toggle("christmas-profile-bg", isChristmasIsland);
+  const st=P.st[P.mode];
+  $("tb").innerHTML=st.list.map(rowHTML).join("");
+  renderTiles();layout();sentUI();refreshGraph();setupIO();
+  if(!st.list.length&&!st.done&&!st.p&&!st.err)loadMore(P.mode);
+}
+function sentUI(){
+  const s=$("sent");if(!s||!P||!P.st)return;
+  const st=P.st[P.mode];
+  s.textContent=st.err?"Couldn’t load more — click to retry":st.done?(st.list.length?"End of list · "+st.list.length+" matches":"No "+(P.mode==="ranked"?"ranked":"private room")+" matches found"):"Loading more…";
+  s.dataset.retry=st.err?"1":"";
+  const c=$("cnt2");if(c)c.textContent=st.list.length+" loaded"+(st.done?"":" · scroll for more");
+}
+function setupIO(){
+  if(io){io.disconnect();io=null}
+  const sc=$("sc"),s=$("sent");if(!sc||!s)return;
+  const need=()=>{const st=P&&P.st&&P.st[P.mode];if(st&&!st.done&&!st.err&&!st.p)loadMore(P.mode)};
+  if(window.IntersectionObserver){
+    io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))need()},{root:sc,rootMargin:"200px"});
+    io.observe(s);
+  }else{
+    sc.onscroll=()=>{if(sc.scrollTop+sc.clientHeight>sc.scrollHeight-200)need()};
+  }
+}
+function kick(){const s=$("sent");if(io&&s){io.unobserve(s);io.observe(s)}}
+function loadMore(mode,count){
+  const tok=P,st=tok.st[mode];
+  if(st.p)return st.p;
+  if(st.done)return Promise.resolve();
+  st.err=null;
+  const n=count||PAGE,last=st.list.length?st.list[st.list.length-1].id:null;
+  sentUI();
+  st.p=fetchMatches(tok.u.uuid,MT[mode],last,n,null,mode==="ranked"?Number(tok.profileSeason)||null:null).then(r=>{
+    st.p=null;
+    const have=new Set(st.list.map(x=>x.id)),add=r.filter(x=>!have.has(x.id));
+    if(!add.length)st.done=true;
+    st.list.push(...add);
+    if(P!==tok)return;
+    if(tok.mode===mode&&$("tb"))$("tb").insertAdjacentHTML("beforeend",add.map(rowHTML).join(""));
+    if(tok.mode===mode){
+      renderTiles();sentUI();kick();
+      if(mode==="ranked"&&(tok.full||st.list.length-add.length<50))refreshGraph();
+    }
+  }).catch(e=>{st.p=null;st.err=e.message||"error";if(P===tok)sentUI()});
+  return st.p;
+}
+async function setFull(v){
+  const tok=P,st=tok.st.ranked,btn=document.querySelector('#gm [data-g="full"]');
+  if(v&&!st.done){
+    while(!st.done&&!st.err&&P===tok){
+      if(btn)btn.textContent="Loading… "+st.list.length;
+      await loadMore("ranked",100);
+    }
+    if(P!==tok)return;
+    if(btn)btn.textContent="Full season";
+  }
+  tok.full=v;
+  [...document.querySelectorAll("#gm button")].forEach(b=>b.classList.toggle("on",(b.dataset.g==="full")===v));
+  refreshGraph();
+}
+
+/* ---------- elo graph ---------- */
+function buildPoints(list,u){
+  if(u.eloRate==null)return[];
+  let cur=u.eloRate;const a=[];
+  list.forEach(x=>{const c=me(x,u.uuid);if(c&&c.change!=null){a.push({id:x.id,m:x,elo:cur,before:cur-c.change});cur-=c.change}});
+  a.reverse();
+  return[{base:true,elo:a.length?a[0].before:cur}].concat(a);
+}
+function refreshGraph(){
+  if(!P||!P.st||P.mode!=="ranked"||!$("gArea"))return;
+  const st=P.st.ranked,list=P.full?st.list:st.list.slice(0,50);
+  pts=buildPoints(list,P.u);
+  sel=null;if(selId!=null){const k=pts.findIndex(p=>String(p.id)===String(selId));if(k>0)sel=k}
+  const ga=$("gArea");
+  $("gsub").textContent=Math.max(pts.length-1,0)+" ranked matches"+(P.full?(st.done?" · season start → now":" · partial"):"")+" · hover or click";
+  if(pts.length<3){ga.innerHTML='<div class="msg">'+((st.done||st.err)?"Not enough ranked matches yet.":"Loading…")+'</div>';return}
+  ga.innerHTML='<div class="chartbox" id="cb"></div><div id="detail">Click a point on the graph to inspect that match.</div>';
+  chart();if(sel!=null)showDetail(sel);
+}
+const W=900,H=280,PD=38;
+let X,Y;
+function graphRankColor(elo){
+  const name=rk(elo).n;
+  if(name.startsWith("Netherite"))return "#b56cff";
+  if(name.startsWith("Diamond"))return "#35d5e8";
+  if(name.startsWith("Emerald"))return "#35d07f";
+  if(name.startsWith("Gold"))return "#f5c542";
+  if(name.startsWith("Iron"))return "#b8c2d1";
+  if(name.startsWith("Coal"))return "#737b8c";
+  return "#8b91a1";
+}
+function chart(){
+  const d=pts.map(p=>p.elo),mn=Math.min(...d)-15,mx=Math.max(...d)+15;
+  X=i=>PD+i*(W-PD*1.5)/(d.length-1);Y=v=>H-PD-(v-mn)/(mx-mn)*(H-PD*1.5);
+  const line=d.map((v,i)=>X(i)+","+Y(v)).join(" ");let grid="";
+  for(let k=0;k<4;k++){const v=mn+(mx-mn)*k/3;grid+=`<line x1="${PD}" x2="${W-PD/2}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="0" y="${Y(v)+4}" fill="var(--muted)" font-size="11">${Math.round(v)}</text>`}
+  const segments=pts.slice(1).map((p,j)=>{const i=j+1;return `<line x1="${X(i-1)}" y1="${Y(pts[i-1].elo)}" x2="${X(i)}" y2="${Y(p.elo)}" stroke="${graphRankColor((pts[i-1].elo+p.elo)/2)}" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>`}).join("");
+  const dots=pts.length>250?"":pts.map((p,i)=>p.base?"":`<circle cx="${X(i)}" cy="${Y(p.elo)}" r="3.5" fill="${graphRankColor(p.elo)}"/>`).join("");
+  const currentColor=graphRankColor(d[d.length-1]);
+  $("cb").innerHTML=`<svg id="sv" viewBox="0 0 ${W} ${H}"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${currentColor}" stop-opacity=".32"/><stop offset="1" stop-color="${currentColor}" stop-opacity="0"/></linearGradient></defs>${grid}<polygon points="${X(0)},${H-PD} ${line} ${X(d.length-1)},${H-PD}" fill="url(#g)"/>${segments}${dots}
+    <line id="hl" y1="${PD/2}" y2="${H-PD}" stroke="var(--muted)" stroke-dasharray="3 4" opacity="0"/><circle id="hd" r="7" fill="none" stroke="var(--text)" stroke-width="2" opacity="0"/><circle id="sd" r="9" fill="none" stroke="${currentColor}" stroke-width="3" opacity="0"/></svg><div id="tip"></div>`;
+  const sv=$("sv");
+  const near=e=>{const r=sv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W;let b=0,bd=1e9;pts.forEach((p,i)=>{const dd=Math.abs(X(i)-x);if(dd<bd){bd=dd;b=i}});return b};
+  sv.onpointermove=e=>hover(near(e));
+  sv.onpointerleave=()=>hover(null);
+  sv.onclick=e=>select(near(e),true);
+  if(sel!=null)mark();
+}
+function hover(i){
+  const hl=$("hl"),hd=$("hd"),tip=$("tip");if(!hl)return;
+  document.querySelectorAll("tr.hl").forEach(r=>r.classList.remove("hl"));
+  if(i==null||i<0){hl.setAttribute("opacity",0);hd.setAttribute("opacity",0);tip.style.opacity=0;return}
+  const p=pts[i],x=X(i),y=Y(p.elo);
+  hl.setAttribute("x1",x);hl.setAttribute("x2",x);hl.setAttribute("opacity",.6);
+  hd.setAttribute("cx",x);hd.setAttribute("cy",y);hd.setAttribute("stroke",graphRankColor(p.elo));hd.setAttribute("opacity",1);
+  const r=$("sv").getBoundingClientRect(),px=Math.min(Math.max(x/W*r.width,95),r.width-95);
+  tip.style.left=px+"px";tip.style.top=(y/H*r.height)+"px";tip.style.opacity=1;
+  if(p.base){tip.innerHTML=`<b>${icon(p.elo,16)} ${p.elo} Elo</b><span class="m">Start of range</span>`;return}
+  const q=info(p.m,P.u.uuid),ch=q.change;
+  tip.innerHTML=`<b>${q.res} vs ${esc(q.opp.nickname||"?")}</b><span class="m">${icon(p.elo,14)} ${p.before} → ${p.elo} <span class="${ch>0?"up":"down"}">(${ch>0?"+":""}${ch})</span><br>${q.won?"Time "+q.time+" · ":""}${esc(q.seed)} · ${ago(p.m.date)}</span>`;
+  const row=document.querySelector(`tr[data-id="${p.id}"]`);if(row)row.classList.add("hl");
+}
+function mark(){
+  const sd=$("sd");if(!sd)return;
+  if(sel==null){sd.setAttribute("opacity",0);return}
+  sd.setAttribute("cx",X(sel));sd.setAttribute("cy",Y(pts[sel].elo));sd.setAttribute("stroke",graphRankColor(pts[sel].elo));sd.setAttribute("opacity",1);
+}
+function showDetail(i){
+  const p=pts[i],dt=$("detail");if(!p||p.base||!dt)return;
+  const q=info(p.m,P.u.uuid),ch=q.change;
+  dt.className="on";
+  dt.innerHTML=`<b>${q.res} vs ${esc(q.opp.nickname||"?")}</b> (${q.opp.eloRate!=null?q.opp.eloRate+" Elo":"unranked"}) · Elo ${p.before} → ${p.elo} <span class="${ch>0?"up":"down"}">(${ch>0?"+":""}${ch})</span><br><span class="mut">${q.won?"Finish "+q.time+" · ":""}Overworld: ${esc(q.seed)}${q.bastion?" · Bastion: "+esc(q.bastion):""} · ${ago(p.m.date)}</span><br><button class="mini" data-open="${p.id}">Splits &amp; VODs</button>`;
+}
+function select(i,fromChart){
+  if(i==null||i<1||!pts[i])return;
+  sel=i;selId=pts[i].id;mark();showDetail(i);
+  document.querySelectorAll("tr.sel").forEach(r=>r.classList.remove("sel"));
+  const row=document.querySelector(`tr[data-id="${pts[i].id}"]`);
+  if(row){row.classList.add("sel");const sc=$("sc");if(fromChart&&sc&&sc.offsetParent)sc.scrollTo({top:row.offsetTop-sc.clientHeight/2+row.clientHeight/2,behavior:"smooth"})}
+}
+
+/* ---------- match modal: splits + VODs ---------- */
+const SPL=[["story.enter_the_nether","Enter Nether"],["nether.find_bastion","Enter Bastion"],["nether.find_fortress","Enter Fortress"],["projectelo.timeline.blind_travel","Blinded"],["story.follow_ender_eye","Enter Stronghold"],["story.enter_the_end","Enter End"],["projectelo.timeline.dragon_death","Free the End"]];
+const SPN=Object.fromEntries(SPL),SPI=Object.fromEntries(SPL.map((x,i)=>[x[0],i]));
+const nice=t=>SPN[t]||String(t).split(".").pop().replace(/_/g," ").replace(/^./,c=>c.toUpperCase());
+const isCnt=t=>/reset/.test(t)||(/death/.test(t)&&!/dragon/.test(t));
+const tstr=s=>{s=Math.max(0,Math.floor(s));return Math.floor(s/3600)+"h"+Math.floor(s%3600/60)+"m"+(s%60)+"s"};
+const canEmbed=()=>/^https?:$/.test(location.protocol)&&!!location.hostname;
+const embedSrc=(id,s,play)=>`https://player.twitch.tv/?video=v${id}&parent=${enc(location.hostname)}&time=${tstr(s)}&autoplay=${play?"true":"false"}&muted=true`;
+let curM=null;
+function closeModal(){curM=null;const m=$("modal");m.classList.remove("open");m.innerHTML="";document.body.style.overflow=""}
+async function openMatch(id){
+  const md=$("modal");curM=id;md.classList.add("open");document.body.style.overflow="hidden";
+  md.innerHTML=`<div class="mbox"><button class="x" data-close aria-label="Close">[x]</button><div class="msg skel">Loading match #${esc(id)}…</div></div>`;
+  try{
+    const m=await(MC[id]||(MC[id]=get(API+"/matches/"+id)));
+    if(curM!==id)return;
+    md.innerHTML=matchHTML(m);
+    const c=md.querySelector("[data-close]");if(c)c.focus();
+  }catch(e){
+    delete MC[id];
+    if(curM===id)md.innerHTML=`<div class="mbox"><button class="x" data-close aria-label="Close">[x]</button><div class="msg">Couldn’t load match #${esc(id)}.<br>${esc(e.message)}</div></div>`;
+  }
+}
+function vodBox(m,p){
+  const v=(m.vod||[]).find(x=>x.uuid===p.uuid);
+  if(!v)return `<div class="vodbox none"><b>${esc(p.nickname)}</b><span>No public VOD</span></div>`;
+  const idm=String(v.url||"").match(/videos\/(\d+)/),vid=idm&&idm[1];
+  const off=Math.max(0,(m.date||0)-(v.startsAt||0));
+  const link=vid?`https://www.twitch.tv/videos/${vid}?t=${tstr(off)}`:v.url;
+  const body=(vid&&canEmbed())?`<iframe id="vod-${esc(p.uuid)}" data-vid="${vid}" data-off="${off}" src="${embedSrc(vid,off,false)}" allowfullscreen title="VOD of ${esc(p.nickname)}"></iframe>`:`<div class="msg">${vid?"Embedded player isn’t available when this page is opened from a file — use the link above.":"This VOD can’t be embedded — use the link above."}</div>`;
+  return `<div class="vodbox"><div class="vh"><b>${esc(p.nickname)}</b><a href="${esc(link)}" target="_blank" rel="noopener">Open on Twitch ↗</a></div>${body}</div>`;
+}
+function matchHTML(m){
+  const pl=m.players||[],tl=m.timelines||[],win=m.result&&m.result.uuid;
+  const chg=u=>(m.changes||[]).find(c=>c.uuid===u)||{};
+  const typeName=["","Casual","Ranked","Private room","Event"][m.type]||"Match";
+  const pcs=pl.map(p=>{const c=chg(p.uuid),el=c.eloRate!=null?c.eloRate:p.eloRate;
+    return `<div class="pc ${win===p.uuid?"winner":""}"><img class="hd" alt="" src="https://mc-heads.net/avatar/${esc(p.uuid)}/44"><div><b>${icon(el,20)}<a href="#${enc(p.nickname)}" style="color:inherit">${esc(p.nickname)}</a></b><span class="mut">${win===p.uuid?"Winner":win?"Lost":"Draw"}${c.change!=null?` · <span class="${c.change>0?"up":"down"}">${c.change>0?"+":""}${c.change} Elo</span>`:""}</span></div></div>`}).join("");
+  /* splits */
+  const types=[...new Set(tl.map(t=>t.type))].filter(t=>SPN[t]!=null);
+  const minT=t=>Math.min(...tl.filter(x=>x.type===t).map(x=>x.time));
+  types.sort((a,b)=>minT(a)-minT(b)||SPI[a]-SPI[b]);
+  const tm=(u,t)=>{const a=tl.filter(x=>x.uuid===u&&x.type===t).map(x=>x.time);return a.length?Math.min(...a):null};
+  const fin=u=>{const c=(m.completions||[]).find(x=>x.uuid===u);return c?c.time:(win===u&&m.result?m.result.time:null)};
+  let rowsData=types.map(t=>({label:nice(t),vals:pl.map(p=>tm(p.uuid,t))}));
+  const dl=pl.map(p=>tl.filter(x=>x.uuid===p.uuid&&/death/.test(x.type)&&!/dragon/.test(x.type)).map(x=>x.time).sort((a,b)=>a-b));
+  for(let n=0;n<Math.max(0,...dl.map(a=>a.length));n++)rowsData.push({label:"Death "+(n+1),vals:dl.map(a=>a[n]!=null?a[n]:null),death:true});
+  const rt=r=>{const a=r.vals.filter(v=>v!=null);return a.length?Math.min(...a):1e12};rowsData=rowsData.filter(r=>r.vals.some(v=>v!=null)).sort((a,b)=>rt(a)-rt(b));
+  const cntRow=(label,re)=>{const vals=pl.map(p=>tl.filter(x=>x.uuid===p.uuid&&isCnt(x.type)&&re.test(x.type)).length);return vals.some(v=>v)?{label,vals,cnt:true}:null};
+  const extra=[];
+  const cell=(r,i,p)=>{const v=r.vals[i];if(v==null)return `<td class="mut">—</td>`;
+    if(r.cnt)return `<td>${v}</td>`;
+    const others=r.vals.filter((x,j)=>j!==i&&x!=null),f=!r.death&&others.length&&v<Math.min(...others);
+    return `<td class="${f?"f":""}" data-u="${esc(p.uuid)}" data-seek="${v}">${fmtP(v)}</td>`};
+  const lead=r=>{if(r.cnt||r.death||pl.length!==2||r.vals[0]==null||r.vals[1]==null||r.vals[0]===r.vals[1])return `<td class="mut">—</td>`;
+    const a=r.vals[0]<r.vals[1]?0:1,d=Math.abs(r.vals[0]-r.vals[1])/1000;
+    return `<td class="mut">${esc(pl[a].nickname)} +${d.toFixed(d<10?2:1)}s</td>`};
+  const splits=rowsData.length||extra.length?`<table><thead><tr><th>Split</th>${pl.map(p=>`<th>${esc(p.nickname)}</th>`).join("")}${pl.length===2?"<th>Ahead by</th>":""}</tr></thead><tbody>${rowsData.concat(extra).map(r=>`<tr class="${r.cnt?"":"sp"}"><td>${esc(r.label)}</td>${pl.map((p,i)=>cell(r,i,p)).join("")}${pl.length===2?lead(r):""}</tr>`).join("")}</tbody></table><div class="hint">Click a split to jump each VOD to that moment.</div>`:`<div class="msg" style="padding:24px">No split data recorded for this match.</div>`;
+  const anyVod=(m.vod||[]).length>0;
+  const seed=m.seed&&m.seed.overworld?String(m.seed.overworld).replace(/_/g," ")+(m.seed.nether?" · "+String(m.seed.nether).replace(/_/g," ")+" bastion":""):"";
+  return `<div class="mbox"><button class="x" data-close aria-label="Close">[x]</button>
+   <h2>${typeName} match #${esc(m.id)}</h2>
+   <div class="mut">${m.date?new Date(m.date*1000).toLocaleString():""}${seed?" · "+esc(seed):""}${m.forfeited?" · forfeited":""}</div>
+   <div class="pcs">${pcs}</div>
+   <div class="sec3"><h3>VODs</h3>${anyVod?`<div class="vods">${pl.map(p=>vodBox(m,p)).join("")}</div>`:`<div class="vodbox none"><span>No public VODs for this match.</span></div>`}</div>
+   <div class="sec3"><h3>Splits</h3>${splits}</div></div>`;
+}
+function seekVod(uuid,ms){
+}
+
+function layout(){const c=$("cardChart");if(c&&P)c.style.display=P.mode==="ranked"?"":"none"}
+
+/* ---------- leaderboard (season / all time, infinite scroll) ---------- */
+const T={sort:{k:"elo",d:-1},shown:20,lb:null,globalLb:null,countryLbCache:{},view:"season",country:"",currentSeason:12,requestId:0,historical:null,histCache:{},histLoading:new Set()};
+const RC={};
+let lio=null;
+function calc(u,sc){
+  const p=stat(u,sc,"playedMatches"),w=stat(u,sc,"wins"),c=stat(u,sc,"completions"),t=stat(u,sc,"completionTime");
+  return{games:p,wins:w,wr:p?w/p*100:null,pb:stat(u,sc,"bestTime"),avg:c&&t!=null?t/c:null};
+}
+function loadRow(name){
+  const k=name.toLowerCase();if(RC[k])return;
+  const r=RC[k]={name,state:"q"};
+  enqueue(async()=>{
+    try{
+      const u=await getUser(name);
+      Object.assign(r,{name:u.nickname,uuid:u.uuid,country:countryCode(u),elo:u.eloRate,rank:u.eloRank,season:calc(u,"season"),all:calc(u,"total"),state:"d"});
+    }catch(e){r.state="e";r.err=e.message}
+    tick();
+  });
+}
+let raf=0;
+function tick(){if(raf||!$("ptab"))return;raf=requestAnimationFrame(()=>{raf=0;renderPT()})}
+const shownNames=()=>(T.lb?T.lb.users:[]).slice(0,T.shown).map(u=>u.nickname);
+function seasonOptions(){return Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(T.view)===String(n)?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")+`<option value="all" ${T.view==="all"?"selected":""}>All time</option>`;}
+async function showLeaderboard(view){
+  // Leaderboards must never inherit a Christmas Island profile background.
+  $("out").classList.remove("christmas-profile");
+  document.body.classList.remove("christmas-profile-bg");
+  setTab("lb");stopProfile();
+  const req=++T.requestId;
+  T.view=view==="all"?"all":view==="season"?String(T.currentSeason):String(view);
+  T.shown=20;
+  T.historical=null;
+  T.sort=T.view==="all"?{k:"wins",d:-1}:{k:"elo",d:-1};
+  $("out").innerHTML=`<div class="card"><div class="ptools"><label for="lbseason">Leaderboard season</label><select id="lbseason" aria-label="Leaderboard season">${seasonOptions()}</select><label for="lbcountry">Country</label><select id="lbcountry" aria-label="Filter leaderboard by country">${countryOptions()}</select><span class="sp"></span><span class="mut" id="pstat"></span></div><div class="scroll" style="max-height:none"><div id="ptab"><div class="msg skel">Loading leaderboard…</div></div></div><div class="sent" id="lbsent"></div><div class="hint" id="lbhint"></div></div>`;
+  try{
+    if(!T.globalLb){T.globalLb=await get(API+"/leaderboard");const n=Number(T.globalLb.season&&T.globalLb.season.number);if(Number.isInteger(n)&&n>0)T.currentSeason=n;}
+    if(req!==T.requestId||!( $("ptab") ))return;
+    if(view==="season")T.view=String(T.currentSeason);
+    $("lbseason").innerHTML=seasonOptions();
+    const historic=T.view!=="all"&&Number(T.view)!==T.currentSeason;
+    if(historic){
+      // Ask the API for the selected country's leaderboard directly, rather than
+      // filtering the global top 150 (which hides lower-ranked country players).
+      const qs=["season="+enc(T.view)];
+      if(T.country)qs.push("country="+enc(T.country.toLowerCase()));
+      const historical=await get(API+"/leaderboard?"+qs.join("&"));
+      if(req!==T.requestId||!$("ptab"))return;
+      const returned=Number(historical.season&&historical.season.number);
+      if(returned!==Number(T.view))throw new Error("The API did not return Season "+T.view+" leaderboard data. Current-season results have not been substituted.");
+      T.historical=historical;
+      renderHistorical();
+      if(lio){lio.disconnect();lio=null}
+      const sentinel=$("lbsent");
+      if(sentinel&&window.IntersectionObserver){lio=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))moreRows()},{rootMargin:"400px"});lio.observe(sentinel)}
+      return;
+    }
+    // The API supports country-filtered leaderboards. Use that endpoint so the
+    // country view contains its own top 150 instead of just country members found
+    // inside the global top 150.
+    if(T.country){
+      const cacheKey=T.view+":"+T.country;
+      if(!T.countryLbCache[cacheKey]){
+        const query="?country="+enc(T.country.toLowerCase());
+        T.countryLbCache[cacheKey]=await get(API+"/leaderboard"+query);
+      }
+      T.lb=T.countryLbCache[cacheKey];
+    }else T.lb=T.globalLb;
+    if(req!==T.requestId||!$("ptab"))return;
+    $("lbhint").textContent=T.country
+      ?cname(T.country)+" leaderboard · country-filtered results from the API, up to 150 players."
+      :T.view==="all"
+        ?"All-time ranked totals for players on the current season leaderboard. Rows fill in gradually because of API rate limits."
+        :"Season "+T.currentSeason+" stats: win rate, matches, PB and average are for the current season. Rows fill in gradually because of API rate limits.";
+    shownNames().forEach(loadRow);renderPT();
+    if(lio){lio.disconnect();lio=null}
+    const se=$("lbsent");
+    if(se&&window.IntersectionObserver){lio=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))moreRows()},{rootMargin:"400px"});lio.observe(se)}
+  }catch(e){if(req===T.requestId&&$("ptab")){$("ptab").innerHTML='<div class="msg">Couldn’t load the selected leaderboard.<br>'+esc(e.message)+'</div>';$("lbsent").textContent="";}}
+}
+function moreRows(){
+  const board=T.historical||T.lb;
+  if(!board||!Array.isArray(board.users)||T.shown>=(T.historical?historicalRows().length:board.users.length))return;
+  T.shown+=10;if(T.historical)renderHistorical();else{shownNames().forEach(loadRow);renderPT();}
+  const se=$("lbsent");if(lio&&se){lio.unobserve(se);lio.observe(se)}
+}
+function historicalRows(){
+  if(!T.historical)return [];
+  return T.historical.users.map((u,i)=>{
+    const standing=u.seasonResult||{};
+    const elo=standing.eloRate??u.eloRate;
+    const rank=standing.eloRank??u.eloRank;
+    const key=String(T.view)+":"+u.uuid;
+    return {u,i,elo,rank,stats:T.histCache[key]||null};
+  }).filter(r=>!T.country||countryCode(r.u)===T.country);
+}
+function loadHistoricalStats(rows){
+  const req=T.requestId,season=Number(T.view);
+  for(const r of rows){
+    const key=season+":"+r.u.uuid;
+    if(T.histCache[key]||T.histLoading.has(key))continue;
+    T.histLoading.add(key);
+    enqueue(async()=>{
+      try{
+        const u=await get(API+"/users/"+enc(r.u.uuid)+"?season="+season);
+        T.histCache[key]={...calc(u,"season"),country:countryCode(u)};
+      }catch(e){T.histCache[key]={error:true}}
+      finally{T.histLoading.delete(key);if(req===T.requestId&&T.historical&&Number(T.view)===season)renderHistorical(false)}
+    });
+  }
+}
+function renderHistorical(fetchStats=true){
+  const el=$("ptab");if(!el||!T.historical)return;
+  const k=T.sort.k,d=T.sort.d;
+  const val=r=>k==="name"?r.u.nickname:k==="elo"?r.elo:k==="rank"?r.rank:r.stats?.[k];
+  const rows=historicalRows().sort((a,b)=>{
+    const x=val(a),y=val(b);
+    if(x==null&&y==null)return (b.elo??-Infinity)-(a.elo??-Infinity)||a.i-b.i;
+    if(x==null)return 1;if(y==null)return -1;
+    return (typeof x==="string"?d*x.localeCompare(y):d*(x-y))||a.i-b.i;
+  });
+  const shown=rows.slice(0,T.shown);
+  const cols=[["name","Player"],["elo","Elo"],["wr","Win rate"],["games","Matches"],["wins","Wins"],["pb","PB"],["avg","Average"]];
+  const f=(v,fn)=>v==null?"—":fn?fn(v):esc(v);
+  el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr><th>#</th>${cols.map(([key,label])=>`<th data-k="${key}" class="${key==="name"?"":"num"}">${label}${k===key?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${shown.map((r,i)=>{
+    const u=r.u,st=r.stats||{},waiting=!r.stats;
+    const cell=(v,fn)=>`<td class="num">${waiting?"…":f(v,fn)}</td>`;
+    return `<tr><td class="mut">${k==="elo"&&!T.country&&d===-1?(r.rank??i+1):i+1}</td><td><span class="who">${flag(u.country)?`<span title="${esc(cname(u.country))}">${flag(u.country)}</span>`:""}<img class="head" alt="" loading="lazy" src="https://mc-heads.net/avatar/${enc(u.uuid)}/24"><a href="#${enc(u.nickname)}" class="${isSupporter(u)?"supporter-name":""}">${esc(u.nickname)}</a>${isSupporter(u)?` <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:""}</span></td><td class="num"><span class="who">${icon(r.elo,22)}${f(r.elo)}</span></td>${cell(st.wr,x=>x.toFixed(1)+"%")}${cell(st.games)}${cell(st.wins)}${cell(st.pb,fmtP)}${cell(st.avg,fmtP)}</tr>`;
+  }).join("")}</tbody></table>`;
+  $("pstat").textContent=shown.length+" / "+rows.length+" players";
+  $("lbsent").textContent=T.shown>=rows.length?"End of leaderboard · "+rows.length+" players":"Scroll for more";
+  $("lbhint").textContent="Season "+T.view+" · Elo order comes from the historical leaderboard. Other columns load from each player's season-specific profile; sorting those columns applies to loaded statistics.";
+  if(fetchStats)loadHistoricalStats(shown);
+}
+function renderPT(){
+  const el=$("ptab");if(!el)return;
+  const v=T.view==="all"?"all":"season",names=shownNames(),rows=names.map(n=>RC[n.toLowerCase()]).filter(Boolean).filter(r=>!T.country||r.country===T.country);
+  const k=T.sort.k,d=T.sort.d;
+  const val=r=>{if(r.state!=="d")return null;if(k==="name")return r.name;if(k==="elo")return r.elo;const s=r[v];return s&&s[k]!=null?s[k]:null};
+  const boardRanks=new Map((T.lb?.users||[]).map((u,i)=>[u.nickname.toLowerCase(),{i,elo:u.seasonResult?.eloRate??u.eloRate}]));
+  const sorted=rows.slice().sort((a,b)=>{if(k==="elo"&&v==="season"){const x=boardRanks.get(a.name.toLowerCase()),y=boardRanks.get(b.name.toLowerCase());return d*((x?.elo??-Infinity)-(y?.elo??-Infinity))||(x?.i??0)-(y?.i??0)}const x=val(a),y=val(b);if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;if(typeof x==="string")return d*x.localeCompare(y);return d*(x-y)});
+  const lead=key=>{const a=rows.map(r=>r[v]&&r[v][key]).filter(x=>x!=null&&x>0);return a.length?Math.min(...a):null};
+  const bpb=lead("pb"),bavg=lead("avg");
+  const cols=[["name","Player",""],["elo","Elo","num"],["wr","Win rate","num"],["games","Matches","num"],["wins","Wins","num"],["pb","PB","num"],["avg","Average","num"]];
+  el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr><th>#</th>${cols.map(c=>`<th class="${c[2]}" data-k="${c[0]}">${c[1]}${k===c[0]?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${sorted.map((r,i)=>{
+    const s=r[v]||{},bad=r.state!=="d",wait=`<span class="mut">${r.state==="e"?"×":"…"}</span>`;
+    const c=(x,f,cls)=>`<td class="num ${cls||""}">${bad?wait:x!=null?f(x):"—"}</td>`;
+    return `<tr><td class="mut">${i+1}</td><td><span class="who">${flag(r.country)?`<span title="${esc(cname(r.country))}">${flag(r.country)}</span>`:""}<img class="head" alt="" width="24" height="24" loading="lazy" src="https://mc-heads.net/avatar/${enc(r.uuid||r.name)}/24"><a href="#${enc(r.name)}">${esc(r.name)}</a></span></td>`+
+      `<td class="num"><span class="who">${bad?wait:icon(r.elo,22)+(r.elo!=null?r.elo:"—")}</span></td>`+
+      c(s.wr,x=>x.toFixed(1)+"%")+c(s.games,x=>x)+c(s.wins,x=>x)+
+      c(s.pb,fmtP,s.pb!=null&&s.pb===bpb?"best":"")+c(s.avg,fmtP,s.avg!=null&&s.avg===bavg?"best":"")+`</tr>`}).join("")}</tbody></table>`;
+  const done=rows.filter(r=>r.state==="d"||r.state==="e").length;
+  const ps=$("pstat");if(ps)ps.textContent=done+" / "+names.length+" players loaded";
+  const se=$("lbsent");if(se)se.textContent=T.lb&&T.shown>=T.lb.users.length?"End of leaderboard · "+T.lb.users.length+" players":"Loading more…";
+}
+
+/* ---------- global events ---------- */
+const out=$("out");
+out.addEventListener("change",async e=>{
+  if(e.target.id==="lbseason")go("#!lb/"+e.target.value);
+  if(e.target.id==="lbcountry"){
+    T.country=e.target.value;T.shown=20;
+    showLeaderboard(T.view);
+  }
+  if(e.target.id==="profileSeason"&&P&&P.u){
+    const season=Number(e.target.value),tok=P;
+    P.profileSeason=String(season);
+    if(season===T.currentSeason){
+      P.u=P.baseUser;
+      const mk=()=>({list:[],done:false,p:null,err:null});
+      P.st={ranked:mk(),private:mk()};P.full=false;
+      renderProfile();return
+    }
+    const area=$("tiles");if(area)area.innerHTML='<div class="msg">Loading Season '+season+' profile and matches…</div>';
+    try{
+      // The user endpoint, unlike the leaderboard endpoint, contains season-specific
+      // statistics (wins, played matches, PB, etc.).
+      const user=await get(API+"/users/"+enc(tok.baseUser.uuid)+"?season="+season);
+      if(P!==tok||String(P.profileSeason)!==String(season))return;
+      if(!user||!user.uuid)throw Error("Season-specific player data unavailable");
+      tok.u=user;
+      const mk=()=>({list:[],done:false,p:null,err:null});
+      tok.st={ranked:mk(),private:mk()};tok.full=false;
+      renderProfile();
+    }catch(err){if(P===tok&&String(P.profileSeason)===String(season)&&$("tiles"))$("tiles").innerHTML='<div class="msg">'+esc(err.message)+'</div>'}
+  }
+});
+out.addEventListener("click",e=>{
+  const t=e.target;
+  const copyBtn=t.closest("[data-copy-discord]");if(copyBtn){
+    const username=copyBtn.dataset.copyDiscord||"";
+    const copied=()=>{const label=copyBtn.querySelector("[data-discord-label]");if(label){label.textContent="Copied!";setTimeout(()=>{if(label.isConnected)label.textContent=username},1400)}};
+    const fallback=()=>{const ta=document.createElement("textarea");ta.value=username;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");copied()}catch(_){}ta.remove()};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(username).then(copied).catch(fallback);else fallback();
+    return;
+  }
+  const op=t.closest("[data-open]");if(op){openMatch(op.dataset.open);return}
+  const md=t.closest("[data-pm]");if(md&&P&&P.st){if(P.mode!==md.dataset.pm){P.mode=md.dataset.pm;renderProfile()}return}
+  const g=t.closest("[data-g]");if(g&&P&&P.st){setFull(g.dataset.g==="full");return}
+  const th=t.closest("th[data-k]");if(th){const k=th.dataset.k;if(T.sort.k===k)T.sort.d*=-1;else T.sort={k,d:(k==="avg"||k==="pb"||k==="name")?1:-1};(T.historical?renderHistorical():renderPT());return}
+  const se=t.closest("#sent");if(se&&se.dataset.retry&&P&&P.st){P.st[P.mode].err=null;loadMore(P.mode);return}
+  if(t.closest("a"))return;
+  const tr=t.closest("tr.pt");
+  if(tr){const id=tr.dataset.id;
+    if(P&&P.st&&P.mode==="ranked"){const ix=pts.findIndex(p=>String(p.id)===String(id));if(ix>0)select(ix,false)}
+    openMatch(id)}
+});
+$("modal").addEventListener("click",e=>{
+  if(e.target===$("modal")||e.target.closest("[data-close]")){closeModal();return}
+  const tr=e.target.closest("tr.sp");
+  if(tr){tr.querySelectorAll("td[data-seek]").forEach(td=>seekVod(td.dataset.u,+td.dataset.seek))}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeModal();const ci=document.getElementById("creatorInfo");if(ci){ci.classList.remove("open");ci.querySelector("button")?.setAttribute("aria-expanded","false")}}});
+const creatorInfo=document.getElementById("creatorInfo");
+creatorInfo?.querySelector("button")?.addEventListener("click",()=>{const opened=creatorInfo.classList.toggle("open");creatorInfo.querySelector("button").setAttribute("aria-expanded",String(opened))});
+document.addEventListener("click",e=>{if(creatorInfo&&!creatorInfo.contains(e.target)){creatorInfo.classList.remove("open");creatorInfo.querySelector("button")?.setAttribute("aria-expanded","false")}});
+
+route();
+</script>
+</body>
+</html>
