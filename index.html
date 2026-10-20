@@ -481,7 +481,7 @@ function renderTiles(){
     const avg=times.length?times.reduce((a,b)=>a+b,0)/times.length:null;
     const timeNote=P.st.ranked.done?"completed wins only":"loading completed wins…";
     const ws=g("currentWinStreak"),bws=g("highestWinStreak");
-    tiles=[["Win rate",pct(wins,played),(wins||0)+"W · "+(loses||0)+"L · "+draws+"D"],["Matches",played!=null?played:"—","this season"],["Best time",P.st.ranked.done?fmt(best):"…",timeNote],["Avg. finish",P.st.ranked.done?fmt(avg):"…",P.st.ranked.done?times.length+" completed wins":timeNote],["Win streak",ws!=null?ws:"—","best "+(bws!=null?bws:"—")],["Forfeit rate",pct(forf,played),(forf||0)+" forfeits"]];
+    tiles=[["Win rate",pct(wins,played!=null?Math.max(0,played-(forf||0)):null),(wins||0)+"W · "+(loses||0)+"L · "+draws+"D · forfeits excluded"],["Matches",played!=null?Math.max(0,played-(forf||0)):"—","this season · forfeits excluded"],["Best time",P.st.ranked.done?fmt(best):"…",timeNote],["Avg. finish",P.st.ranked.done?fmt(avg):"…",P.st.ranked.done?times.length+" completed wins":timeNote],["Win streak",ws!=null?ws:"—","best "+(bws!=null?bws:"—")],["Forfeit rate",pct(forf,played),(forf||0)+" forfeits"]];
   }else tiles=privTiles(P.st[P.mode].list,u.uuid);
   t.innerHTML=tiles.map(x=>`<div class="tile"><div class="l">${esc(x[0])}</div><div class="v">${esc(x[1])}</div><div class="d">${esc(x[2])}</div></div>`).join("");
 }
@@ -819,8 +819,9 @@ const T={sort:{k:"elo",d:-1},shown:20,lb:null,globalLb:null,countryLbCache:{},vi
 const RC={};
 let lio=null;
 function calc(u,sc){
-  const p=stat(u,sc,"playedMatches"),w=stat(u,sc,"wins"),c=stat(u,sc,"completions"),t=stat(u,sc,"completionTime");
-  return{games:p,wins:w,wr:p?w/p*100:null,pb:stat(u,sc,"bestTime"),avg:c&&t!=null?t/c:null};
+  const p=stat(u,sc,"playedMatches"),w=stat(u,sc,"wins"),f=stat(u,sc,"forfeits"),c=stat(u,sc,"completions"),t=stat(u,sc,"completionTime");
+  const games=p!=null?Math.max(0,p-(f||0)):null;
+  return{games,wins:w,wr:games>0&&w!=null?w/games*100:null,pb:stat(u,sc,"bestTime"),avg:c&&t!=null?t/c:null};
 }
 function loadRow(name){
   const k=name.toLowerCase();if(RC[k])return;
