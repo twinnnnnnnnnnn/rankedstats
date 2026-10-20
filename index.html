@@ -291,17 +291,21 @@ $("f").addEventListener("submit",e=>{e.preventDefault();const v=$("q").value.tri
 window.addEventListener("hashchange",route);
 
 const PROFILE_DECORATIONS={};
+const ANJOUU_EMOTE='<img class="profile-custom-emote" src="https://cdn.7tv.app/emote/01HF53HZWR0005NHKNXV1F8VTJ/2x.webp" alt="7TV emote" title="7TV emote">';
 const BBIDDD_EMOTE='<img class="profile-custom-emote" src="https://cdn.7tv.app/emote/01KP6XX8J1J115JJEZE01P0SBE/2x.webp" alt="7TV emote" title="7TV emote">';
+let anjouuUuid=localStorage.getItem("anjouuProfileUuid")||"";
 let bbidddUuid=localStorage.getItem("bbidddProfileUuid")||"";
 let feinbergUuid=localStorage.getItem("feinbergProfileUuid")||"";
 getUser("Feinberg").then(u=>{if(!u?.uuid)return;feinbergUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("feinbergProfileUuid",feinbergUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===feinbergUuid)renderProfile()}).catch(()=>{});
 function profileDecoration(u){
   const id=String(u.uuid||"").replace(/-/g,"").toLowerCase();
+  if(id===anjouuUuid)return " "+ANJOUU_EMOTE;
   if(id===bbidddUuid)return " "+BBIDDD_EMOTE;
   return PROFILE_DECORATIONS[id]||"";
 }
 // Resolve the initial nickname once and keep its UUID for future name changes.
 getUser("bbiddd").then(u=>{if(!u?.uuid)return;bbidddUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("bbidddProfileUuid",bbidddUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===bbidddUuid)renderProfile()}).catch(()=>{});
+getUser("ANJOUU").then(u=>{if(!u?.uuid)return;anjouuUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("anjouuProfileUuid",anjouuUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===anjouuUuid)renderProfile()}).catch(()=>{});
 /* ---------- profile ---------- */
 function showProfile(name){
   // Reset profile-only country styling immediately so it cannot leak between profiles.
