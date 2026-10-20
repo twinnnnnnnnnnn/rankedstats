@@ -1086,6 +1086,43 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
  select.addEventListener('change',()=>{localStorage.setItem(fontKey,select.value);applyFont(select.value)});
  background.addEventListener('change',()=>{localStorage.setItem(backgroundKey,background.value);applyBackground(background.value)});
 })();
+/* Gentle UI feedback sounds, generated locally with Web Audio (no downloads). */
+(function(){
+  let audio=null,lastHover=0,lastGraph=0;
+  function tone(freq,duration,volume,type){
+    try{
+      const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+      if(!AudioContextClass)return;
+      if(!audio)audio=new AudioContextClass();
+      if(audio.state!=="running")return;
+      const osc=audio.createOscillator(),gain=audio.createGain(),now=audio.currentTime;
+      osc.type=type||"sine";osc.frequency.setValueAtTime(freq,now);
+      osc.frequency.exponentialRampToValueAtTime(freq*.82,now+duration);
+      gain.gain.setValueAtTime(.0001,now);
+      gain.gain.exponentialRampToValueAtTime(volume,now+.008);
+      gain.gain.exponentialRampToValueAtTime(.0001,now+duration);
+      osc.connect(gain);gain.connect(audio.destination);osc.start(now);osc.stop(now+duration+.01);
+    }catch(e){}
+  }
+  document.addEventListener("pointerdown",e=>{
+    if(!e.target.closest("a,button,select,input[type=checkbox],input[type=radio],.pt2 th,canvas,svg"))return;
+    if(!audio){try{audio=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return}}
+    if(audio.state==="suspended")audio.resume().then(()=>tone(490,.075,.028,"triangle")).catch(()=>{});
+    else tone(490,.075,.028,"triangle");
+  },{passive:true});
+  document.addEventListener("pointerover",e=>{
+    if(e.pointerType==="touch")return;
+    const el=e.target.closest("a,button,select,.pt2 th,canvas,svg");
+    if(!el||el.contains(e.relatedTarget))return;
+    const now=performance.now();if(now-lastHover<95)return;lastHover=now;
+    tone(690,.045,.012,"sine");
+  },{passive:true});
+  document.addEventListener("pointermove",e=>{
+    if(!e.target.closest("canvas,svg"))return;
+    const now=performance.now();if(now-lastGraph<170)return;lastGraph=now;
+    tone(580,.03,.006,"sine");
+  },{passive:true});
+})();
 route();
 </script>
 </body>
