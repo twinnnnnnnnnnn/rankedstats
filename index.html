@@ -38,6 +38,10 @@ button.go{background:var(--surface2);color:var(--text);border:1px solid var(--li
 .tabs button.on{background:var(--surface);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .ri{vertical-align:middle;object-fit:contain;flex:none;image-rendering:pixelated}
 .who{display:inline-flex;align-items:center;gap:6px}.supporter-name{background:linear-gradient(90deg,#fff0a6,#ffc928,#fff4bd,#d99a00,#fff0a6);background-size:220% 100%;animation:supporterGold 3.5s linear infinite;-webkit-background-clip:text;background-clip:text;color:transparent!important;font-weight:800}.supporter-pick{display:inline-block;color:#f4c542;font-size:1.02em;line-height:1;filter:drop-shadow(0 0 4px rgba(255,190,35,.35));vertical-align:-.04em}.hero h1 .supporter-name{display:inline-block}@keyframes supporterGold{to{background-position:220% 0}}@media(prefers-reduced-motion:reduce){.supporter-name{animation:none}}.head{width:24px;height:24px;border-radius:5px;image-rendering:pixelated;flex:none;background:var(--surface2)}
+/* Randomly scattered Lyxier-only Halloween decorations */
+#lyxier-decor{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+#lyxier-decor img{position:absolute;width:clamp(65px,9vw,155px);height:auto;max-height:190px;object-fit:contain;opacity:.88;filter:drop-shadow(0 4px 10px rgba(0,0,0,.65));user-select:none}
+@media(max-width:700px){#lyxier-decor img{width:clamp(45px,12vw,85px);opacity:.7}}
 /* Lyxier-exclusive Halloween blood drips on the main player card */
 #out.lyxier-profile .hero{position:relative;isolation:isolate;overflow:hidden;border-color:rgba(169,12,30,.75);box-shadow:0 0 22px rgba(160,0,25,.22),inset 0 0 22px rgba(90,0,15,.18)}
 #out.lyxier-profile .hero::before{content:"";position:absolute;top:0;left:0;right:0;height:76px;pointer-events:none;z-index:2;background:linear-gradient(180deg,#65000b 0%,#a3081a 12%,#d01c2b 26%,#7e0010 100%);clip-path:polygon(0 0,100% 0,100% 14px,96% 14px,96% 29px,94.7% 40px,93.6% 29px,93.6% 14px,86% 14px,86% 48px,84.8% 61px,83.6% 48px,83.6% 14px,75% 14px,75% 26px,73.8% 35px,72.6% 26px,72.6% 14px,64% 14px,64% 40px,62.7% 53px,61.4% 40px,61.4% 14px,52% 14px,52% 22px,50.8% 31px,49.6% 22px,49.6% 14px,41% 14px,41% 55px,39.7% 70px,38.4% 55px,38.4% 14px,29% 14px,29% 31px,27.7% 42px,26.4% 31px,26.4% 14px,17% 14px,17% 45px,15.8% 58px,14.6% 45px,14.6% 14px,7% 14px,7% 25px,5.8% 36px,4.6% 25px,4.6% 14px,0 14px);filter:drop-shadow(0 3px 3px rgba(65,0,0,.5))}
@@ -326,6 +330,21 @@ getUser("ANJOUU").then(u=>{if(!u?.uuid)return;anjouuUuid=String(u.uuid).replace(
 for(const [name,key] of [["MufatMCSR","mufatMcsrProfileUuid"],["honeyspots","honeyspotsProfileUuid"]])getUser(name).then(u=>{if(!u?.uuid)return;const id=String(u.uuid).replace(/-/g,"").toLowerCase();sharedEmoteUuids[name]=id;localStorage.setItem(key,id);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===id)renderProfile();refreshDecoratedLeaderboard();refreshDecoratedLeaderboard()}).catch(()=>{});
 getUser("chloeity").then(u=>{if(!u?.uuid)return;chloeityUuid=String(u.uuid).replace(/-/g,"").toLowerCase();localStorage.setItem("chloeityProfileUuid",chloeityUuid);if(P?.u&&String(P.u.uuid).replace(/-/g,"").toLowerCase()===chloeityUuid)renderProfile();refreshDecoratedLeaderboard();refreshDecoratedLeaderboard()}).catch(()=>{});
 function refreshDecoratedLeaderboard(){if(!$("ptab"))return;if(T.historical)renderHistorical(false);else if(T.lb)renderPT()}
+function updateLyxierDecor(enabled){
+  let layer=document.getElementById("lyxier-decor");
+  if(!enabled){if(layer)layer.remove();return}
+  if(layer)return;
+  layer=document.createElement("div");layer.id="lyxier-decor";layer.setAttribute("aria-hidden","true");
+  const assets=["https://femboy.beauty/NYL00D","https://femboy.beauty/saH2xv"];
+  const spots=[[4,19],[79,15],[8,69],[80,70],[44,81],[47,8]];
+  for(let i=0;i<6;i++){
+    const img=document.createElement("img");img.src=assets[i%2];img.alt="";
+    const [x,y]=spots[i];img.style.left=(x+(Math.random()-.5)*9)+"%";img.style.top=(y+(Math.random()-.5)*9)+"%";
+    img.style.transform="rotate("+((Math.random()-.5)*34)+"deg)";
+    layer.appendChild(img);
+  }
+  document.body.appendChild(layer);
+}
 /* ---------- profile ---------- */
 function showProfile(name){
   // Reset profile-only country styling immediately so it cannot leak between profiles.
@@ -333,6 +352,7 @@ function showProfile(name){
   document.body.classList.remove("christmas-profile-bg");
   $("out").classList.remove("lyxier-profile");
   document.body.classList.remove("lyxier-profile-bg");
+  updateLyxierDecor(false);
   setTab("profile");$("q").value=name;lastName=name;
   if(io){io.disconnect();io=null}
   $("out").innerHTML='<div class="msg skel">Loading '+esc(name)+'…</div>';
@@ -429,6 +449,7 @@ function renderProfile(){
   const isLyxier=String(u.nickname||"").toLowerCase()==="lyxier";
   $("out").classList.toggle("lyxier-profile",isLyxier);
   document.body.classList.toggle("lyxier-profile-bg",isLyxier);
+  updateLyxierDecor(isLyxier);
   $("out").classList.toggle("christmas-profile", isChristmasIsland);
   document.body.classList.toggle("christmas-profile-bg", isChristmasIsland);
   const st=P.st[P.mode];
@@ -723,6 +744,7 @@ async function showLeaderboard(view){
   document.body.classList.remove("christmas-profile-bg");
   $("out").classList.remove("lyxier-profile");
   document.body.classList.remove("lyxier-profile-bg");
+  updateLyxierDecor(false);
   setTab("lb");stopProfile();
   const req=++T.requestId;
   T.view=view==="all"?"all":view==="season"?String(T.currentSeason):String(view);
