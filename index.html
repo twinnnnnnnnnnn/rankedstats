@@ -353,7 +353,14 @@ function startLyxierBounce(){
   const root=document.getElementById("out");
   if(!root?.classList.contains("lyxier-profile")||window.matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   const cards=[...root.querySelectorAll(".card,.tile")];
-  lyxierBounceItems=cards.map((el,i)=>({el,x:0,y:0,vx:(i%2?1:-1)*(8+i%4*2),vy:(i%3?1:-1)*(6+i%3*2)}));
+  lyxierBounceItems=cards.map((el,i)=>{
+    const rect=el.getBoundingClientRect();
+    // Keep each component inside the visible browser window, not its original grid cell.
+    const minX=8-rect.left,maxX=window.innerWidth-rect.right-8;
+    const minY=8-rect.top,maxY=window.innerHeight-rect.bottom-8;
+    const x=Math.min(maxX,Math.max(minX,0)),y=Math.min(maxY,Math.max(minY,0));
+    return {el,x,y,vx:(i%2?1:-1)*(16+i%4*4),vy:(i%3?1:-1)*(12+i%3*4)};
+  });
   function frame(now){
     if(!root.classList.contains("lyxier-profile")){stopLyxierBounce();return}
     const dt=Math.min((now-(lyxierBounceLast||now))/1000,.05);lyxierBounceLast=now;
@@ -361,15 +368,19 @@ function startLyxierBounce(){
       if(!item.el.isConnected)continue;
       const rect=item.el.getBoundingClientRect();
       const left=rect.left-item.x,top=rect.top-item.y;
-      const maxX=Math.min(24,Math.max(0,window.innerWidth-left-rect.width-8));
-      const minX=Math.max(-24,8-left);
-      const maxY=Math.min(20,Math.max(0,window.innerHeight-top-rect.height-8));
-      const minY=Math.max(-20,8-top);
+      const minX=8-left,maxX=window.innerWidth-left-rect.width-8;
+      const minY=8-top,maxY=window.innerHeight-top-rect.height-8;
       item.x+=item.vx*dt;item.y+=item.vy*dt;
-      if(item.x>=maxX){item.x=maxX;item.vx=-Math.abs(item.vx)}
-      if(item.x<=minX){item.x=minX;item.vx=Math.abs(item.vx)}
-      if(item.y>=maxY){item.y=maxY;item.vy=-Math.abs(item.vy)}
-      if(item.y<=minY){item.y=minY;item.vy=Math.abs(item.vy)}
+      if(maxX<minX)item.x=(minX+maxX)/2;
+      else{
+        if(item.x>=maxX){item.x=maxX;item.vx=-Math.abs(item.vx)}
+        if(item.x<=minX){item.x=minX;item.vx=Math.abs(item.vx)}
+      }
+      if(maxY<minY)item.y=(minY+maxY)/2;
+      else{
+        if(item.y>=maxY){item.y=maxY;item.vy=-Math.abs(item.vy)}
+        if(item.y<=minY){item.y=minY;item.vy=Math.abs(item.vy)}
+      }
       item.el.style.transform="translate3d("+item.x.toFixed(2)+"px,"+item.y.toFixed(2)+"px,0)";
     }
     lyxierBounceFrame=requestAnimationFrame(frame);
