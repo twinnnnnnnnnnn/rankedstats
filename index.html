@@ -298,7 +298,7 @@ function showProfile(name){
   getUser(name).then(u=>{
     if(P!==tok)return;
     const mk=()=>({list:[],done:false,p:null,err:null});
-    Object.assign(tok,{u,baseUser:u,mode:"ranked",full:false,profileSeason:"current",st:{ranked:mk(),private:mk()}});
+    Object.assign(tok,{u,baseUser:u,mode:"ranked",full:false,matchSort:"recent",profileSeason:"current",st:{ranked:mk(),private:mk()}});
     sel=null;selId=null;renderProfile();
   }).catch(e=>{if(P===tok)$("out").innerHTML='<section class="invalid-profile"><img class="invalid-main-image" src="https://femboy.beauty/k1GPpI" alt="Random Tung does not play ranked"><div class="invalid-caption"><span>Random Tung Doesnt play ranked</span><img class="invalid-text-image" src="https://femboy.beauty/RTvF50" alt=""></div></section>'});
 }
@@ -374,7 +374,7 @@ function renderProfile(){
    <div class="tiles" id="tiles"></div>
    <div class="main">
     <div class="card" id="cardChart"><h2>Elo history <span id="gsub"></span><span class="seg" id="gm" style="min-width:210px"><button data-g="recent" class="${P.full?"":"on"}">Recent 50</button><button data-g="full" class="${P.full?"on":""}">Full season</button></span></h2><div id="gArea"></div></div>
-    <div class="card" id="cardTable"><h2>${rkd?"Ranked matches":"Private room matches"} <span id="cnt2"></span></h2><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th>${rkd?"<th>Opp. Elo</th>":""}<th>Time</th>${rkd?"<th>Elo</th>":""}<th>Overworld</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div><div class="hint">Click a match for splits and VODs.</div></div>
+    <div class="card" id="cardTable"><h2>${rkd?"Ranked matches":"Private room matches"} <span id="cnt2"></span></h2><div class="bar" style="margin:0 0 12px;gap:8px"><label for="matchSort">Sort matches</label><select id="matchSort" aria-label="Sort matches"><option value="recent" ${P.matchSort==="recent"?"selected":""}>Most recent</option><option value="fastest" ${P.matchSort==="fastest"?"selected":""}>Fastest finish (wins only)</option></select></div><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th>${rkd?"<th>Opp. Elo</th>":""}<th>Time</th>${rkd?"<th>Elo</th>":""}<th>Overworld</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div><div class="hint">Click a match for splits and VODs.</div></div>
    </div>`;
   startTwitchStatus(twitch);
   const country=String(u.country||"").trim().toUpperCase();
@@ -382,14 +382,39 @@ function renderProfile(){
   $("out").classList.toggle("christmas-profile", isChristmasIsland);
   document.body.classList.toggle("christmas-profile-bg", isChristmasIsland);
   const st=P.st[P.mode];
-  $("tb").innerHTML=st.list.map(rowHTML).join("");
+  renderMatchRows();
   renderTiles();layout();sentUI();refreshGraph();setupIO();
   if(!st.list.length&&!st.done&&!st.p&&!st.err)loadMore(P.mode);
+}
+function renderMatchRows(){
+  if(!P||!P.st||!$("tb"))return;
+  const list=P.st[P.mode].list;
+  const rows=P.matchSort==="fastest"
+    ?list.filter(x=>x.result&&x.result.uuid===P.u.uuid&&Number(x.result.time)>0&&!x.decayed)
+      .slice().sort((a,b)=>Number(a.result.time)-Number(b.result.time))
+    :list;
+  $("tb").innerHTML=rows.map(rowHTML).join("");
+}
+async function setMatchSort(value){
+  if(!P||!P.st)return;
+  const tok=P,mode=tok.mode,st=tok.st[mode];
+  tok.matchSort=value==="fastest"?"fastest":"recent";
+  renderMatchRows();sentUI();
+  if(tok.matchSort!=="fastest")return;
+  const control=$("matchSort");
+  if(control)control.disabled=true;
+  while(P===tok&&tok.mode===mode&&tok.matchSort==="fastest"&&!st.done&&!st.err){
+    await loadMore(mode,100);
+  }
+  if(P!==tok||tok.mode!==mode)return;
+  const select=$("matchSort");
+  if(select)select.disabled=false;
+  renderMatchRows();sentUI();
 }
 function sentUI(){
   const s=$("sent");if(!s||!P||!P.st)return;
   const st=P.st[P.mode];
-  s.textContent=st.err?"Couldn’t load more — click to retry":st.done?(st.list.length?"End of list · "+st.list.length+" matches":"No "+(P.mode==="ranked"?"ranked":"private room")+" matches found"):"Loading more…";
+  s.textContent=st.err?"Couldn’t load more — click to retry":st.done?(st.list.length?"End of list · "+st.list.length+" matches":"No "+(P.mode==="ranked"?"ranked":"private room")+" matches found"):P.matchSort==="fastest"?"Loading all matches to find fastest wins…":"Loading more…";
   s.dataset.retry=st.err?"1":"";
   const c=$("cnt2");if(c)c.textContent=st.list.length+" loaded"+(st.done?"":" · scroll for more");
 }
@@ -418,7 +443,7 @@ function loadMore(mode,count){
     if(!add.length)st.done=true;
     st.list.push(...add);
     if(P!==tok)return;
-    if(tok.mode===mode&&$("tb"))$("tb").insertAdjacentHTML("beforeend",add.map(rowHTML).join(""));
+    if(tok.mode===mode&&$("tb")){if(tok.matchSort==="fastest")renderMatchRows();else $("tb").insertAdjacentHTML("beforeend",add.map(rowHTML).join(""))}
     if(tok.mode===mode){
       renderTiles();sentUI();kick();
       if(mode==="ranked"&&(tok.full||st.list.length-add.length<50))refreshGraph();
@@ -778,7 +803,7 @@ out.addEventListener("change",async e=>{
     if(season===T.currentSeason){
       P.u=P.baseUser;
       const mk=()=>({list:[],done:false,p:null,err:null});
-      P.st={ranked:mk(),private:mk()};P.full=false;
+      P.st={ranked:mk(),private:mk()};P.full=false;P.matchSort="recent";
       renderProfile();return
     }
     const area=$("tiles");if(area)area.innerHTML='<div class="msg">Loading Season '+season+' profile and matches…</div>';
@@ -790,11 +815,12 @@ out.addEventListener("change",async e=>{
       if(!user||!user.uuid)throw Error("Season-specific player data unavailable");
       tok.u=user;
       const mk=()=>({list:[],done:false,p:null,err:null});
-      tok.st={ranked:mk(),private:mk()};tok.full=false;
+      tok.st={ranked:mk(),private:mk()};tok.full=false;tok.matchSort="recent";
       renderProfile();
     }catch(err){if(P===tok&&String(P.profileSeason)===String(season)&&$("tiles"))$("tiles").innerHTML='<div class="msg">'+esc(err.message)+'</div>'}
   }
 });
+out.addEventListener("change",e=>{if(e.target.id==="matchSort")setMatchSort(e.target.value)});
 out.addEventListener("click",e=>{
   const t=e.target;
   const copyBtn=t.closest("[data-copy-discord]");if(copyBtn){
@@ -805,7 +831,7 @@ out.addEventListener("click",e=>{
     return;
   }
   const op=t.closest("[data-open]");if(op){openMatch(op.dataset.open);return}
-  const md=t.closest("[data-pm]");if(md&&P&&P.st){if(P.mode!==md.dataset.pm){P.mode=md.dataset.pm;renderProfile()}return}
+  const md=t.closest("[data-pm]");if(md&&P&&P.st){if(P.mode!==md.dataset.pm){P.mode=md.dataset.pm;P.matchSort="recent";renderProfile()}return}
   const g=t.closest("[data-g]");if(g&&P&&P.st){setFull(g.dataset.g==="full");return}
   const th=t.closest("th[data-k]");if(th){const k=th.dataset.k;if(T.sort.k===k)T.sort.d*=-1;else T.sort={k,d:(k==="avg"||k==="pb"||k==="name")?1:-1};(T.historical?renderHistorical():renderPT());return}
   const se=t.closest("#sent");if(se&&se.dataset.retry&&P&&P.st){P.st[P.mode].err=null;loadMore(P.mode);return}
