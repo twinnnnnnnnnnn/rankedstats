@@ -303,9 +303,9 @@ function showProfile(name){
   }).catch(e=>{if(P===tok)$("out").innerHTML='<section class="invalid-profile"><img class="invalid-main-image" src="https://femboy.beauty/k1GPpI" alt="Random Tung does not play ranked"><div class="invalid-caption"><span>Random Tung Doesnt play ranked</span><img class="invalid-text-image" src="https://femboy.beauty/RTvF50" alt=""></div></section>'});
 }
 function privTiles(list,uid){
-  const wins=list.filter(x=>x.result&&x.result.uuid===uid),ts=wins.map(x=>x.result.time).filter(t=>t>0);
+  const wins=list.filter(x=>x.result&&x.result.uuid===uid&&!x.decayed&&!x.forfeited),ts=wins.map(x=>Number(x.result.time)).filter(t=>Number.isFinite(t)&&t>0);
   const best=ts.length?Math.min(...ts):null,avg=ts.length?ts.reduce((a,b)=>a+b,0)/ts.length:null;
-  return[["Matches loaded",list.length,P.st.private.done?"all loaded":"scroll for more"],["Wins",wins.length,pct(wins.length,list.length)+" win rate"],["Best time",fmt(best),"fastest win loaded"],["Avg. finish",fmt(avg),ts.length+" wins timed"],["With VOD",list.filter(x=>x.vod&&x.vod.length).length,"streamed matches"]];
+  return[["Matches loaded",list.length,P.st[P.mode].done?"all loaded":"scroll for more"],["Wins",wins.length,pct(wins.length,list.length)+" win rate"],["Best time",fmt(best),"fastest win loaded"],["Avg. finish",fmt(avg),ts.length+" wins timed"],["With VOD",list.filter(x=>x.vod&&x.vod.length).length,"streamed matches"]];
 }
 function renderTiles(){
   const t=$("tiles");if(!t||!P||!P.u)return;
@@ -315,8 +315,13 @@ function renderTiles(){
   if(P.mode==="ranked"){
     const played=g("playedMatches"),wins=g("wins"),loses=g("loses"),forf=g("forfeits"),comp=g("completions");
     const draws=g("draws")!=null?g("draws"):Math.max(0,(played||0)-(wins||0)-(loses||0));
-    const avg=comp?g("completionTime")/comp:null,ws=g("currentWinStreak"),bws=g("highestWinStreak");
-    tiles=[["Win rate",pct(wins,played),(wins||0)+"W · "+(loses||0)+"L · "+draws+"D"],["Matches",played!=null?played:"—","this season"],["Best time",fmt(g("bestTime")),"season PB"],["Avg. finish",fmt(avg),(comp||0)+" completions"],["Win streak",ws!=null?ws:"—","best "+(bws!=null?bws:"—")],["Forfeit rate",pct(forf,played),(forf||0)+" forfeits"]];
+    const completedWins=P.st.ranked.list.filter(x=>x.result&&x.result.uuid===u.uuid&&!x.forfeited&&!x.decayed&&Number(x.result.time)>0);
+    const times=completedWins.map(x=>Number(x.result.time));
+    const best=times.length?Math.min(...times):null;
+    const avg=times.length?times.reduce((a,b)=>a+b,0)/times.length:null;
+    const timeNote=P.st.ranked.done?"completed wins only":"loading completed wins…";
+    const ws=g("currentWinStreak"),bws=g("highestWinStreak");
+    tiles=[["Win rate",pct(wins,played),(wins||0)+"W · "+(loses||0)+"L · "+draws+"D"],["Matches",played!=null?played:"—","this season"],["Best time",P.st.ranked.done?fmt(best):"…",timeNote],["Avg. finish",P.st.ranked.done?fmt(avg):"…",P.st.ranked.done?times.length+" completed wins":timeNote],["Win streak",ws!=null?ws:"—","best "+(bws!=null?bws:"—")],["Forfeit rate",pct(forf,played),(forf||0)+" forfeits"]];
   }else tiles=privTiles(P.st[P.mode].list,u.uuid);
   t.innerHTML=tiles.map(x=>`<div class="tile"><div class="l">${esc(x[0])}</div><div class="v">${esc(x[1])}</div><div class="d">${esc(x[2])}</div></div>`).join("");
 }
@@ -385,6 +390,7 @@ function renderProfile(){
   renderMatchRows();
   renderTiles();layout();sentUI();refreshGraph();setupIO();
   if(!st.list.length&&!st.done&&!st.p&&!st.err)loadMore(P.mode);
+  if(P.mode==="ranked")loadRankedTimeStats(P);
 }
 function renderMatchRows(){
   if(!P||!P.st||!$("tb"))return;
@@ -410,6 +416,13 @@ async function setMatchSort(value){
   const select=$("matchSort");
   if(select)select.disabled=false;
   renderMatchRows();sentUI();
+}
+async function loadRankedTimeStats(tok){
+  const st=tok.st.ranked;
+  if(st.timeStatsLoading||st.done||st.err)return;
+  st.timeStatsLoading=true;
+  try{while(P===tok&&tok.mode==="ranked"&&!st.done&&!st.err){await loadMore("ranked",100)}}
+  finally{st.timeStatsLoading=false;if(P===tok&&tok.mode==="ranked")renderTiles()}
 }
 function sentUI(){
   const s=$("sent");if(!s||!P||!P.st)return;
