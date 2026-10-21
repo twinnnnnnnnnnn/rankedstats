@@ -413,7 +413,7 @@ function nameEmoji(name){
   const rules=[[/watermelon|melon/,"🍉"],[/aqua|ocean|wave|water/,"🌊"],[/fennec|fenni|fox/,"🦊"],[/dog|doggo|woof|puppy/,"🐶"],[/cat|kitty|kitten/,"🐱"],[/bird|birrd|parrot/,"🐦"],[/pig|piggy/,"🐷"],[/bee|honey/,"🐝"],[/frog/,"🐸"],[/bunny|rabbit/,"🐰"],[/panda/,"🐼"],[/bear/,"🐻"],[/wolf/,"🐺"],[/dragon/,"🐉"],[/dino/,"🦖"],[/fish/,"🐟"],[/shark/,"🦈"],[/turtle/,"🐢"],[/duck/,"🦆"],[/chicken/,"🐔"],[/apple/,"🍎"],[/banana/,"🍌"],[/cherry/,"🍒"],[/strawberry/,"🍓"],[/peach/,"🍑"],[/lemon/,"🍋"],[/milk/,"🥛"],[/coffee|cofe/,"☕"],[/tea/,"🍵"],[/cookie/,"🍪"],[/bread/,"🍞"],[/cake/,"🍰"],[/pizza/,"🍕"],[/salad/,"🥗"],[/pickle/,"🥒"],[/flower|petal|rose/,"🌸"],[/sun|solar/,"☀️"],[/moon|lunar/,"🌙"],[/star|astro/,"⭐"],[/snow|ice|frost/,"❄️"],[/fire|flame|blaze/,"🔥"],[/lightning|thunder|bolt/,"⚡"],[/cloud/,"☁️"],[/rain/,"🌧️"],[/diamond/,"💎"],[/emerald/,"💚"],[/gold/,"🥇"],[/spider/,"🕷️"]];
   return rules.find(([re])=>re.test(n))?.[1]||"";
 }
-function emojiName(name,u){return esc(name||"—");}
+function emojiName(name,u){return esc(name||"—")+(u?profileDecoration(u):"");}
 function supporterName(u,name){return isSupporter(u)?`<span class="supporter-name">${emojiName(name||u.nickname||"—",u)}</span> <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:emojiName(name||u.nickname||"—",u)}
 function countryOptions(){
   const countries=[];
