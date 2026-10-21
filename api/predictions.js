@@ -53,7 +53,8 @@ async function roster(){
     const list=await matches(p.uuid,100);
     const latest=Math.max(0,...list.map(dateOf));
     if(!latest||now-latest<=sessionGap(p))return null;
-    return {...p,odds:oddsFor(list,p.uuid)};
+    const baseline=averageCompleted(lastCompletedSession(list,p)||[],p.uuid);
+    return baseline===null?null:{...p,baselineAvgMs:baseline,odds:{faster:190,slower:190}};
    }catch(e){return null}
   }));
   selected.push(...batch.filter(Boolean));
@@ -117,9 +118,11 @@ module.exports=async(req,res)=>{
    return res.status(200).json({balance:Number(wallet.rows[0]?.balance||0),players:odds,history:history.rows,day:day(),remaining:Math.max(0,3-history.rows.filter(p=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(p.placed_at))===day()).length)});
   }
   const {uuid,direction,stake}=req.body||{};
-  if(typeof uuid!=='string'||!['gain','loss'].includes(direction)||!Number.isSafeInteger(stake)||stake<1||stake>1000000)return res.status(400).json({error:'Invalid prediction'});
+  if(typeof uuid!=='string'||!['faster','slower'].includes(direction)||!Number.isSafeInteger(stake)||stake<1||stake>1000000)return res.status(400).json({error:'Invalid prediction'});
   const players=await roster();const player=players.find(p=>p.uuid===uuid);if(!player)return res.status(400).json({error:'Player not in today\'s roster'});
-  const odds=player.odds[direction];
+  const baseline=player.baselineAvgMs;
+  if(baseline===null)return res.status(400).json({error:'No completed winning runs in the last completed session'});
+  const odds=190;
   await client.query('BEGIN');
   const wallet=await client.query('SELECT balance FROM discord_wallets WHERE discord_id=$1 FOR UPDATE',[session.id]);
   if(!wallet.rows.length||Number(wallet.rows[0].balance)<stake){await client.query('ROLLBACK');return res.status(400).json({error:'Insufficient coins'})}
@@ -128,7 +131,7 @@ module.exports=async(req,res)=>{
   const dup=await client.query("SELECT 1 FROM ranked_predictions WHERE discord_id=$1 AND player_uuid=$2 AND jst_day=(NOW() AT TIME ZONE 'Asia/Tokyo')::date",[session.id,uuid]);
   if(dup.rowCount){await client.query('ROLLBACK');return res.status(400).json({error:'Already predicted this player today'})}
   await client.query('UPDATE discord_wallets SET balance=balance-$2 WHERE discord_id=$1',[session.id,stake]);
-  const saved=await client.query("INSERT INTO ranked_predictions(discord_id,player_uuid,player_name,direction,stake,odds_basis_points,jst_day,player_rank,player_elo,baseline_avg_ms) VALUES($1,$2,$3,$4,$5,$6,(NOW() AT TIME ZONE 'Asia/Tokyo')::date,$7,$8,$9) RETURNING id",[session.id,uuid,player.nickname,direction,stake,odds,player.rank,player.elo,null]);
+  const saved=await client.query("INSERT INTO ranked_predictions(discord_id,player_uuid,player_name,direction,stake,odds_basis_points,jst_day,player_rank,player_elo,baseline_avg_ms) VALUES($1,$2,$3,$4,$5,$6,(NOW() AT TIME ZONE 'Asia/Tokyo')::date,$7,$8,$9) RETURNING id",[session.id,uuid,player.nickname,direction,stake,odds,player.rank,player.elo,baseline]);
   await client.query('COMMIT');return res.status(201).json({id:saved.rows[0].id,odds:odds/100,balance:Number(wallet.rows[0].balance)-stake});
  }catch(e){if(client)await client.query('ROLLBACK').catch(()=>{});console.error('Predictions API failed',e);return res.status(503).json({error:'Predictions temporarily unavailable'})}finally{client?.release()}
 };
