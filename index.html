@@ -287,6 +287,7 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 .lb-live-dot{display:none;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.16);vertical-align:middle;flex:none;margin-left:5px}.lb-live-dot.is-live{display:inline-block}
 .decay-row td{padding:5px 10px!important}.decay-bar{display:flex;align-items:center;gap:12px;min-height:34px;color:var(--muted);font-weight:700;letter-spacing:.12em}.decay-roses{flex:1;height:28px;background-image:url("https://mcasset.cloud/1.21.4/assets/minecraft/textures/block/wither_rose.png");background-repeat:repeat-x;background-position:center;background-size:28px 28px;image-rendering:pixelated;opacity:.75}.decay-label{white-space:nowrap}.decay-elo{color:var(--loss);font-weight:800}
 .discord-login-toggle{background:#5865f2;color:#fff;border-color:#5865f2;font-weight:750}.discord-login-toggle:hover{filter:brightness(1.1)}.discord-auth-panel{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:#0009;padding:18px}.discord-auth-panel.open{display:flex}.discord-auth-card{width:min(440px,100%);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 20px 70px #0007}.discord-auth-card h2{margin:0 0 10px}.discord-auth-card p{color:var(--muted);font-size:14px}.discord-auth-actions{display:flex;gap:10px;flex-wrap:wrap}.discord-auth-actions button{font-weight:700}.discord-auth-primary{background:#5865f2;color:white;border-color:#5865f2}
+.discord-account-wrap{position:relative;flex:none;margin-left:auto}.discord-account-wrap+.settings-wrap{margin-left:0}.discord-account-menu{display:none;position:absolute;top:calc(100% + 7px);right:0;z-index:95;width:220px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px #0005;padding:10px;gap:8px}.discord-account-wrap.open .discord-account-menu{display:grid}.discord-account-name{font-weight:750;overflow-wrap:anywhere;padding:7px 8px;border-bottom:1px solid var(--line)}#discordAccountLogout{color:var(--loss);font-weight:700;text-align:left}
 </style>
 </head>
 <body>
@@ -301,7 +302,7 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
   <a class="logo" id="logo" href="#!lb/season" aria-label="Season leaderboard"><img alt="Site logo" src="https://femboy.beauty/jzRZs6"></a>
   <div class="tabs" id="tabs"><button data-t="fast">Fastest Time</button><button data-t="lb">Leaderboard</button><button data-t="profile">Profile</button></div>
   <form id="f"><input id="q" type="text" placeholder="Player name or UUID" aria-label="Player"><button class="go">Search</button></form>
-  <button type="button" class="discord-login-toggle" id="discordLoginToggle">Discord Login</button>
+  <div class="discord-account-wrap" id="discordAccountWrap"><button type="button" class="discord-login-toggle" id="discordLoginToggle" aria-expanded="false">Discord Login</button><div class="discord-account-menu" id="discordAccountMenu"><div class="discord-account-name" id="discordAccountName"></div><button type="button" id="discordAccountLogout">Log out</button></div></div>
   <div class="settings-wrap" id="settingsWrap">
     <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Settings" title="Settings" aria-expanded="false">⚙</button>
     <section class="settings-panel" aria-label="Website settings">
@@ -309,7 +310,6 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
       <div class="setting-field"><label for="fontChoice">Font</label><select id="fontChoice" aria-label="Website font"><option value="default">Default</option><option value="minecraft">Minecraft font</option><option value="sga">Standard Galactic Alphabet</option></select></div>
       <div class="setting-field"><label for="soundChoice">UI sounds</label><select id="soundChoice" aria-label="UI sounds"><option value="on">On</option><option value="off">Muted</option></select></div>
       <div class="setting-field"><label for="backgroundChoice">Background</label><select id="backgroundChoice" aria-label="Website background"><option value="default">Default</option><option value="dark">Dark (all black)</option></select></div>
-      <button type="button" id="discordSettingsLogout" style="display:none;color:var(--loss);font-weight:700">Log out of Discord</button>
     </section>
   </div>
 </nav>
@@ -1480,50 +1480,39 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
   },{passive:true});
 })();
 
-// Discord account control: show Profile after successful sign-in.
+// Compact Discord account menu next to Settings.
 (()=>{
- const panel=document.getElementById('discordAuthPanel'),button=document.getElementById('discordLoginToggle'),close=document.getElementById('discordAuthClose'),start=document.getElementById('discordAuthStart'),status=document.getElementById('discordAuthStatus'),logout=document.getElementById('discordSettingsLogout');
- if(!panel||!button||!close||!start||!status)return;
+ const wrap=document.getElementById('discordAccountWrap'),button=document.getElementById('discordLoginToggle'),name=document.getElementById('discordAccountName'),logout=document.getElementById('discordAccountLogout');
+ if(!wrap||!button||!name||!logout)return;
  let signedIn=false;
- const hide=()=>panel.classList.remove('open');
- const refresh=async()=>{
+ const hide=()=>{wrap.classList.remove('open');button.setAttribute('aria-expanded','false')};
+ async function refresh(){
   try{
-   const r=await fetch('/api/auth/discord/status',{credentials:'same-origin',cache:'no-store'});
-   if(!r.ok)throw Error('unavailable');
-   const data=await r.json();
+   const response=await fetch('/api/auth/discord/status',{credentials:'same-origin',cache:'no-store'});
+   if(!response.ok)throw Error('unavailable');
+   const data=await response.json();
    signedIn=!!data.authenticated;
    button.textContent=signedIn?'Profile':'Discord Login';
-   if(logout)logout.style.display=signedIn?'block':'none';
-   if(signedIn){
-    status.textContent='Discord: '+(data.discordUsername||'Connected')+(data.rankedVerified?' · Ranked verified':' · Ranked verification pending');
-    start.style.display='none';
-   }else{
-    status.textContent='Sign in with Discord to access your account profile.';
-    start.style.display='';start.textContent='Login with Discord';
-   }
-   start.disabled=false;
-  }catch(e){
-   signedIn=false;button.textContent='Discord Login';if(logout)logout.style.display='none';
-   status.textContent='Discord login is currently unavailable.';
-   start.disabled=true;
-  }
- };
- button.addEventListener('click',async()=>{panel.classList.add('open');await refresh()});
- close.addEventListener('click',hide);
- panel.addEventListener('click',e=>{if(e.target===panel)hide()});
- document.addEventListener('keydown',e=>{if(e.key==='Escape')hide()});
- start.addEventListener('click',()=>{window.location.assign('/api/auth/discord/start')});
- if(logout)logout.addEventListener('click',async()=>{
+   name.textContent=data.discordUsername||'Discord user';
+  }catch(e){signedIn=false;button.textContent='Discord Login'}
+  if(!signedIn)hide();
+ }
+ button.addEventListener('click',()=>{
+  if(!signedIn){window.location.assign('/api/auth/discord/start');return}
+  const isOpen=wrap.classList.toggle('open');
+  button.setAttribute('aria-expanded',String(isOpen));
+ });
+ logout.addEventListener('click',async()=>{
   logout.disabled=true;
   try{
    const response=await fetch('/api/auth/discord/logout',{method:'POST',credentials:'same-origin'});
    if(!response.ok)throw Error('logout failed');
    await refresh();hide();
-   const wrap=document.getElementById('settingsWrap');
-   if(wrap){wrap.classList.remove('open');document.getElementById('settingsToggle')?.setAttribute('aria-expanded','false')}
   }catch(e){window.alert('Unable to log out right now.')}
   finally{logout.disabled=false}
  });
+ document.addEventListener('click',e=>{if(!wrap.contains(e.target))hide()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')hide()});
  refresh();
 })();
 
