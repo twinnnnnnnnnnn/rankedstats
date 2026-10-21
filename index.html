@@ -285,7 +285,7 @@ img[src*="mc-heads.net/head/"]{object-fit:contain;image-rendering:pixelated}
 /* Ensure leaderboard 3D heads blend with row backgrounds. */
 table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix-blend-mode:normal}
 .lb-live-dot{display:none;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.16);vertical-align:middle;flex:none;margin-left:5px}.lb-live-dot.is-live{display:inline-block}
-.decay-row td{padding:5px 10px!important}.decay-bar{display:flex;align-items:center;gap:12px;min-height:34px;color:var(--muted);font-weight:700;letter-spacing:.12em}.decay-roses{flex:1;height:28px;background-image:url("https://mcasset.cloud/1.21.4/assets/minecraft/textures/block/wither_rose.png");background-repeat:repeat-x;background-position:center;background-size:28px 28px;image-rendering:pixelated;opacity:.75}.decay-label{white-space:nowrap}
+.decay-row td{padding:5px 10px!important}.decay-bar{display:flex;align-items:center;gap:12px;min-height:34px;color:var(--muted);font-weight:700;letter-spacing:.12em}.decay-roses{flex:1;height:28px;background-image:url("https://mcasset.cloud/1.21.4/assets/minecraft/textures/block/wither_rose.png");background-repeat:repeat-x;background-position:center;background-size:28px 28px;image-rendering:pixelated;opacity:.75}.decay-label{white-space:nowrap}.decay-elo{color:var(--loss);font-weight:800}
 </style>
 </head>
 <body>
@@ -588,7 +588,7 @@ function rowHTML(x){
   const roomWinner=P.mode==="private"&&roomPlayers.length>2&&x.result&&x.result.uuid?roomPlayers.find(p=>p.uuid===x.result.uuid):null;
   const shownOpp=roomWinner||opp;
   const roomExtra=roomWinner?Math.max(0,roomPlayers.length-2):0;
-  if(i.dec)return `<tr class="pt decay-row" data-id="${x.id}"><td colspan="${r?8:6}"><div class="decay-bar"><span class="decay-roses" aria-hidden="true"></span><span class="decay-label">☠ DECAY${ch!=null?" · "+(ch>0?"+":"")+ch+" Elo":""}</span><span class="decay-roses" aria-hidden="true"></span></div></td></tr>`;
+  if(i.dec)return `<tr class="pt decay-row" data-id="${x.id}"><td colspan="${r?8:6}"><div class="decay-bar"><span class="decay-roses" aria-hidden="true"></span><span class="decay-label">☠ DECAY${ch!=null?' · <span class="decay-elo">'+(ch>0?"+":"")+ch+" Elo</span>":""}</span><span class="decay-roses" aria-hidden="true"></span></div></td></tr>`;
   return `<tr class="pt" data-id="${x.id}"><td><span class="res ${i.draw||i.dec?"d":i.won?"w":"l"}">${i.res}</span></td>`+
   `<td>${i.dec?"":`<span class="who">${icon(shownOpp.eloRate,18)}<a href="#${enc(shownOpp.nickname||"")}">${esc(shownOpp.nickname||"—")}</a>${roomWinner?` <span class="mut" title="${roomExtra} additional player${roomExtra===1?"":"s"}">+${roomExtra}</span>`:""}</span>`}</td>`+
   (r?`<td>${opp.eloRate!=null?opp.eloRate:"—"}</td>`:"")+
