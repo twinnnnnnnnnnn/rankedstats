@@ -415,7 +415,20 @@ function stopProfile(){P=null;if(io){io.disconnect();io=null}}
 const go=h=>{if(location.hash===h)route();else location.hash=h};
 
 // Browser-only prediction prototype: no real bets, wallets or event outcomes.
-function showPredictionDemo(){
+async function showPredictionDemo(){
+ document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==='predictions'));
+ const gateRoot=document.getElementById('out');
+ gateRoot.innerHTML='<div class="prediction-demo"><h1>📈 Predictions</h1><div class="pred-card" role="status">Checking Discord login…</div></div>';
+ let authorized=false;
+ try{
+  const response=await fetch('/api/auth/discord/status',{credentials:'same-origin',cache:'no-store'});
+  if(response.ok){const auth=await response.json();authorized=auth.authenticated===true}
+ }catch(e){}
+ if(location.hash.indexOf('#!predictions')!==0)return;
+ if(!authorized){
+  gateRoot.innerHTML='<div class="prediction-demo"><h1>📈 Predictions</h1><div class="pred-card"><h2>Discord login required</h2><p>Sign in with Discord to access predictions and the coin leaderboard.</p><a class="go" href="/api/auth/discord/start" style="display:inline-block;padding:11px 18px;text-decoration:none;border-radius:10px">Log in with Discord</a></div></div>';
+  return;
+ }
  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==='predictions'));
  const root=document.getElementById('out');
  root.innerHTML='<div class="prediction-demo"><h1>📈 Predictions</h1><div class="pred-subtabs"><span class="pred-today" id="predToday"></span><button type="button" class="on" data-pred-subtab="predictions">Predictions</button><button type="button" data-pred-subtab="leaderboard">Leaderboard</button><span class="pred-wallet" id="predWallet" title="Your Discord wallet">👛 <span id="predWalletAmount">—</span></span></div><div id="predictionsPanel"><h2>Daily Elo Predictions</h2><p class="pred-note">10 players daily · resets 00:00 JST · 3 predictions per day · virtual coins only.</p><p class="pred-note">Choose Gain or Loss, then place your prediction. Stakes are deducted immediately. Payouts use locked dynamic odds; inactive sessions are refunded.</p><div id="dailyPredStatus" class="pred-card">Loading current-season leaderboard…</div><div id="dailyPredPlayers"></div></div><div id="predLeaderboardPanel" hidden><h2>🪙 Balance Leaderboard</h2><div id="predLeaderboardRows" class="pred-card">Loading…</div></div></div>';
