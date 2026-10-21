@@ -30,28 +30,33 @@ async function baselineFor(p){
  return session?averageCompleted(session,p.uuid):null;
 }
 
+let rosterCache=null;
 async function roster(){
+ if(rosterCache&&Date.now()-rosterCache.at<120000)return rosterCache.players;
  const board=await ranked('/leaderboard');
  const users=(board.users||[]).filter(u=>u&&u.nickname&&u.uuid);
- const d=day();
+ const d=day(),now=Math.floor(Date.now()/1000);
  const shuffle=(arr,salt)=>arr.slice().sort((a,b)=>hash(d+salt+a.nickname)-hash(d+salt+b.nickname));
- const candidates=[...shuffle(users.slice(0,50),'top'),...shuffle(users.slice(50,150),'mid')];
- const now=Math.floor(Date.now()/1000);
- const checked=await Promise.all(candidates.map(async u=>{
-  const p={uuid:u.uuid,nickname:u.nickname,rank:users.indexOf(u)+1,elo:Number(u.eloRate??u.seasonResult?.eloRate??0)};
-  try{
-   const recent=await matches(p.uuid,1);
-   const latest=recent.map(dateOf).filter(Number.isFinite).filter(t=>t>0).sort((a,b)=>b-a)[0];
-   return latest&&now-latest>sessionGap(p)?p:null;
-  }catch(e){return null}
- }));
- const eligible=checked.filter(Boolean);
- const top=eligible.filter(p=>p.rank<=50).slice(0,3);
- const other=eligible.filter(p=>p.rank>50).slice(0,7);
- const selected=[...top,...other];
- if(selected.length<10)selected.push(...eligible.filter(p=>!selected.some(x=>x.uuid===p.uuid)).slice(0,10-selected.length));
- return selected;
+ const candidates=[...shuffle(users.slice(0,50),'top').slice(0,14),...shuffle(users.slice(50,150),'mid').slice(0,24)];
+ const selected=[];
+ // Limit requests to prevent upstream API rate limits and Vercel function timeouts.
+ for(let i=0;i<candidates.length&&selected.length<10;i+=6){
+  const batch=await Promise.all(candidates.slice(i,i+6).map(async u=>{
+   const p={uuid:u.uuid,nickname:u.nickname,rank:users.indexOf(u)+1,elo:Number(u.eloRate??u.seasonResult?.eloRate??0)};
+   try{
+    const list=await matches(p.uuid,100);
+    const latest=Math.max(0,...list.map(dateOf));
+    if(!latest||now-latest<=sessionGap(p))return null;
+    const baseline=averageCompleted(lastCompletedSession(list,p)||[],p.uuid);
+    return baseline===null?null:{...p,baselineAvgMs:baseline,odds:{faster:190,slower:190}};
+   }catch(e){return null}
+  }));
+  selected.push(...batch.filter(Boolean));
+ }
+ rosterCache={at:Date.now(),players:selected.slice(0,10)};
+ return rosterCache.players;
 }
+
 async function settle(client,items){
  for(const p of items){
   try{
@@ -103,13 +108,13 @@ module.exports=async(req,res)=>{
   if(pending.rows.length)await settle(client,pending.rows);
   if(req.method==='GET'){
    const [wallet,history,players]=await Promise.all([client.query('SELECT balance FROM discord_wallets WHERE discord_id=$1',[session.id]),client.query('SELECT id,player_name,direction,stake,odds_basis_points,status,payout,result_elo,baseline_avg_ms,result_avg_ms,placed_at FROM ranked_predictions WHERE discord_id=$1 ORDER BY id DESC LIMIT 30',[session.id]),roster()]);
-   const odds=(await Promise.all(players.map(async p=>{try{const baseline=await baselineFor(p);return baseline===null?null:{...p,baselineAvgMs:baseline,odds:{faster:190,slower:190}}}catch(e){return null}}))).filter(Boolean);
+   const odds=players;
    return res.status(200).json({balance:Number(wallet.rows[0]?.balance||0),players:odds,history:history.rows,day:day(),remaining:Math.max(0,3-history.rows.filter(p=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(p.placed_at))===day()).length)});
   }
   const {uuid,direction,stake}=req.body||{};
   if(typeof uuid!=='string'||!['faster','slower'].includes(direction)||!Number.isSafeInteger(stake)||stake<1||stake>1000000)return res.status(400).json({error:'Invalid prediction'});
   const players=await roster();const player=players.find(p=>p.uuid===uuid);if(!player)return res.status(400).json({error:'Player not in today\'s roster'});
-  const baseline=await baselineFor(player);
+  const baseline=player.baselineAvgMs;
   if(baseline===null)return res.status(400).json({error:'No completed winning runs in the last completed session'});
   const odds=190;
   await client.query('BEGIN');
