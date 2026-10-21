@@ -12,6 +12,24 @@ const changeOf=(m,id)=>{const c=(m.changes||[]).find(x=>x.uuid===id);return c&&N
 async function matches(id,count=30){const data=await ranked('/users/'+encodeURIComponent(id)+'/matches?count='+count+'&type=2');return Array.isArray(data)?data:[]}
 function oddsFor(list,id){const valid=list.map(m=>changeOf(m,id)).filter(x=>x!==null&&x!==0);const gain=valid.filter(x=>x>0).length;const p=Math.max(.2,Math.min(.8,(gain+3)/(valid.length+6)));return {gain:Math.max(110,Math.min(500,Math.floor(95/p))),loss:Math.max(110,Math.min(500,Math.floor(95/(1-p))))}}
 const sessionGap=p=>(p.elo>=2500?3:p.rank<=150?2:1)*3600;
+const completionTime=(m,id)=>m.result?.uuid===id&&!m.forfeited&&!m.decayed&&Number(m.result.time)>0?Number(m.result.time):null;
+const averageCompleted=(list,id)=>{const times=list.map(m=>completionTime(m,id)).filter(t=>t!==null);return times.length?times.reduce((a,b)=>a+b,0)/times.length:null};
+function lastCompletedSession(list,p){
+ const sorted=list.filter(m=>dateOf(m)>0).sort((a,b)=>dateOf(b)-dateOf(a));
+ const gap=sessionGap(p),now=Math.floor(Date.now()/1000);
+ let groups=[],group=[];
+ for(const m of sorted){
+  if(group.length&&dateOf(group[group.length-1])-dateOf(m)>gap){groups.push(group);group=[]}
+  group.push(m);
+ }
+ if(group.length)groups.push(group);
+ return groups.find(g=>now-dateOf(g[0])>gap)||null;
+}
+async function baselineFor(p){
+ const session=lastCompletedSession(await matches(p.uuid,100),p);
+ return session?averageCompleted(session,p.uuid):null;
+}
+
 async function roster(){
  const board=await ranked('/leaderboard');
  const users=(board.users||[]).filter(u=>u&&u.nickname&&u.uuid);
@@ -49,14 +67,22 @@ async function settle(client,items){
     const session=[relevant[0]];
     for(let i=1;i<relevant.length;i++){if(dateOf(relevant[i])-dateOf(session[session.length-1])>gap)break;session.push(relevant[i])}
     if(now-dateOf(session[session.length-1])<=gap)continue;
+    if(p.direction==='faster'||p.direction==='slower'){
+     const avg=averageCompleted(session,p.player_uuid);
+     const base=Number(p.baseline_avg_ms);
+     if(avg===null||!Number.isFinite(base)||base<=0||avg===base)status='refunded';
+     else status=(avg<base?'faster':'slower')===p.direction?'won':'lost';
+     delta=avg;
+    }else{
     const changes=session.map(m=>changeOf(m,p.player_uuid));
     if(changes.some(v=>v===null))continue;
     delta=Math.round(changes.reduce((a,b)=>a+b,0));
     status=delta===0?'refunded':(delta>0?'gain':'loss')===p.direction?'won':'lost';
+    }
    }
    payout=status==='refunded'?Number(p.stake):status==='won'?Math.floor(Number(p.stake)*p.odds_basis_points/100):0;
    await client.query('BEGIN');
-   const updated=await client.query("UPDATE ranked_predictions SET status=$2,resolved_at=NOW(),result_elo=$3,payout=$4 WHERE id=$1 AND status='pending' RETURNING discord_id",[p.id,status,delta,payout]);
+   const updated=await client.query("UPDATE ranked_predictions SET status=$2,resolved_at=NOW(),result_elo=CASE WHEN direction IN ('gain','loss') THEN $3 ELSE NULL END,result_avg_ms=CASE WHEN direction IN ('faster','slower') THEN $3 ELSE NULL END,payout=$4 WHERE id=$1 AND status='pending' RETURNING discord_id",[p.id,status,delta,payout]);
    if(updated.rowCount&&payout)await client.query('UPDATE discord_wallets SET balance=balance+$2 WHERE discord_id=$1',[p.discord_id,payout]);
    await client.query('COMMIT');
   }catch(e){await client.query('ROLLBACK').catch(()=>{});console.error('Prediction settlement failed',p.id,e.message)}
@@ -76,14 +102,16 @@ module.exports=async(req,res)=>{
   const pending=await client.query("SELECT * FROM ranked_predictions WHERE status='pending' AND discord_id=$1 ORDER BY placed_at LIMIT 20",[session.id]);
   if(pending.rows.length)await settle(client,pending.rows);
   if(req.method==='GET'){
-   const [wallet,history,players]=await Promise.all([client.query('SELECT balance FROM discord_wallets WHERE discord_id=$1',[session.id]),client.query('SELECT id,player_name,direction,stake,odds_basis_points,status,payout,result_elo,placed_at FROM ranked_predictions WHERE discord_id=$1 ORDER BY id DESC LIMIT 30',[session.id]),roster()]);
-   const odds=await Promise.all(players.map(async p=>({...p,odds:oddsFor(await matches(p.uuid,30),p.uuid)})));
+   const [wallet,history,players]=await Promise.all([client.query('SELECT balance FROM discord_wallets WHERE discord_id=$1',[session.id]),client.query('SELECT id,player_name,direction,stake,odds_basis_points,status,payout,result_elo,baseline_avg_ms,result_avg_ms,placed_at FROM ranked_predictions WHERE discord_id=$1 ORDER BY id DESC LIMIT 30',[session.id]),roster()]);
+   const odds=(await Promise.all(players.map(async p=>{try{const baseline=await baselineFor(p);return baseline===null?null:{...p,baselineAvgMs:baseline,odds:{faster:190,slower:190}}}catch(e){return null}}))).filter(Boolean);
    return res.status(200).json({balance:Number(wallet.rows[0]?.balance||0),players:odds,history:history.rows,day:day(),remaining:Math.max(0,3-history.rows.filter(p=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(p.placed_at))===day()).length)});
   }
   const {uuid,direction,stake}=req.body||{};
-  if(typeof uuid!=='string'||!['gain','loss'].includes(direction)||!Number.isSafeInteger(stake)||stake<1||stake>1000000)return res.status(400).json({error:'Invalid prediction'});
+  if(typeof uuid!=='string'||!['faster','slower'].includes(direction)||!Number.isSafeInteger(stake)||stake<1||stake>1000000)return res.status(400).json({error:'Invalid prediction'});
   const players=await roster();const player=players.find(p=>p.uuid===uuid);if(!player)return res.status(400).json({error:'Player not in today\'s roster'});
-  const odds=oddsFor(await matches(uuid,30),uuid)[direction];
+  const baseline=await baselineFor(player);
+  if(baseline===null)return res.status(400).json({error:'No completed winning runs in the last completed session'});
+  const odds=190;
   await client.query('BEGIN');
   const wallet=await client.query('SELECT balance FROM discord_wallets WHERE discord_id=$1 FOR UPDATE',[session.id]);
   if(!wallet.rows.length||Number(wallet.rows[0].balance)<stake){await client.query('ROLLBACK');return res.status(400).json({error:'Insufficient coins'})}
@@ -92,7 +120,7 @@ module.exports=async(req,res)=>{
   const dup=await client.query("SELECT 1 FROM ranked_predictions WHERE discord_id=$1 AND player_uuid=$2 AND jst_day=(NOW() AT TIME ZONE 'Asia/Tokyo')::date",[session.id,uuid]);
   if(dup.rowCount){await client.query('ROLLBACK');return res.status(400).json({error:'Already predicted this player today'})}
   await client.query('UPDATE discord_wallets SET balance=balance-$2 WHERE discord_id=$1',[session.id,stake]);
-  const saved=await client.query("INSERT INTO ranked_predictions(discord_id,player_uuid,player_name,direction,stake,odds_basis_points,jst_day,player_rank,player_elo) VALUES($1,$2,$3,$4,$5,$6,(NOW() AT TIME ZONE 'Asia/Tokyo')::date,$7,$8) RETURNING id",[session.id,uuid,player.nickname,direction,stake,odds,player.rank,player.elo]);
+  const saved=await client.query("INSERT INTO ranked_predictions(discord_id,player_uuid,player_name,direction,stake,odds_basis_points,jst_day,player_rank,player_elo,baseline_avg_ms) VALUES($1,$2,$3,$4,$5,$6,(NOW() AT TIME ZONE 'Asia/Tokyo')::date,$7,$8,$9) RETURNING id",[session.id,uuid,player.nickname,direction,stake,odds,player.rank,player.elo,baseline]);
   await client.query('COMMIT');return res.status(201).json({id:saved.rows[0].id,odds:odds/100,balance:Number(wallet.rows[0].balance)-stake});
  }catch(e){if(client)await client.query('ROLLBACK').catch(()=>{});console.error('Predictions API failed',e);return res.status(503).json({error:'Predictions temporarily unavailable'})}finally{client?.release()}
 };
