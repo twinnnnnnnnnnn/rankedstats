@@ -1244,7 +1244,7 @@ function renderPT(){
   el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr><th>#</th>${cols.map(c=>`<th class="${c[2]}" data-k="${c[0]}">${c[1]}${k===c[0]?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${sorted.map((r,i)=>{
     const s=r[v]||{},bad=r.state!=="d",wait=`<span class="mut">${r.state==="e"?"×":"…"}</span>`;
     const c=(x,f,cls)=>`<td class="num ${cls||""}">${bad?wait:x!=null?f(x):"—"}</td>`;
-    return `<tr><td class="mut">${i+1}</td><td><span class="who">${flag(r.country)?`<span title="${esc(cname(r.country))}">${flag(r.country)}</span>`:""}<img class="head" alt="" width="24" height="24" loading="lazy" src="https://mc-heads.net/avatar/${enc(r.uuid||r.name)}/24"><a href="#${enc(r.name)}">${leaderboardDisplayName(r.name,r.user||null)}</a>${r.uuid?profileDecoration({uuid:r.uuid}):""}${leaderboardLiveBadge(r.user||{})}</span></td>`+
+    return `<tr><td class="mut">${i+1}</td><td><span class="who">${`<span class="flag-slot">${flagSlot(r.country)}</span>`}<img class="head" alt="" width="40" height="40" loading="lazy" src="https://mc-heads.net/avatar/${enc(r.uuid||r.name)}/40"><a href="#${enc(r.name)}">${leaderboardDisplayName(r.name,r.user||null)}</a>${r.uuid?profileDecoration({uuid:r.uuid}):""}${leaderboardLiveBadge(r.user||{})}</span></td>`+
       `<td class="num"><span class="who">${bad?wait:icon(r.elo,22)+(r.elo!=null?r.elo:"—")}</span></td>`+
       c(s.wr,x=>x.toFixed(1)+"%")+c(s.games,x=>x)+c(s.wins,x=>x)+
       c(s.pb,fmtP,s.pb!=null&&s.pb===bpb?"best":"")+c(s.avg,fmtP,s.avg!=null&&s.avg===bavg?"best":"")+`</tr>`}).join("")}</tbody></table>`;
