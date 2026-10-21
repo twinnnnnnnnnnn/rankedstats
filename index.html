@@ -332,6 +332,23 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 <div id="modal" role="dialog" aria-modal="true" aria-label="Match details"></div>
 
 <script>
+// Independent bootstrap guard: also runs when the main script fails to parse.
+(function(){
+ let failure='';
+ window.addEventListener('error',function(e){failure=e.message||'JavaScript error';show();});
+ window.addEventListener('unhandledrejection',function(e){failure=String(e.reason&&e.reason.message||e.reason||'Async startup error');show();});
+ function show(){
+  const out=document.getElementById('out');
+  if(!out||out.textContent.trim())return;
+  const section=document.createElement('section');section.className='card';section.style.cssText='padding:24px;margin:24px auto;max-width:740px';
+  const heading=document.createElement('h2');heading.textContent='Website startup failed';
+  const detail=document.createElement('pre');detail.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';detail.textContent=failure||'Main application did not render. Check browser console for details.';
+  section.append(heading,detail);out.append(section);
+ }
+ window.addEventListener('load',function(){setTimeout(show,3500)});
+})();
+</script>
+<script>
 // Surface unexpected startup failures instead of leaving an empty page.
 function showStartupError(message){
  const out=document.getElementById('out');
