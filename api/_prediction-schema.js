@@ -18,5 +18,7 @@ async function ensurePredictionTables(client) {
  )`);
  await client.query('CREATE INDEX IF NOT EXISTS ranked_predictions_pending_idx ON ranked_predictions (status, placed_at)');
  await client.query('CREATE INDEX IF NOT EXISTS ranked_predictions_user_day_idx ON ranked_predictions (discord_id, jst_day)');
+ // Enforce one prediction per player per Discord account per JST day at the database level.
+ await client.query('CREATE UNIQUE INDEX IF NOT EXISTS ranked_predictions_unique_player_day_idx ON ranked_predictions (discord_id, jst_day, player_uuid)');
 }
 module.exports={ensurePredictionTables};
