@@ -239,6 +239,7 @@ body:has(#out.lyxier-profile) #gradient-appearances,body:has(#out.christmas-prof
 .vod-macro{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
 .vod-macro button{font-size:12px;padding:6px 10px}
 #modal.vod-expanded .vod-macro{margin-top:14px}
+.split-behind{color:var(--loss);font-size:12px;font-weight:700;white-space:nowrap;margin-left:5px}
 </style>
 </head>
 <body>
@@ -869,7 +870,7 @@ function matchHTML(m){
   const fin=u=>{const c=(m.completions||[]).find(x=>x.uuid===u);return c?c.time:(win===u&&m.result?m.result.time:null)};
   let rowsData=types.map(t=>({label:nice(t),vals:pl.map(p=>tm(p.uuid,t))}));
   const dl=pl.map(p=>tl.filter(x=>x.uuid===p.uuid&&/death/.test(x.type)&&!/dragon/.test(x.type)).map(x=>x.time).sort((a,b)=>a-b));
-  for(let n=0;n<Math.max(0,...dl.map(a=>a.length));n++)rowsData.push({label:"Death "+(n+1),vals:dl.map(a=>a[n]!=null?a[n]:null),death:true});
+  for(let i=0;i<dl.length;i++)for(let n=0;n<dl[i].length;n++){const vals=pl.map(()=>null);vals[i]=dl[i][n];rowsData.push({label:pl[i].nickname+" · Death "+(n+1),vals,death:true});}
   // Match end is the room's final recorded time, not each player's own finish.
   // Use the latest completion/timeline event across everyone in the room.
   const roomEndTimes=[
@@ -885,8 +886,10 @@ function matchHTML(m){
   const extra=[];
   const cell=(r,i,p)=>{const v=r.vals[i];if(v==null)return `<td class="mut">—</td>`;
     if(r.cnt)return `<td>${v}</td>`;
-    const others=r.vals.filter((x,j)=>j!==i&&x!=null),f=!r.death&&others.length&&v<Math.min(...others);
-    return `<td class="${f?"f":""}" data-u="${esc(p.uuid)}" data-seek="${v}">${fmtP(v)}</td>`};
+    const others=r.vals.filter((x,j)=>j!==i&&x!=null),f=!r.death&&!r.end&&others.length&&v<Math.min(...others);
+    const behind=!r.death&&!r.end&&others.length&&v>Math.min(...others)?(v-Math.min(...others))/1000:null;
+    const lag=behind!=null?` <span class="split-behind">+${behind.toFixed(behind<10?2:1)}s</span>`:"";
+    return `<td class="${f?"f":""}" data-u="${esc(p.uuid)}" data-seek="${v}">${fmtP(v)}${lag}</td>`};
   const lead=r=>{if(r.cnt||r.death||pl.length!==2||r.vals[0]==null||r.vals[1]==null||r.vals[0]===r.vals[1])return `<td class="mut">—</td>`;
     const a=r.vals[0]<r.vals[1]?0:1,d=Math.abs(r.vals[0]-r.vals[1])/1000;
     return `<td class="mut">${esc(pl[a].nickname)} +${d.toFixed(d<10?2:1)}s</td>`};
