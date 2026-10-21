@@ -1240,7 +1240,7 @@ function renderPT(){
 const FAST={token:0,users:[],runs:new Map(),selected:null,duplicates:false,limit:50,loading:false,season:"all"};
 function fastRuns(u){return FAST.runs.get(FAST.season+":"+u.uuid)||[]}
 function fastWinningRuns(matches,uuid){
- return (Array.isArray(matches)?matches:[]).filter(m=>m.result?.uuid===uuid&&Number(m.result.time)>0&&Number(m.type)===MT.ranked&&!m.forfeit&&!m.forfeited).map(m=>({time:Number(m.result.time),id:m.id,seed:m.seed?.overworld?String(m.seed.overworld).replace(/_/g," "):"—"})).sort((a,b)=>a.time-b.time);
+ return (Array.isArray(matches)?matches:[]).filter(m=>m.result?.uuid===uuid&&Number(m.result.time)>0&&Number(m.type)===MT.ranked&&!m.forfeit&&!m.forfeited).map(m=>({time:Number(m.result.time),id:m.id,seed:m.seed?.overworld?String(m.seed.overworld).replace(/_/g," "):"—",bastion:m.seed?.nether?String(m.seed.nether).replace(/_/g," "):"—"})).sort((a,b)=>a.time-b.time);
 }
 function fastRows(){
  const entries=[];
@@ -1257,7 +1257,7 @@ function fastRows(){
 function renderFastest(){
  const host=$("fastList");if(!host)return;
  const rows=fastRows();
- host.innerHTML=rows.length?'<table class="pt2 fast-table"><thead><tr><th>#</th><th>Player</th><th class="fast-time-col">Time</th><th>Seed type</th></tr></thead><tbody>'+rows.slice(0,200).map((r,i)=>'<tr><td class="mut">'+(i+1)+'</td><td>'+flag(countryCode(r.u))+' <img class="fast-head" alt="" loading="lazy" src="https://mc-heads.net/avatar/'+enc(r.u.uuid)+'/40"> <button type="button" class="fast-player" data-fast-user="'+esc(r.u.uuid)+'" aria-expanded="'+(FAST.selected===r.u.uuid)+'">'+esc(r.u.nickname)+'</button></td><td class="fast-time-col">'+(r.id?'<button type="button" class="fast-time" data-fast-match="'+esc(r.id)+'" title="View match splits">'+fmtP(r.time)+'</button>':fmtP(r.time))+'</td><td>'+esc(r.seed||'—')+'</td></tr>'+(FAST.selected===r.u.uuid?'<tr class="fast-expanded-row"><td colspan="4"><div class="fast-inline-profile">'+fastProfileHTML(r.u)+'</div></td></tr>':'')).join("")+'</tbody></table>':'<div class="msg">Loading player PBs…</div>';
+ host.innerHTML=rows.length?'<table class="pt2 fast-table"><thead><tr><th>#</th><th>Player</th><th class="fast-time-col">Time</th><th>Seed type</th><th>Bastion type</th></tr></thead><tbody>'+rows.slice(0,200).map((r,i)=>'<tr><td class="mut">'+(i+1)+'</td><td>'+flag(countryCode(r.u))+' <img class="fast-head" alt="" loading="lazy" src="https://mc-heads.net/avatar/'+enc(r.u.uuid)+'/40"> <button type="button" class="fast-player" data-fast-user="'+esc(r.u.uuid)+'" aria-expanded="'+(FAST.selected===r.u.uuid)+'">'+esc(r.u.nickname)+'</button></td><td class="fast-time-col">'+(r.id?'<button type="button" class="fast-time" data-fast-match="'+esc(r.id)+'" title="View match splits">'+fmtP(r.time)+'</button>':fmtP(r.time))+'</td><td>'+esc(r.seed||'—')+'</td><td>'+esc(r.bastion||'—')+'</td></tr>'+(FAST.selected===r.u.uuid?'<tr class="fast-expanded-row"><td colspan="5"><div class="fast-inline-profile">'+fastProfileHTML(r.u)+'</div></td></tr>':'')).join("")+'</tbody></table>':'<div class="msg">Loading player PBs…</div>';
  const status=$("fastStatus");if(status)status.textContent=FAST.loading?"Loading ranked results…":(FAST.duplicates?"Showing completed ranked wins only; older matches may not be included.":"Verified ranked wins from fetched match history; "+rows.length+" players.");
 }
 function fastProfileHTML(u){
