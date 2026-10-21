@@ -418,7 +418,7 @@ const go=h=>{if(location.hash===h)route();else location.hash=h};
 function showPredictionDemo(){
  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==='predictions'));
  const root=document.getElementById('out');
- root.innerHTML='<div class="prediction-demo"><h1>📈 Predictions</h1><div class="pred-subtabs"><span class="pred-today" id="predToday"></span><button type="button" class="on" data-pred-subtab="predictions">Predictions</button><button type="button" data-pred-subtab="leaderboard">Leaderboard</button><span class="pred-wallet" id="predWallet" title="Your Discord wallet">👛 <span id="predWalletAmount">—</span></span></div><div id="predictionsPanel"><h2>Daily Elo Predictions</h2><p class="pred-note">Prototype · 10 players daily · resets 00:00 JST · 3 predictions per day. Virtual coins only.</p><p class="pred-note">Choose Gain OR Loss and enter a stake within your demo balance. This is a preview: no coins are deducted, and no predictions are submitted until secure settlement and refunds are implemented.</p><div id="dailyPredStatus" class="pred-card">Loading current-season leaderboard…</div><div id="dailyPredPlayers"></div></div><div id="predLeaderboardPanel" hidden><h2>🪙 Balance Leaderboard</h2><div id="predLeaderboardRows" class="pred-card">Loading…</div></div></div>';
+ root.innerHTML='<div class="prediction-demo"><h1>📈 Predictions</h1><div class="pred-subtabs"><span class="pred-today" id="predToday"></span><button type="button" class="on" data-pred-subtab="predictions">Predictions</button><button type="button" data-pred-subtab="leaderboard">Leaderboard</button><span class="pred-wallet" id="predWallet" title="Your Discord wallet">👛 <span id="predWalletAmount">—</span></span></div><div id="predictionsPanel"><h2>Daily Elo Predictions</h2><p class="pred-note">10 players daily · resets 00:00 JST · 3 predictions per day · virtual coins only.</p><p class="pred-note">Choose Gain or Loss, then place your prediction. Stakes are deducted immediately. Payouts use locked dynamic odds; inactive sessions are refunded.</p><div id="dailyPredStatus" class="pred-card">Loading current-season leaderboard…</div><div id="dailyPredPlayers"></div></div><div id="predLeaderboardPanel" hidden><h2>🪙 Balance Leaderboard</h2><div id="predLeaderboardRows" class="pred-card">Loading…</div></div></div>';
  const dateLabel=root.querySelector('#predToday');
  dateLabel.textContent=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',month:'short',day:'numeric',year:'numeric'}).format(new Date())+' JST';
  const walletAmount=root.querySelector('#predWalletAmount');
@@ -438,23 +438,24 @@ function showPredictionDemo(){
  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  const hash=t=>{let h=2166136261;for(let i=0;i<t.length;i++)h=Math.imul(h^t.charCodeAt(i),16777619);return h>>>0};
  const shuffle=(arr,salt)=>arr.slice().sort((a,b)=>hash(day+salt+a.nickname)-hash(day+salt+b.nickname));
- Promise.all([get(API+'/leaderboard'),fetch('/api/auth/discord/status',{credentials:'same-origin',cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({}))]).then(async ([data,auth])=>{
-  if(!document.getElementById('dailyPredPlayers'))return;
-  const users=(data.users||[]).filter(u=>u&&u.nickname);
-  const selected=[...shuffle(users.slice(0,50),'top').slice(0,3),...shuffle(users.slice(50,150),'mid').slice(0,3)];
-  selected.push(...shuffle(users.slice(50,150).filter(u=>!selected.some(p=>p.nickname===u.nickname)),'extra').slice(0,4));
-  let balance=0,walletReady=false;
-  if(auth.authenticated){
-   try{
-    const response=await fetch('/api/wallet',{credentials:'same-origin',cache:'no-store'});
-    if(response.ok){const wallet=await response.json();balance=wallet.balance;walletReady=Number.isSafeInteger(balance)&&balance>=0}
-   }catch(e){}
-  }
+ fetch('/api/predictions',{credentials:'same-origin',cache:'no-store'}).then(async response=>{const data=await response.json();if(!response.ok)throw Error(data.error||'Unavailable');return data}).then(data=>{
+  if(!list.isConnected)return;
   status.remove();
-  list.innerHTML=selected.map((u,i)=>{
-   const rank=users.indexOf(u)+1,tag=rank<=10?'Top 10':rank<=50?'Top 50':'Top 150';
-   return '<div class="pred-card" data-daily-pred="'+i+'"><button type="button" class="pred-player-name" data-pred-player="'+i+'" aria-expanded="false">'+esc(u.nickname)+' <span class="pred-player-chevron">⌄</span></button><div class="pred-mini" data-pred-mini="'+i+'" hidden></div><p class="pred-note">#'+rank+' · '+tag+'</p><div class="pred-options"><button type="button" data-direction="gain">📈 Gain Elo</button><button type="button" data-direction="loss">📉 Lose Elo</button></div><div class="pred-actions"><label class="pred-stake-label">Stake 🪙 <input class="pred-stake-input" type="number" min="1" step="1" max="'+balance+'" value="'+(balance?Math.min(10,balance):'')+'" data-stake inputmode="numeric"> coins</label><button type="button" data-preview disabled>Preview prediction</button></div><p class="pred-note" data-feedback role="status">Choose one outcome and enter an amount.</p></div>';
-  }).join('');
+  let balance=data.balance;const players=data.players||[];
+  if(walletAmount.isConnected)walletAmount.textContent=balance.toLocaleString()+' 🪙';
+  const history=document.createElement('div');history.className='pred-card';
+  history.innerHTML='<h3>Your predictions · '+data.remaining+'/3 remaining today</h3>'+(data.history.length?data.history.map(p=>'<p class="pred-note">'+esc(p.player_name)+' · '+esc(p.direction)+' · 🪙 '+p.stake+' · '+(p.odds_basis_points/100).toFixed(2)+'× · '+esc(p.status)+(p.status==='won'?' · 🪙 '+p.payout:'')+'</p>').join(''):'<p class="pred-note">No predictions yet.</p>');
+  list.before(history);
+  list.innerHTML=players.map((u,i)=>'<div class="pred-card" data-daily-pred="'+i+'"><button type="button" class="pred-player-name" data-pred-player="'+i+'" aria-expanded="false">'+esc(u.nickname)+' <span class="pred-player-chevron">⌄</span></button><div class="pred-mini" data-pred-mini="'+i+'" hidden></div><p class="pred-note">#'+u.rank+(u.rank<=10?' · Top 10':u.rank<=50?' · Top 50':' · Top 150')+'</p><div class="pred-options"><button type="button" data-direction="gain">📈 Gain · '+(u.odds.gain/100).toFixed(2)+'×</button><button type="button" data-direction="loss">📉 Loss · '+(u.odds.loss/100).toFixed(2)+'×</button></div><div class="pred-actions"><label class="pred-stake-label">Stake 🪙 <input class="pred-stake-input" type="number" min="1" step="1" max="'+balance+'" value="'+(balance?Math.min(10,balance):'')+'" data-stake inputmode="numeric"> coins</label><button type="button" data-preview>Place prediction</button></div><p class="pred-note" data-feedback role="status">Choose an outcome.</p></div>').join('');
+  list.querySelectorAll('[data-daily-pred]').forEach((card,i)=>{
+   let direction='';const stake=card.querySelector('[data-stake]'),submit=card.querySelector('[data-preview]'),feedback=card.querySelector('[data-feedback]');
+   const validate=()=>{const n=Number(stake.value);submit.disabled=!direction||!Number.isSafeInteger(n)||n<1||n>balance||data.remaining<=0;};
+   card.querySelectorAll('[data-direction]').forEach(button=>button.addEventListener('click',()=>{direction=button.dataset.direction;card.querySelectorAll('[data-direction]').forEach(b=>{b.classList.toggle('selected',b===button);b.classList.toggle('dimmed',b!==button)});feedback.textContent='Potential payout: 🪙 '+Math.floor(Number(stake.value)*players[i].odds[direction]/100);validate()}));
+   stake.addEventListener('input',validate);
+   submit.addEventListener('click',async()=>{validate();if(submit.disabled)return;submit.disabled=true;feedback.textContent='Placing prediction…';try{const response=await fetch('/api/predictions',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({uuid:players[i].uuid,direction,stake:Number(stake.value)})});const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to place');showPredictionDemo()}catch(e){feedback.textContent=e.message;validate()}});
+   validate();
+  });
+  const selected=players;
   list.querySelectorAll('[data-pred-player]').forEach(button=>button.addEventListener('click',async()=>{
    const i=Number(button.dataset.predPlayer),u=selected[i],panel=list.querySelector('[data-pred-mini="'+i+'"]');
    if(!u||!panel)return;
@@ -496,7 +497,7 @@ function showPredictionDemo(){
    submit.addEventListener('click',()=>{validate();if(!submit.disabled)feedback.textContent='Preview: '+direction.toUpperCase()+' · '+Number(stake.value)+' 🪙 demo coins. Not placed; balance unchanged.'});
    validate();
   });
- }).catch(()=>{status.textContent='Unable to load Ranked players right now. Please try again later.'});
+ }).catch(e=>{status.textContent='Predictions unavailable: '+e.message;});
 }
 
 function route(){
