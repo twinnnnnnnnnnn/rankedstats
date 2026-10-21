@@ -316,7 +316,7 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 <div id="out"></div>
 <footer class="ranked-footer"><div><strong>Play MCSR Ranked</strong><p>Ready to compete? Visit the official MCSR Ranked website to get started.</p><p class="mut" style="margin-top:6px;font-size:12px">Not an official MCSR Ranked website.</p></div><a href="https://mcsrranked.com/" target="_blank" rel="noopener noreferrer">Download Ranked ↗</a></footer>
 </div>
-<div class="discord-auth-panel" id="discordAuthPanel" role="dialog" aria-modal="true" aria-label="Discord account login"><section class="discord-auth-card"><h2>Discord Account</h2><p>Sign in with Discord to link your account to your MCSR Ranked profile. Your linked Ranked Discord account must be verified before coins or casino access can be enabled.</p><p id="discordAuthStatus" role="status">Checking login availability…</p><div id="minecraftVerifySection" style="display:none;padding:14px;margin:12px 0;border:1px solid var(--line);border-radius:12px;background:var(--surface2)"><strong>Verify Minecraft for Casino</strong><p id="minecraftVerifyStatus">Connect your Microsoft account to verify Minecraft Java ownership before accessing coins and slots.</p><button type="button" id="minecraftVerifyButton" disabled>Verify with Microsoft (coming soon)</button><p style="font-size:12px">Verification must be completed through a secure Microsoft OAuth backend. Discord login alone does not verify Minecraft ownership.</p></div><div class="discord-auth-actions"><button class="discord-auth-primary" type="button" id="discordAuthStart">Login with Discord</button><button type="button" id="discordAuthClose">Close</button></div><p style="font-size:12px">Discord is used to sign in. Minecraft verification will be required separately for the casino. Coins and slots remain locked until verification is implemented.</p></section></div>
+<div class="discord-auth-panel" id="discordAuthPanel" role="dialog" aria-modal="true" aria-label="Discord account login"><section class="discord-auth-card"><h2>Discord Account</h2><p>Sign in with Discord to manage your account. Ranked account linking and casino access will be added later.</p><p id="discordAuthStatus" role="status">Checking login availability…</p><div class="discord-auth-actions"><button class="discord-auth-primary" type="button" id="discordAuthStart">Login with Discord</button><button type="button" id="discordAuthClose">Close</button></div><p style="font-size:12px">Discord is used to sign in. Coins and slots remain unavailable until secure account linking and wallet services are implemented.</p></section></div>
 <div id="modal" role="dialog" aria-modal="true" aria-label="Match details"></div>
 
 <script>
@@ -1482,7 +1482,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 
 // Discord account control: show Profile after successful sign-in.
 (()=>{
- const panel=document.getElementById('discordAuthPanel'),button=document.getElementById('discordLoginToggle'),close=document.getElementById('discordAuthClose'),start=document.getElementById('discordAuthStart'),status=document.getElementById('discordAuthStatus'),logout=document.getElementById('discordSettingsLogout'),minecraft=document.getElementById('minecraftVerifySection'),minecraftStatus=document.getElementById('minecraftVerifyStatus');
+ const panel=document.getElementById('discordAuthPanel'),button=document.getElementById('discordLoginToggle'),close=document.getElementById('discordAuthClose'),start=document.getElementById('discordAuthStart'),status=document.getElementById('discordAuthStatus'),logout=document.getElementById('discordSettingsLogout');
  if(!panel||!button||!close||!start||!status)return;
  let signedIn=false;
  const hide=()=>panel.classList.remove('open');
@@ -1494,9 +1494,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
    signedIn=!!data.authenticated;
    button.textContent=signedIn?'Profile':'Discord Login';
    if(logout)logout.style.display=signedIn?'block':'none';
-   if(minecraft)minecraft.style.display=signedIn?'block':'none';
    if(signedIn){
-    if(minecraftStatus)minecraftStatus.textContent='Minecraft Java ownership is not yet verified. Microsoft OAuth setup is required to enable casino access.';
     status.textContent='Discord: '+(data.discordUsername||'Connected')+(data.rankedVerified?' · Ranked verified':' · Ranked verification pending');
     start.style.display='none';
    }else{
@@ -1505,7 +1503,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
    }
    start.disabled=false;
   }catch(e){
-   signedIn=false;if(minecraft)minecraft.style.display='none';button.textContent='Discord Login';if(logout)logout.style.display='none';
+   signedIn=false;button.textContent='Discord Login';if(logout)logout.style.display='none';
    status.textContent='Discord login is currently unavailable.';
    start.disabled=true;
   }
