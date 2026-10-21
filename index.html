@@ -776,7 +776,8 @@ function vodBox(m,p){
   if(!v)return `<div class="vodbox none"><b>${esc(p.nickname)}</b><span>No public VOD</span></div>`;
   const idm=String(v.url||"").match(/videos\/(\d+)/),vid=idm&&idm[1];
   const matchDuration=(m.result&&Number.isFinite(Number(m.result.time)))?Math.max(0,Number(m.result.time)/1000):0;
-  const off=Math.max(0,(m.date||0)-(v.startsAt||0)-matchDuration);
+  // Start VOD playback at the 10-second pre-game countdown, not the game start.
+  const off=Math.max(0,(m.date||0)-(v.startsAt||0)-matchDuration-10);
   const link=vid?`https://www.twitch.tv/videos/${vid}?t=${tstr(off)}`:v.url;
   const body=(vid&&canEmbed())?`<iframe id="vod-${esc(p.uuid)}" data-vid="${vid}" data-off="${off}" src="${embedSrc(vid,off,false)}" allowfullscreen title="VOD of ${esc(p.nickname)}"></iframe>`:`<div class="msg">${vid?"Embedded player isn’t available when this page is opened from a file — use the link above.":"This VOD can’t be embedded — use the link above."}</div>`;
   return `<div class="vodbox"><div class="vh"><b>${esc(p.nickname)}</b><a href="${esc(link)}" target="_blank" rel="noopener">Open on Twitch ↗</a></div>${body}</div>`;
