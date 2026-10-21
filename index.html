@@ -640,7 +640,7 @@ function renderProfile(){
    <div class="tiles" id="tiles"></div><details class="card session-panel" id="sessionPanel"><summary>Current Session <span class="mut">(estimated)</span></summary><div id="sessionStats"></div></details>
    <div class="main">
     <div class="card" id="cardChart"><h2>Elo history <span id="gsub"></span><span class="seg" id="gm" style="min-width:210px"><button data-g="recent" class="${P.full?"":"on"}">Recent 50</button><button data-g="full" class="${P.full?"on":""}">Full season</button></span></h2><div id="gArea"></div></div>
-    <div class="card" id="cardTable"><h2>${P.mode==="ranked"?"Ranked matches":P.mode==="casual"?"Casual matches":"Private room matches"} <span id="cnt2"></span></h2><div class="bar" style="margin:0 0 12px;gap:8px;flex-wrap:wrap"><label for="matchMode">Match type</label><select id="matchMode" aria-label="Match type"><option value="ranked" ${P.mode==="ranked"?"selected":""}>Ranked</option><option value="casual" ${P.mode==="casual"?"selected":""}>Casual</option><option value="private" ${P.mode==="private"?"selected":""}>Private rooms</option></select><label for="matchSort">Sort matches</label><select id="matchSort" aria-label="Sort matches"><option value="recent" ${P.matchSort==="recent"?"selected":""}>Most recent</option><option value="fastest" ${P.matchSort==="fastest"?"selected":""}>Fastest finish (wins only)</option></select></div><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th>${rkd?"<th>Opp. Elo</th>":""}<th>Time</th>${rkd?"<th>Elo</th>":""}<th>Overworld</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div><div class="hint">Click a match for splits and VODs.</div></div>
+    <div class="card" id="cardTable"><h2>${P.mode==="ranked"?"Ranked matches":P.mode==="casual"?"Casual matches":"Private room matches"} <span id="cnt2"></span></h2><div class="bar" style="margin:0 0 12px;gap:8px;flex-wrap:wrap"><label for="matchMode">Match type</label><select id="matchMode" aria-label="Match type"><option value="ranked" ${P.mode==="ranked"?"selected":""}>Ranked</option><option value="casual" ${P.mode==="casual"?"selected":""}>Casual</option><option value="private" ${P.mode==="private"?"selected":""}>Private rooms</option></select><label for="matchSort">Sort matches</label><select id="matchSort" aria-label="Sort matches"><option value="recent" ${P.matchSort==="recent"?"selected":""}>Most recent</option><option value="oldest" ${P.matchSort==="oldest"?"selected":""}>Oldest first</option><option value="fastest" ${P.matchSort==="fastest"?"selected":""}>Fastest finish (wins only)</option></select></div><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th>${rkd?"<th>Opp. Elo</th>":""}<th>Time</th>${rkd?"<th>Elo</th>":""}<th>Overworld</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div><div class="hint">Click a match for splits and VODs.</div></div>
    </div>`;
   startTwitchStatus(twitch);
   $("out").classList.remove("lyxier-profile","christmas-profile");
@@ -656,7 +656,9 @@ function renderProfile(){
 function renderMatchRows(){
   if(!P||!P.st||!$("tb"))return;
   const list=P.st[P.mode].list;
-  const rows=P.matchSort==="fastest"
+  const rows=P.matchSort==="oldest"
+    ?list.slice().sort((a,b)=>Number(a.date||0)-Number(b.date||0))
+    :P.matchSort==="fastest"
     ?list.filter(x=>x.result&&x.result.uuid===P.u.uuid&&Number(x.result.time)>0&&!x.decayed&&!x.forfeited)
       .slice().sort((a,b)=>Number(a.result.time)-Number(b.result.time))
     :list;
@@ -665,8 +667,14 @@ function renderMatchRows(){
 async function setMatchSort(value){
   if(!P||!P.st)return;
   const tok=P,mode=tok.mode,st=tok.st[mode];
-  tok.matchSort=value==="fastest"?"fastest":"recent";
+  tok.matchSort=["fastest","oldest"].includes(value)?value:"recent";
   renderMatchRows();sentUI();
+  if(tok.matchSort==="oldest"){
+    const control=$("matchSort");if(control)control.disabled=true;
+    while(P===tok&&tok.mode===mode&&tok.matchSort==="oldest"&&!st.done&&!st.err)await loadMore(mode,100);
+    if(P===tok&&tok.mode===mode){if(control)control.disabled=false;renderMatchRows();sentUI()}
+    return;
+  }
   if(tok.matchSort!=="fastest")return;
   const control=$("matchSort");
   if(control)control.disabled=true;
@@ -688,7 +696,7 @@ async function loadRankedTimeStats(tok){
 function sentUI(){
   const s=$("sent");if(!s||!P||!P.st)return;
   const st=P.st[P.mode];
-  s.textContent=st.err?"Couldn’t load more — click to retry":st.done?(st.list.length?"End of list · "+st.list.length+" matches":"No "+(P.mode==="ranked"?"ranked":P.mode==="casual"?"casual":"private room")+" matches found"):P.matchSort==="fastest"?"Loading all matches to find fastest wins…":"Loading more…";
+  s.textContent=st.err?"Couldn’t load more — click to retry":st.done?(st.list.length?"End of list · "+st.list.length+" matches":"No "+(P.mode==="ranked"?"ranked":P.mode==="casual"?"casual":"private room")+" matches found"):P.matchSort==="fastest"?"Loading all matches to find fastest wins…":P.matchSort==="oldest"?"Loading matches to sort oldest first…":"Loading more…";
   s.dataset.retry=st.err?"1":"";
   const c=$("cnt2");if(c)c.textContent=st.list.length+" loaded"+(st.done?"":" · scroll for more");
 }
@@ -718,7 +726,7 @@ function loadMore(mode,count){
     st.list.push(...add);
     if(P!==tok)return;
     if(mode==="ranked")refreshSessionStats();
-    if(tok.mode===mode&&$("tb")){if(tok.matchSort==="fastest")renderMatchRows();else $("tb").insertAdjacentHTML("beforeend",add.map(rowHTML).join(""))}
+    if(tok.mode===mode&&$("tb")){if(tok.matchSort==="fastest"||tok.matchSort==="oldest")renderMatchRows();else $("tb").insertAdjacentHTML("beforeend",add.map(rowHTML).join(""))}
     if(tok.mode===mode){
       renderTiles();sentUI();kick();
       if(mode==="ranked"&&(tok.full||st.list.length-add.length<50))refreshGraph();
