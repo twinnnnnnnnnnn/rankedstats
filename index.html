@@ -204,27 +204,6 @@ body.dark-everything.christmas-profile-bg::before{background:#000!important;back
 @keyframes splashFadeOut{to{opacity:0;visibility:hidden}}
 @media(prefers-reduced-motion:reduce){#loadingSplash{animation:none}#loadingSplash .loading-dot{animation:none;opacity:1}}
 
-/* Random image apparitions over the default gradient only */
-#gradient-appearances{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
-#gradient-appearances img{position:absolute;width:clamp(220px,34vw,520px);max-height:65vh;object-fit:contain;opacity:0;animation:gradientApparition 15s ease-in-out infinite;filter:drop-shadow(0 5px 15px rgba(0,0,0,.45))}
-@keyframes gradientApparition{0%,12%,38%,100%{opacity:0}18%,31%{opacity:.8}}
-body.lyxier-profile-bg #gradient-appearances,body.christmas-profile-bg #gradient-appearances,body.dark-everything #gradient-appearances{display:none}
-body:has(#out.lyxier-profile) #gradient-appearances,body:has(#out.christmas-profile) #gradient-appearances{display:none}
-.wrap{position:relative;z-index:1}
-@media(prefers-reduced-motion:reduce){#gradient-appearances img{animation:none!important}}
-
-#modal .mbox{transition:width .4s ease,padding .4s ease,background .4s ease}
-#modal.vod-expanded{padding:0;align-items:center;background:rgba(0,0,0,.97)}
-#modal.vod-expanded .mbox{width:100%;min-height:100vh;border:0;border-radius:0;background:#000;padding:16px;display:flex;flex-direction:column;justify-content:center}
-#modal.vod-expanded .mbox>h2,#modal.vod-expanded .mbox>.mut,#modal.vod-expanded .mbox>.pcs{display:none}
-#modal.vod-expanded .vods{width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-#modal.vod-expanded .vodbox{background:#080808;border:0;padding:5px;min-width:0}
-#modal.vod-expanded .vodbox iframe,#modal.vod-expanded .vod-player{width:100%;aspect-ratio:16/9}
-#modal.vod-expanded .mbox .x{position:fixed;top:12px;right:14px}
-.vod-zoom-btn{font-size:12px;padding:3px 8px;white-space:nowrap}
-@media(max-width:700px){#modal.vod-expanded .vods{grid-template-columns:1fr}#modal.vod-expanded .mbox{padding:40px 6px 12px}}
-@media(prefers-reduced-motion:reduce){#modal .mbox{transition:none}}
-
 /* Single expand control beneath the VOD pair; keep iframes mounted while resizing. */
 .vod-section>.vod-zoom-btn{display:block;margin:12px auto 0;padding:8px 18px}
 #modal.vod-expanded .mbox>.sec3:not(.vod-section){display:none}
@@ -281,23 +260,14 @@ body:has(#out.lyxier-profile) #gradient-appearances,body:has(#out.christmas-prof
 img[src*="mc-heads.net/head/"]{object-fit:contain;image-rendering:pixelated}
 .vod-race-name{left:-135px;top:17px;max-width:120px;width:120px;text-align:right;overflow:visible;white-space:nowrap;font-size:12px}
 .vod-race{padding-left:145px;padding-right:48px}
-.vod-race-name::before{content:"";display:inline-block;width:24px;height:24px;vertical-align:middle;margin-right:5px;background-image:var(--race-avatar);background-size:contain;background-repeat:no-repeat;background-position:center}
+
 @media(max-width:700px){.vod-race{padding-left:48px}.vod-race-name{display:none}}
+/* Ensure leaderboard 3D heads blend with row backgrounds. */
+table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix-blend-mode:multiply}
 </style>
 </head>
 <body>
-<div id="gradient-appearances" aria-hidden="true"></div>
-<script>
-(function(){
-  const layer=document.getElementById("gradient-appearances");
-  for(let i=0;i<5;i++){
-    const img=document.createElement("img");img.src="https://femboy.beauty/nYUvsb";img.alt="";
-    img.style.left=(5+Math.random()*72)+"%";img.style.top=(5+Math.random()*65)+"%";
-    img.style.animationDelay=(-Math.random()*15)+"s";img.style.animationDuration=(12+Math.random()*11)+"s";
-    layer.appendChild(img);
-  }
-})();
-</script>
+
 
 <div id="loadingSplash" role="status" aria-live="polite" aria-label="Loading website">
   <img src="https://femboy.beauty/qnWWeD" alt="" fetchpriority="high">
@@ -992,7 +962,7 @@ function matchHTML(m){
    <h2>${typeName} match #${esc(m.id)}</h2>
    <div class="mut">${m.date?new Date(m.date*1000).toLocaleString():""}${seed?" · "+esc(seed):""}${m.forfeited?" · forfeited":""}</div>
    <div class="pcs">${pcs}</div>
-   <div class="sec3 vod-section"><h3>VODs</h3>${anyVod?`<div class="vods">${pl.map(p=>vodBox(m,p)).join("")}</div><div class="vod-macro vod-transport"><button type="button" data-vod-action="restart" title="Restart" aria-label="Restart"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.7 6.4"/><path d="M3 4v7h7"/></svg></button><button type="button" data-vod-action="backward" title="Back 10 seconds" aria-label="Back 10 seconds"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 19-9-7 9-7v14Zm11 0-9-7 9-7v14Z"/></svg></button><button type="button" class="vod-main-play" data-vod-action="toggle" title="Play or pause" aria-label="Play or pause"><span class="vod-play-icon"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 5 12 7-12 7V5Z" fill="currentColor" stroke="none"/></svg></span><span class="vod-pause-icon" hidden><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></span></button><button type="button" data-vod-action="forward" title="Forward 10 seconds" aria-label="Forward 10 seconds"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 5 9 7-9 7V5Zm11 0 9 7-9 7V5Z"/></svg></button></div><div class="vod-match-timeline"><div class="vod-timeline-top"><span>Match progress</span><span data-vod-clock>0:00 / 0:00</span></div><div class="vod-race" data-race-total="${Math.max(1,(finalTime||resultTime||0)/1000)}"><div class="vod-race-lane vod-race-upper"><span class="vod-race-name" style="--race-avatar:url(https://mc-heads.net/head/${esc(pl[0]?.uuid||"")}/32)">${esc(pl[0]?.nickname||"Player 1")}</span><img class="vod-race-head" data-race-head="0" src="https://mc-heads.net/head/${esc(pl[0]?.uuid||"")}/36" alt=""><div class="vod-race-splits">${types.map((t,i)=>{const time=pl[0]?tm(pl[0].uuid,t):null;return '<button type="button" class="vod-race-split" data-vod-seek="'+(time!=null?Math.round(time/1000):'')+'" style="left:'+((i+1)/(types.length+1)*100)+'%" '+(time==null?'disabled':'')+'><span>'+ (time!=null?fmtP(time):'—') +'</span></button>'}).join("")}</div></div><div class="vod-race-stages"><span>Start</span>${types.map((t,i)=>'<span class="vod-race-stage" style="left:'+((i+1)/(types.length+1)*100)+'%">'+esc(nice(t))+'</span>').join("")}<span>End</span></div><div class="vod-race-lane vod-race-lower"><span class="vod-race-name" style="--race-avatar:url(https://mc-heads.net/head/${esc(pl[1]?.uuid||"")}/32)">${esc(pl[1]?.nickname||"Player 2")}</span><img class="vod-race-head" data-race-head="1" src="https://mc-heads.net/head/${esc(pl[1]?.uuid||"")}/36" alt=""><div class="vod-race-splits">${types.map((t,i)=>{const time=pl[1]?tm(pl[1].uuid,t):null;return '<button type="button" class="vod-race-split" data-vod-seek="'+(time!=null?Math.round(time/1000):'')+'" style="left:'+((i+1)/(types.length+1)*100)+'%" '+(time==null?'disabled':'')+'><span>'+(time!=null?fmtP(time):'—')+'</span></button>'}).join("")}</div></div></div><input class="vod-timeline-track" type="range" min="0" max="${Math.max(1,Math.ceil((finalTime||resultTime||0)/1000))}" value="0" step="1" aria-label="Seek both VODs to match time"><div class="vod-timeline-times"><span>Countdown</span><span>Match end</span></div><div hidden class="vod-race-data">${JSON.stringify(pl.slice(0,2).map(p=>types.map(t=>tm(p.uuid,t)==null?null:tm(p.uuid,t)/1000)))}</div></div><button type="button" class="vod-zoom-btn" data-vod-zoom>⛶ Enlarge VODs</button>`:`<div class="vodbox none"><span>No public VODs for this match.</span></div>`}</div>
+   <div class="sec3 vod-section"><h3>VODs</h3>${anyVod?`<div class="vods">${pl.map(p=>vodBox(m,p)).join("")}</div><div class="vod-macro vod-transport"><button type="button" data-vod-action="restart" title="Restart" aria-label="Restart"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11a9 9 0 1 1 2.7 6.4"/><path d="M3 4v7h7"/></svg></button><button type="button" data-vod-action="backward" title="Back 10 seconds" aria-label="Back 10 seconds"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 19-9-7 9-7v14Zm11 0-9-7 9-7v14Z"/></svg></button><button type="button" class="vod-main-play" data-vod-action="toggle" title="Play or pause" aria-label="Play or pause"><span class="vod-play-icon"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 5 12 7-12 7V5Z" fill="currentColor" stroke="none"/></svg></span><span class="vod-pause-icon" hidden><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg></span></button><button type="button" data-vod-action="forward" title="Forward 10 seconds" aria-label="Forward 10 seconds"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m2 5 9 7-9 7V5Zm11 0 9 7-9 7V5Z"/></svg></button></div><div class="vod-match-timeline"><div class="vod-timeline-top"><span>Match progress</span><span data-vod-clock>0:00 / 0:00</span></div><div class="vod-race" data-race-total="${Math.max(1,(finalTime||resultTime||0)/1000)}"><div class="vod-race-lane vod-race-upper"><span class="vod-race-name">${esc(pl[0]?.nickname||"Player 1")}</span><img class="vod-race-head" data-race-head="0" src="https://mc-heads.net/head/${esc(pl[0]?.uuid||"")}/36" alt=""><div class="vod-race-splits">${types.map((t,i)=>{const time=pl[0]?tm(pl[0].uuid,t):null;return '<button type="button" class="vod-race-split" data-vod-seek="'+(time!=null?Math.round(time/1000):'')+'" style="left:'+((i+1)/(types.length+1)*100)+'%" '+(time==null?'disabled':'')+'><span>'+ (time!=null?fmtP(time):'—') +'</span></button>'}).join("")}</div></div><div class="vod-race-stages"><span>Start</span>${types.map((t,i)=>'<span class="vod-race-stage" style="left:'+((i+1)/(types.length+1)*100)+'%">'+esc(nice(t))+'</span>').join("")}<span>End</span></div><div class="vod-race-lane vod-race-lower"><span class="vod-race-name">${esc(pl[1]?.nickname||"Player 2")}</span><img class="vod-race-head" data-race-head="1" src="https://mc-heads.net/head/${esc(pl[1]?.uuid||"")}/36" alt=""><div class="vod-race-splits">${types.map((t,i)=>{const time=pl[1]?tm(pl[1].uuid,t):null;return '<button type="button" class="vod-race-split" data-vod-seek="'+(time!=null?Math.round(time/1000):'')+'" style="left:'+((i+1)/(types.length+1)*100)+'%" '+(time==null?'disabled':'')+'><span>'+(time!=null?fmtP(time):'—')+'</span></button>'}).join("")}</div></div></div><input class="vod-timeline-track" type="range" min="0" max="${Math.max(1,Math.ceil((finalTime||resultTime||0)/1000))}" value="0" step="1" aria-label="Seek both VODs to match time"><div class="vod-timeline-times"><span>Countdown</span><span>Match end</span></div><div hidden class="vod-race-data">${JSON.stringify(pl.slice(0,2).map(p=>types.map(t=>tm(p.uuid,t)==null?null:tm(p.uuid,t)/1000)))}</div></div><button type="button" class="vod-zoom-btn" data-vod-zoom>⛶ Enlarge VODs</button>`:`<div class="vodbox none"><span>No public VODs for this match.</span></div>`}</div>
    <div class="sec3"><h3>Splits</h3>${splits}</div></div>`;
 }
 function seekVod(uuid,ms){
@@ -1137,7 +1107,7 @@ function renderHistorical(fetchStats=true){
   el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr><th>#</th>${cols.map(([key,label])=>`<th data-k="${key}" class="${key==="name"?"":"num"}">${label}${k===key?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${shown.map((r,i)=>{
     const u=r.u,st=r.stats||{},waiting=!r.stats;
     const cell=(v,fn)=>`<td class="num">${waiting?"…":f(v,fn)}</td>`;
-    return `<tr><td class="mut">${k==="elo"&&!T.country&&d===-1?(r.rank??i+1):i+1}</td><td><span class="who">${flag(u.country)?`<span title="${esc(cname(u.country))}">${flag(u.country)}</span>`:""}<img class="head" alt="" loading="lazy" src="https://mc-heads.net/head/${enc(u.uuid)}/24"><a href="#${enc(u.nickname)}" class="${isSupporter(u)?"supporter-name":""}">${esc(u.nickname)}</a>${profileDecoration(u)}${isSupporter(u)?` <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:""}</span></td><td class="num"><span class="who">${icon(r.elo,22)}${f(r.elo)}</span></td>${cell(st.wr,x=>x.toFixed(1)+"%")}${cell(st.games)}${cell(st.wins)}${cell(st.pb,fmtP)}${cell(st.avg,fmtP)}</tr>`;
+    return `<tr><td class="mut">${k==="elo"&&!T.country&&d===-1?(r.rank??i+1):i+1}</td><td><span class="who">${flag(u.country)?`<span title="${esc(cname(u.country))}">${flag(u.country)}</span>`:""}<img class="head" alt="" loading="lazy" src="https://mc-heads.net/head/${enc(u.uuid)}/24?overlay=true"><a href="#${enc(u.nickname)}" class="${isSupporter(u)?"supporter-name":""}">${esc(u.nickname)}</a>${profileDecoration(u)}${isSupporter(u)?` <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:""}</span></td><td class="num"><span class="who">${icon(r.elo,22)}${f(r.elo)}</span></td>${cell(st.wr,x=>x.toFixed(1)+"%")}${cell(st.games)}${cell(st.wins)}${cell(st.pb,fmtP)}${cell(st.avg,fmtP)}</tr>`;
   }).join("")}</tbody></table>`;
   $("pstat").textContent=shown.length+" / "+rows.length+" players";
   $("lbsent").textContent=T.shown>=rows.length?"End of leaderboard · "+rows.length+" players":"Scroll for more";
@@ -1157,7 +1127,7 @@ function renderPT(){
   el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr><th>#</th>${cols.map(c=>`<th class="${c[2]}" data-k="${c[0]}">${c[1]}${k===c[0]?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${sorted.map((r,i)=>{
     const s=r[v]||{},bad=r.state!=="d",wait=`<span class="mut">${r.state==="e"?"×":"…"}</span>`;
     const c=(x,f,cls)=>`<td class="num ${cls||""}">${bad?wait:x!=null?f(x):"—"}</td>`;
-    return `<tr><td class="mut">${i+1}</td><td><span class="who">${flag(r.country)?`<span title="${esc(cname(r.country))}">${flag(r.country)}</span>`:""}<img class="head" alt="" width="24" height="24" loading="lazy" src="https://mc-heads.net/head/${enc(r.uuid||r.name)}/24"><a href="#${enc(r.name)}">${esc(r.name)}</a>${r.uuid?profileDecoration({uuid:r.uuid}):""}</span></td>`+
+    return `<tr><td class="mut">${i+1}</td><td><span class="who">${flag(r.country)?`<span title="${esc(cname(r.country))}">${flag(r.country)}</span>`:""}<img class="head" alt="" width="24" height="24" loading="lazy" src="https://mc-heads.net/head/${enc(r.uuid||r.name)}/24?overlay=true"><a href="#${enc(r.name)}">${esc(r.name)}</a>${r.uuid?profileDecoration({uuid:r.uuid}):""}</span></td>`+
       `<td class="num"><span class="who">${bad?wait:icon(r.elo,22)+(r.elo!=null?r.elo:"—")}</span></td>`+
       c(s.wr,x=>x.toFixed(1)+"%")+c(s.games,x=>x)+c(s.wins,x=>x)+
       c(s.pb,fmtP,s.pb!=null&&s.pb===bpb?"best":"")+c(s.avg,fmtP,s.avg!=null&&s.avg===bavg?"best":"")+`</tr>`}).join("")}</tbody></table>`;
