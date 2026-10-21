@@ -325,7 +325,7 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
     </section>
   </div>
 </nav>
-<div id="out"></div>
+<div id="out" style="display:block;visibility:visible;opacity:1;min-height:180px"><section class="card" id="initialLoadStatus" style="padding:24px;margin:24px auto;max-width:740px"><h2>Loading leaderboard…</h2><p>If this message stays on screen, the website JavaScript has not started. Open Developer Tools (F12), select Console, and copy the first red error.</p></section></div>
 <footer class="ranked-footer"><div><strong>Play MCSR Ranked</strong><p>Ready to compete? Visit the official MCSR Ranked website to get started.</p><p class="mut" style="margin-top:6px;font-size:12px">Not an official MCSR Ranked website.</p></div><a href="https://mcsrranked.com/" target="_blank" rel="noopener noreferrer">Download Ranked ↗</a></footer>
 </div>
 <div class="discord-auth-panel" id="discordAuthPanel" role="dialog" aria-modal="true" aria-label="Discord account login"><section class="discord-auth-card"><h2>Discord Account</h2><p>Sign in with Discord to manage your account. Ranked account linking and casino access will be added later.</p><p id="discordAuthStatus" role="status">Checking login availability…</p><div class="discord-auth-actions"><button class="discord-auth-primary" type="button" id="discordAuthStart">Login with Discord</button><button type="button" id="discordAuthClose">Close</button></div><p style="font-size:12px">Discord is used to sign in. Coins and slots remain unavailable until secure account linking and wallet services are implemented.</p></section></div>
@@ -339,11 +339,11 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
  window.addEventListener('unhandledrejection',function(e){failure=String(e.reason&&e.reason.message||e.reason||'Async startup error');show();});
  function show(){
   const out=document.getElementById('out');
-  if(!out||out.textContent.trim())return;
+  if(!out||out.textContent.trim()&&!document.getElementById('initialLoadStatus'))return;
   const section=document.createElement('section');section.className='card';section.style.cssText='padding:24px;margin:24px auto;max-width:740px';
   const heading=document.createElement('h2');heading.textContent='Website startup failed';
   const detail=document.createElement('pre');detail.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';detail.textContent=failure||'Main application did not render. Check browser console for details.';
-  section.append(heading,detail);out.append(section);
+  section.append(heading,detail);out.replaceChildren(section);
  }
  window.addEventListener('load',function(){setTimeout(show,3500)});
 })();
@@ -352,7 +352,7 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 // Surface unexpected startup failures instead of leaving an empty page.
 function showStartupError(message){
  const out=document.getElementById('out');
- if(!out||out.children.length)return;
+ if(!out||out.children.length&&!document.getElementById('initialLoadStatus'))return;
  out.innerHTML='<section class="card" style="margin:24px auto;max-width:700px;padding:24px"><h2>Website failed to load</h2><p>Please copy this error so we can fix it:</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></section>';
  out.querySelector('pre').textContent=String(message||'Unknown error');
 }
