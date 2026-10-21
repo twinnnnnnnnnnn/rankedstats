@@ -6,7 +6,7 @@ let pool;
 const db=()=>pool||(pool=new Pool({connectionString:process.env.DATABASE_URL,max:3}));
 const day=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const hash=t=>{let h=2166136261;for(let i=0;i<t.length;i++)h=Math.imul(h^t.charCodeAt(i),16777619);return h>>>0};
-async function ranked(path){const response=await fetch(API+path,{signal:AbortSignal.timeout(8500)});if(!response.ok)throw Error('Ranked API unavailable');const json=await response.json();if(json.status!=='success')throw Error('Ranked API failed');return json.data}
+async function ranked(path){const response=await fetch(API+path,{signal:AbortSignal.timeout(8500)});if(!response.ok)throw Error('Ranked API unavailable ('+response.status+') at '+path.split('?')[0]);const json=await response.json();if(json.status!=='success')throw Error('Ranked API failed');return json.data}
 const dateOf=m=>Number(m.date)||0;
 const changeOf=(m,id)=>{const c=(m.changes||[]).find(x=>x.uuid===id);return c&&Number.isFinite(Number(c.change))?Number(c.change):null};
 async function matches(id,count=30){const data=await ranked('/users/'+encodeURIComponent(id)+'/matches?count='+count+'&type=2');return Array.isArray(data)?data:[]}
