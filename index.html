@@ -421,7 +421,7 @@ function showPredictionDemo(){
  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  const hash=t=>{let h=2166136261;for(let i=0;i<t.length;i++)h=Math.imul(h^t.charCodeAt(i),16777619);return h>>>0};
  const shuffle=(arr,salt)=>arr.slice().sort((a,b)=>hash(day+salt+a.nickname)-hash(day+salt+b.nickname));
- Promise.all([get(API+'/leaderboard'),fetch('/api/auth/discord/status',{credentials:'same-origin',cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({}))]).then(([data,auth])=>{
+ Promise.all([get(API+'/leaderboard'),fetch('/api/auth/discord/status',{credentials:'same-origin',cache:'no-store'}).then(r=>r.ok?r.json():{}).catch(()=>({}))]).then(async ([data,auth])=>{
   if(!document.getElementById('dailyPredPlayers'))return;
   const users=(data.users||[]).filter(u=>u&&u.nickname);
   const selected=[...shuffle(users.slice(0,50),'top').slice(0,3),...shuffle(users.slice(50,150),'mid').slice(0,3)];
