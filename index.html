@@ -11,7 +11,7 @@
 :root{--bg:#f4f5f9;--surface:#fff;--surface2:#eceef5;--text:#14162a;--muted:#6a6f8c;--line:#dfe2ee;--accent:#14b87a;--accent2:#6d5dfc;--loss:#e5484d;--win:#14b87a;--r:18px}
 @media (prefers-color-scheme:dark){:root{--bg:#0b0c14;--surface:#141626;--surface2:#1c1f35;--text:#eceefc;--muted:#8a8fb0;--line:#262a44;--loss:#ff6b6f;--win:#2ee59d}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;isolation:isolate;position:relative;min-height:100vh}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;isolation:isolate;position:relative;min-height:100vh}
 /* Full-page animated gradient is the default background, not a panel background. */
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(-45deg,#100708,#260b0b,#4b1410,#69200d,#8b3510,#3c100d,#170808);background-size:400% 400%;animation:ambientGradient 22s ease infinite;will-change:background-position}
 @keyframes ambientGradient{0%{background-position:0% 50%}25%{background-position:50% 100%}50%{background-position:100% 50%}75%{background-position:50% 0%}100%{background-position:0% 50%}}
@@ -116,8 +116,8 @@ svg{display:block;width:100%;height:auto;cursor:crosshair}
 #detail.on{border:1px solid var(--accent2);color:var(--text);background:var(--surface2)}
 .mini{padding:4px 10px;font-size:13px;margin-top:8px;border-color:var(--accent2)}
 .scroll{overflow:auto;max-height:520px;position:relative}
-table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
-th{position:sticky;top:0;background:var(--surface);text-align:left;color:var(--muted);font-weight:500;font-size:12px;padding:6px 10px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;z-index:1}
+table{width:100%;border-collapse:collapse;font-size:15px;min-width:560px}
+th{position:sticky;top:0;background:var(--surface);text-align:left;color:var(--muted);font-weight:500;font-size:13px;padding:6px 10px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;z-index:1}
 td{padding:10px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
 tr.pt{cursor:pointer}tr.pt:hover td,tr.hl td{background:var(--surface2)}
 tr.sel td{background:color-mix(in srgb,var(--accent2) 18%,transparent)}
