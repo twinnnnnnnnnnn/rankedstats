@@ -507,17 +507,25 @@ async function showPredictionDemo(){
    if(!opening)return;
    panel.hidden=false;button.setAttribute('aria-expanded','true');
    if(panel.dataset.loaded)return;
-   panel.textContent='Loading last 10 ranked matches…';
+   panel.textContent='Loading last session…';
    try{
     const profile=await getUser(u.uuid||u.nickname);
-    const matches=await fetchMatches(profile.uuid,MT.ranked,null,10,null,null);
+    const matches=await fetchMatches(profile.uuid,MT.ranked,null,100,null,null);
     if(!panel.isConnected)return;
-    const recent=(Array.isArray(matches)?matches:[]).slice(0,10);
+    const ordered=(Array.isArray(matches)?matches:[]).filter(m=>Number(m.date)>0).sort((a,b)=>Number(b.date)-Number(a.date));
+    const gapHours=Number(u.elo)>=2500?3:Number(u.rank)<=150?2:1,gap=gapHours*3600,now=Date.now()/1000;
+    const sessions=[];let group=[];
+    for(const m of ordered){
+     if(group.length&&Number(group[group.length-1].date)-Number(m.date)>gap){sessions.push(group);group=[]}
+     group.push(m);
+    }
+    if(group.length)sessions.push(group);
+    const recent=sessions.find(g=>now-Number(g[0].date)>gap)||[];
     const wins=recent.filter(m=>m.result?.uuid===profile.uuid).length;
     const losses=recent.filter(m=>m.result?.uuid&&m.result.uuid!==profile.uuid).length;
-    const completed=recent.filter(m=>m.result?.uuid===profile.uuid&&Number(m.result.time)>0);
+    const completed=recent.filter(m=>m.result?.uuid===profile.uuid&&!m.forfeited&&!m.decayed&&Number(m.result.time)>0);
     const avg=completed.length?completed.reduce((sum,m)=>sum+Number(m.result.time),0)/completed.length:null;
-    panel.innerHTML='<div class="pred-mini-stats"><span><b>'+wins+'</b> Wins</span><span><b>'+losses+'</b> Losses</span><span><b>'+(avg===null?'—':fmtP(avg))+'</b> Avg completion</span></div><div class="pred-mini-matches">'+(recent.length?recent.map(m=>{const won=m.result?.uuid===profile.uuid,draw=!m.result?.uuid;return '<span class="pred-match-pill '+(draw?'draw':won?'win':'loss')+'" title="'+(draw?'Draw':won?'Win':'Loss')+'">'+(draw?'D':won?'W':'L')+'</span>'}).join(''):'No recent ranked matches')+'</div><p class="pred-note">Last '+recent.length+' ranked matches · Average uses completed wins with recorded times.</p>';
+    panel.innerHTML='<div class="pred-mini-stats"><span><b>'+wins+'</b> Wins</span><span><b>'+losses+'</b> Losses</span><span><b>'+(avg===null?'—':fmtP(avg))+'</b> Avg completion</span></div><div class="pred-mini-matches">'+(recent.length?recent.map(m=>{const won=m.result?.uuid===profile.uuid,draw=!m.result?.uuid;return '<span class="pred-match-pill '+(draw?'draw':won?'win':'loss')+'" title="'+(draw?'Draw':won?'Win':'Loss')+'">'+(draw?'D':won?'W':'L')+'</span>'}).join(''):'No completed session found')+'</div><p class="pred-note">Last completed session · '+recent.length+' ranked matches · '+gapHours+'h inactivity cutoff · Average uses completed wins with recorded times.</p>';
     panel.dataset.loaded='1';
    }catch(e){if(panel.isConnected)panel.textContent='Could not load recent matches. Click again to retry.'}
   }));
