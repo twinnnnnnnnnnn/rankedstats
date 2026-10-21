@@ -33,7 +33,13 @@ async function baselineFor(p){
 let rosterCache=null;
 async function roster(){
  if(rosterCache&&Date.now()-rosterCache.at<120000)return rosterCache.players;
- const board=await ranked('/leaderboard');
+ let board;
+ try{board=await ranked('/leaderboard');}
+ catch(e){
+  console.error('Prediction roster leaderboard unavailable:',e.message);
+  if(rosterCache?.players?.length)return rosterCache.players;
+  return [];
+ }
  const users=(board.users||[]).filter(u=>u&&u.nickname&&u.uuid);
  const d=day(),now=Math.floor(Date.now()/1000);
  const shuffle=(arr,salt)=>arr.slice().sort((a,b)=>hash(d+salt+a.nickname)-hash(d+salt+b.nickname));
