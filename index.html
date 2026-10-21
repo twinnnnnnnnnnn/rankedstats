@@ -611,7 +611,7 @@ function renderProfile(){
    <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
    <div class="tiles" id="tiles"></div>
    <div class="main">
-    <div class="card" id="cardChart"><h2>Elo history <span id="gsub"></span><span class="seg" id="gm" style="min-width:210px"><button data-g="recent" class="${P.full?"":"on"}">Recent 50</button><button data-g="full" class="${P.full?"on":""}">Full season</button></span></h2><div id="gArea"></div></div>
+    <div class="card" id="cardChart"><h2><select id="graphKind" aria-label="Graph type" style="font:inherit;font-weight:700;background:var(--surface);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:5px"><option value="elo">Elo history</option><option value="splits">Split performance</option></select> <span id="gsub"></span><span class="seg" id="gm" style="min-width:210px"><button data-g="recent" class="${P.full?"":"on"}">Recent 50</button><button data-g="full" class="${P.full?"on":""}">Full season</button></span></h2><div id="gArea"></div></div>
     <div class="card" id="cardTable"><h2>${P.mode==="ranked"?"Ranked matches":P.mode==="casual"?"Casual matches":"Private room matches"} <span id="cnt2"></span></h2><div class="bar" style="margin:0 0 12px;gap:8px;flex-wrap:wrap"><label for="matchMode">Match type</label><select id="matchMode" aria-label="Match type"><option value="ranked" ${P.mode==="ranked"?"selected":""}>Ranked</option><option value="casual" ${P.mode==="casual"?"selected":""}>Casual</option><option value="private" ${P.mode==="private"?"selected":""}>Private rooms</option></select><label for="matchSort">Sort matches</label><select id="matchSort" aria-label="Sort matches"><option value="recent" ${P.matchSort==="recent"?"selected":""}>Most recent</option><option value="fastest" ${P.matchSort==="fastest"?"selected":""}>Fastest finish (wins only)</option></select></div><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th>${rkd?"<th>Opp. Elo</th>":""}<th>Time</th>${rkd?"<th>Elo</th>":""}<th>Overworld</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div><div class="hint">Click a match for splits and VODs.</div></div>
    </div>`;
   startTwitchStatus(twitch);
@@ -717,6 +717,7 @@ async function setFull(v){
   refreshGraph();
 }
 
+document.addEventListener("change",e=>{if(e.target.id==="graphKind"){graphKind=e.target.value;refreshGraph()}});
 /* ---------- elo graph ---------- */
 function buildPoints(list,u){
   const historical=Number(P?.profileSeason)&&Number(P.profileSeason)!==T.currentSeason;
@@ -727,7 +728,35 @@ function buildPoints(list,u){
   a.reverse();
   return[{base:true,elo:a.length?a[0].before:cur}].concat(a);
 }
+let graphKind="elo",splitGraphToken=0;
+async function renderSplitPerformance(){
+ const area=$("gArea"),sub=$("gsub");if(!P||!area)return;
+ const token=++splitGraphToken,profile=P,uid=P.u.uuid;
+ const matches=(P.full?P.st.ranked.list:P.st.ranked.list.slice(0,50)).slice(0,30);
+ sub.textContent=" · sampled ranked matches";
+ area.innerHTML='<div class="msg">Loading split data…</div>';
+ const details=[];
+ for(let i=0;i<matches.length;i+=5){
+  const batch=await Promise.all(matches.slice(i,i+5).map(async m=>{try{return await (MC[m.id]||(MC[m.id]=get(API+"/matches/"+m.id)))}catch(_){return null}}));
+  if(token!==splitGraphToken||P!==profile||graphKind!=="splits")return;
+  details.push(...batch.filter(Boolean));
+ }
+ const types=SPL.map(x=>x[0]),names=SPL.map(x=>x[1]);
+ const avg=(who,t)=>{const values=[];for(const m of details){const events=(m.timelines||[]).filter(x=>x.type===t&&(who==="self"?x.uuid===uid:x.uuid!==uid));const per=new Map();for(const e of events){const time=Number(e.time);if(Number.isFinite(time)&&time>=0)per.set(e.uuid,Math.min(per.get(e.uuid)??Infinity,time))}values.push(...per.values())}return values.length?values.reduce((a,b)=>a+b,0)/values.length:null};
+ const data=types.map((t,i)=>({name:names[i],self:avg("self",t),other:avg("other",t)})).filter(x=>x.self!==null||x.other!==null);
+ if(!data.length){area.innerHTML='<div class="msg">No split timelines available for these matches.</div>';return}
+ const W=900,H=300,L=62,R=24,T=24,B=64,max=Math.max(...data.flatMap(x=>[x.self,x.other].filter(v=>v!==null)))*1.12;
+ const px=i=>L+i*(W-L-R)/Math.max(1,data.length-1),py=v=>H-B-v/max*(H-T-B);
+ const poly=k=>data.map((d,i)=>d[k]===null?null:({x:px(i),y:py(d[k])}));
+ const lines=k=>{const a=poly(k);return a.slice(1).map((p,i)=>p&&a[i]?'<line x1="'+a[i].x+'" y1="'+a[i].y+'" x2="'+p.x+'" y2="'+p.y+'" stroke="'+(k==="self"?"#61b6ff":"#ffab62")+'" stroke-width="3"/>':'').join("")};
+ const dots=k=>data.map((d,i)=>d[k]===null?"":'<circle cx="'+px(i)+'" cy="'+py(d[k])+'" r="5" fill="'+(k==="self"?"#61b6ff":"#ffab62")+'"><title>'+d.name+': '+(d[k]/1000).toFixed(1)+'s</title></circle>').join("");
+ const ticks=[0,.25,.5,.75,1].map(f=>'<line x1="'+L+'" x2="'+(W-R)+'" y1="'+py(max*f)+'" y2="'+py(max*f)+'" stroke="var(--line)"/><text x="4" y="'+(py(max*f)+4)+'" font-size="12" fill="var(--muted)">'+(max*f/1000).toFixed(0)+'s</text>').join("");
+ const labels=data.map((d,i)=>'<text x="'+px(i)+'" y="'+(H-B+18)+'" text-anchor="end" transform="rotate(-30 '+px(i)+' '+(H-B+18)+')" font-size="11" fill="var(--muted)">'+esc(d.name)+'</text>').join("");
+ area.innerHTML='<div class="hint" style="margin-bottom:10px"><span style="color:#61b6ff">●</span> Player average &nbsp; <span style="color:#ffab62">●</span> Opponents in sampled matches · lower is faster</div><div class="chartbox"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Average split times for player and opponents">'+ticks+lines("self")+lines("other")+dots("self")+dots("other")+labels+'</svg></div><div class="hint">Based on '+details.length+' recent ranked matches with available data, not the full same-rank or global playerbase. Hover points for times.</div>';
+}
 function refreshGraph(){
+  if(graphKind==="splits"){renderSplitPerformance();return;}
+  ++splitGraphToken;
   if(!P||!P.st||P.mode!=="ranked"||!$("gArea"))return;
   const st=P.st.ranked,list=P.full?st.list:st.list.slice(0,50);
   pts=buildPoints(list,P.u);
