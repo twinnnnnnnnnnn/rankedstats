@@ -743,6 +743,7 @@ async function renderSplitPerformance(){
  }
  const elo=Number(P.u.eloRate??P.u.seasonResult?.last?.eloRate);
  const playerRank=Number.isFinite(elo)?rk(elo).n:null;
+ const rankTier=playerRank?playerRank.split(" ")[0]:null;
  const rankColor=Number.isFinite(elo)?graphRankColor(elo):"#b8c2d1";
  const fmtMs=ms=>{const seconds=Math.max(0,ms/1000);return Math.floor(seconds/60)+":"+String(Math.floor(seconds%60)).padStart(2,"0")+"."+String(Math.round((seconds%1)*10)%10)};
  const avg=(kind,t)=>{
@@ -757,7 +758,7 @@ async function renderSplitPerformance(){
     if(kind==="rank"){
      const other=players.get(e.uuid);
      const rate=Number(other?.eloRate??(m.changes||[]).find(c=>c.uuid===e.uuid)?.eloRate);
-     if(!Number.isFinite(rate)||!playerRank||rk(rate).n!==playerRank)continue;
+     if(!Number.isFinite(rate)||!rankTier||rk(rate).n.split(" ")[0]!==rankTier)continue;
     }
     const time=Number(e.time);
     if(Number.isFinite(time)&&time>=0)per.set(e.uuid,Math.min(per.get(e.uuid)??Infinity,time));
@@ -771,7 +772,8 @@ async function renderSplitPerformance(){
  const W=900,H=310,L=66,R=24,T=24,B=70;
  const max=Math.max(...data.flatMap(d=>[d.self,d.rank,d.overall].filter(v=>v!==null)))*1.12||1000;
  const px=i=>L+i*(W-L-R)/Math.max(1,data.length-1),py=v=>H-B-v/max*(H-T-B);
- const series=[["self","#61b6ff","Player"],["rank",rankColor,"Same rank"],["overall","#ffab62","Sampled opponents"]];
+ const hasRankData=data.some(d=>d.rank!==null);
+ const series=[["self","#61b6ff","Player"],["rank",rankColor,"Same rank ("+(rankTier||"unknown")+")"],["overall","#ffab62","Sampled opponents"]];
  const paths=series.map(([key,color])=>{
   let path="",active=false;
   data.forEach((d,i)=>{if(d[key]===null){active=false;return}path+=(active?" L":" M")+px(i)+" "+py(d[key]);active=true});
