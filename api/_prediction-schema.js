@@ -5,7 +5,7 @@ async function ensurePredictionTables(client) {
   discord_id TEXT NOT NULL,
   player_uuid TEXT NOT NULL,
   player_name TEXT NOT NULL,
-  direction TEXT NOT NULL CHECK (direction IN ('gain','loss')),
+  direction TEXT NOT NULL CHECK (direction IN ('gain','loss','faster','slower')),
   stake BIGINT NOT NULL CHECK (stake > 0),
   odds_basis_points INTEGER NOT NULL CHECK (odds_basis_points >= 100),
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','won','lost','refunded')),
@@ -16,6 +16,11 @@ async function ensurePredictionTables(client) {
   result_elo INTEGER,
   payout BIGINT NOT NULL DEFAULT 0
  )`);
+ await client.query("ALTER TABLE ranked_predictions ADD COLUMN IF NOT EXISTS baseline_avg_ms DOUBLE PRECISION");
+ await client.query("ALTER TABLE ranked_predictions ADD COLUMN IF NOT EXISTS result_avg_ms DOUBLE PRECISION");
+ // Existing tables may still have the original two-direction constraint.
+ await client.query("ALTER TABLE ranked_predictions DROP CONSTRAINT IF EXISTS ranked_predictions_direction_check");
+ await client.query("ALTER TABLE ranked_predictions ADD CONSTRAINT ranked_predictions_direction_check CHECK (direction IN ('gain','loss','faster','slower'))");
  await client.query('CREATE INDEX IF NOT EXISTS ranked_predictions_pending_idx ON ranked_predictions (status, placed_at)');
  await client.query('CREATE INDEX IF NOT EXISTS ranked_predictions_user_day_idx ON ranked_predictions (discord_id, jst_day)');
  // Enforce one prediction per player per Discord account per JST day at the database level.
