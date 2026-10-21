@@ -11,7 +11,29 @@ const dateOf=m=>Number(m.date)||0;
 const changeOf=(m,id)=>{const c=(m.changes||[]).find(x=>x.uuid===id);return c&&Number.isFinite(Number(c.change))?Number(c.change):null};
 async function matches(id,count=30){const data=await ranked('/users/'+encodeURIComponent(id)+'/matches?count='+count+'&type=2');return Array.isArray(data)?data:[]}
 function oddsFor(list,id){const valid=list.map(m=>changeOf(m,id)).filter(x=>x!==null&&x!==0);const gain=valid.filter(x=>x>0).length;const p=Math.max(.2,Math.min(.8,(gain+3)/(valid.length+6)));return {gain:Math.max(110,Math.min(500,Math.floor(95/p))),loss:Math.max(110,Math.min(500,Math.floor(95/(1-p))))}}
-async function roster(){const board=await ranked('/leaderboard');const users=(board.users||[]).filter(u=>u&&u.nickname&&u.uuid);const d=day();const shuffle=(arr,salt)=>arr.slice().sort((a,b)=>hash(d+salt+a.nickname)-hash(d+salt+b.nickname));const selected=[...shuffle(users.slice(0,50),'top').slice(0,3),...shuffle(users.slice(50,150),'mid').slice(0,3)];selected.push(...shuffle(users.slice(50,150).filter(u=>!selected.some(p=>p.uuid===u.uuid)),'extra').slice(0,4));return selected.map(u=>({uuid:u.uuid,nickname:u.nickname,rank:users.indexOf(u)+1,elo:Number(u.eloRate??u.seasonResult?.eloRate??0)}))}
+const sessionGap=p=>(p.elo>=2500?3:p.rank<=150?2:1)*3600;
+async function roster(){
+ const board=await ranked('/leaderboard');
+ const users=(board.users||[]).filter(u=>u&&u.nickname&&u.uuid);
+ const d=day();
+ const shuffle=(arr,salt)=>arr.slice().sort((a,b)=>hash(d+salt+a.nickname)-hash(d+salt+b.nickname));
+ const candidates=[...shuffle(users.slice(0,50),'top'),...shuffle(users.slice(50,150),'mid')];
+ const now=Math.floor(Date.now()/1000);
+ const checked=await Promise.all(candidates.map(async u=>{
+  const p={uuid:u.uuid,nickname:u.nickname,rank:users.indexOf(u)+1,elo:Number(u.eloRate??u.seasonResult?.eloRate??0)};
+  try{
+   const recent=await matches(p.uuid,1);
+   const latest=recent.map(dateOf).filter(Number.isFinite).filter(t=>t>0).sort((a,b)=>b-a)[0];
+   return latest&&now-latest>sessionGap(p)?p:null;
+  }catch(e){return null}
+ }));
+ const eligible=checked.filter(Boolean);
+ const top=eligible.filter(p=>p.rank<=50).slice(0,3);
+ const other=eligible.filter(p=>p.rank>50).slice(0,7);
+ const selected=[...top,...other];
+ if(selected.length<10)selected.push(...eligible.filter(p=>!selected.some(x=>x.uuid===p.uuid)).slice(0,10-selected.length));
+ return selected;
+}
 async function settle(client,items){
  for(const p of items){
   try{
