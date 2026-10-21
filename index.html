@@ -300,6 +300,17 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 .prediction-demo .pred-stake-input:invalid{border-color:var(--loss)}
 .pred-subtabs{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:16px 0}.pred-today{margin-right:auto;color:var(--muted);font-size:.9rem;font-weight:650}.pred-wallet{margin-left:auto;display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);font-weight:750;font-variant-numeric:tabular-nums}@media(max-width:620px){.pred-today{width:100%}.pred-wallet{margin-left:0}}.pred-subtabs button{padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--text);cursor:pointer}.pred-subtabs button.on{border-color:var(--accent);font-weight:800}.prediction-demo [hidden]{display:none!important}
 .pred-player-name{border:0;background:none;padding:0;color:var(--text);font:inherit;font-weight:800;font-size:1.08rem;cursor:pointer;text-align:left}.pred-player-name:hover{text-decoration:underline}.pred-player-chevron{opacity:.6;margin-left:5px}.pred-mini{margin:10px 0 12px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface2)}.pred-mini[hidden]{display:none}.pred-mini-stats{display:flex;flex-wrap:wrap;gap:16px;margin-bottom:12px}.pred-mini-stats span{display:flex;flex-direction:column;gap:3px;font-size:.83rem;color:var(--muted)}.pred-mini-stats b{font-size:1.15rem;color:var(--text)}.pred-mini-matches{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}.pred-match-pill{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:7px;font-size:.8rem;font-weight:800}.pred-match-pill.win{background:#17804c;color:white}.pred-match-pill.loss{background:#a83240;color:white}.pred-match-pill.draw{background:#666;color:white}
+
+/* Prediction outcome hover: color expands smoothly from the center. */
+.prediction-demo .pred-options button[data-direction]{position:relative;isolation:isolate;overflow:hidden;transition:color .25s ease,border-color .25s ease,opacity .18s ease,filter .18s ease}
+.prediction-demo .pred-options button[data-direction]::before{content:"";position:absolute;z-index:-1;inset:0;background:var(--pred-hover);transform:scaleX(0);transform-origin:center;transition:transform .3s ease;pointer-events:none}
+.prediction-demo .pred-options button[data-direction="gain"]{--pred-hover:#16874b}
+.prediction-demo .pred-options button[data-direction="loss"]{--pred-hover:#b93842}
+.prediction-demo .pred-options button[data-direction]:hover:not(:disabled)::before,
+.prediction-demo .pred-options button[data-direction]:focus-visible::before{transform:scaleX(1)}
+.prediction-demo .pred-options button[data-direction]:hover:not(:disabled),
+.prediction-demo .pred-options button[data-direction]:focus-visible{color:#fff;border-color:var(--pred-hover)}
+@media(prefers-reduced-motion:reduce){.prediction-demo .pred-options button[data-direction]::before{transition:none}}
 </style>
 </head>
 <body>
