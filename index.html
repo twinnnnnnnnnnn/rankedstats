@@ -586,6 +586,29 @@ function startTwitchStatus(login){
   check();twitchStatusTimer=setInterval(check,60000);
 }
 
+const pacemanPBs=new Map();
+async function loadPacemanPB(u){
+ const uid=String(u.uuid||"").replace(/-/g,"");
+ const el=document.getElementById("paceman-rsg-pb");
+ if(!uid||!el)return;
+ const profile=P;
+ try{
+  let result=pacemanPBs.get(uid);
+  if(!result){
+   const response=await fetch("https://paceman.gg/stats/api/getPBs?uuids="+encodeURIComponent(uid),{headers:{Accept:"application/json"}});
+   if(!response.ok)throw Error("PaceMan unavailable");
+   result=await response.json();
+   pacemanPBs.set(uid,result);
+  }
+  if(P!==profile)return;
+  const entry=Array.isArray(result)?result.find(x=>String(x.uuid||"").replace(/-/g,"").toLowerCase()===uid.toLowerCase())||result[0]:result?.[uid]||result?.[u.uuid]||result?.pbs?.[uid]||result?.pbs?.[u.uuid]||result;
+  const raw=typeof entry==="number"?entry:entry?.rsg?.time??entry?.rsg?.pb??entry?.rsgPB??entry?.rsg_pb??entry?.pb?.time??entry?.pb??entry?.time;
+  const ms=Number(raw);
+  // PaceMan run times are milliseconds; do not guess from unknown object formats.
+  el.textContent=Number.isFinite(ms)&&ms>1000?fmtP(ms):"—";
+  el.title=el.textContent==="—"?"No tracked RSG PB found on PaceMan":"RSG personal best tracked by PaceMan";
+ }catch(_){if(P===profile){el.textContent="Unavailable";el.title="Could not load PaceMan data (API or browser access may be restricted)";}}
+}
 function renderProfile(){
   const u=P.u,uid=u.uuid,sn=(u.statistics&&u.statistics.season)||{};
   const at=k=>stat(u,"total",k),atc=at("completions"),att=at("completionTime");
@@ -606,7 +629,7 @@ function renderProfile(){
   const socials=(twitch||discord)?`<div class="social-links">${twitch?`<a class="social-link" href="${esc(twitchUrl)}" target="_blank" rel="noopener noreferrer" title="Open ${esc(twitch)} on Twitch"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M4 2 1.5 6v15h5v3h4l3-3h4l5-5V2H4zm16 13-3 3h-5l-3 3v-3H4V4h16v11zM9 7h2v6H9zm5 0h2v6h-2z"/></svg><span class="social-name">${esc(twitch)}</span><span class="twitch-live-dot" data-twitch-live-dot aria-label="Live on Twitch" title="Live on Twitch"></span><span class="twitch-live-label" data-twitch-live-label>LIVE</span></a>`:""}${discord?`<button type="button" class="social-link discord" data-copy-discord="${esc(discord)}" title="Click to copy Discord username"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M19.7 5.2A18.4 18.4 0 0 0 15.2 3.8l-.6 1.2a16.8 16.8 0 0 0-5.2 0l-.6-1.2a18.3 18.3 0 0 0-4.5 1.4C1.4 9.4.6 13.5 1 17.6a18.5 18.5 0 0 0 5.5 2.8l1.2-2a11.8 11.8 0 0 1-1.9-.9l.5-.4a13.1 13.1 0 0 0 11.4 0l.5.4a12.4 12.4 0 0 1-1.9.9l1.2 2a18.4 18.4 0 0 0 5.5-2.8c.5-4.8-.8-8.9-3.3-12.4ZM8.6 14.7c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Zm6.8 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2Z"/></svg><span class="social-name" data-discord-label>${esc(discord)}</span><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg></button>`:""}</div>`:"";
   $("out").innerHTML=
   `<section class="hero"><img class="avatar" alt="" src="https://mc-heads.net/avatar/${enc(uid)}/84">
-   <div><h1>${(historicalSeason?seasonStanding.eloRank:u.eloRank)!=null?`<span class="profile-rank ${[1,2,3].includes(Number(historicalSeason?seasonStanding.eloRank:u.eloRank))?`podium-${historicalSeason?seasonStanding.eloRank:u.eloRank}`:""}">#${historicalSeason?seasonStanding.eloRank:u.eloRank}</span> `:""}${flag(u.country)?flag(u.country)+" ":""}${supporterName(u,u.nickname)}${profileDecoration(u)}${String(u.nickname||"").toLowerCase()==="lyxier"?" 🕷️":""}</h1>${socials}<div class="sub">${u.country?`<span class="pill">${esc(cname(u.country))}</span>`:""}${pl("All-time matches",nz(at("playedMatches")))}${pl("Wins",nz(at("wins")))}${pl("Completions",nz(atc))}${pl("PB",fmtP(at("bestTime")))}${pl("Average",atc&&att!=null?fmtP(att/atc):"—")}</div></div>
+   <div><h1>${(historicalSeason?seasonStanding.eloRank:u.eloRank)!=null?`<span class="profile-rank ${[1,2,3].includes(Number(historicalSeason?seasonStanding.eloRank:u.eloRank))?`podium-${historicalSeason?seasonStanding.eloRank:u.eloRank}`:""}">#${historicalSeason?seasonStanding.eloRank:u.eloRank}</span> `:""}${flag(u.country)?flag(u.country)+" ":""}${supporterName(u,u.nickname)}${profileDecoration(u)}${String(u.nickname||"").toLowerCase()==="lyxier"?" 🕷️":""}</h1>${socials}<div class="sub">${u.country?`<span class="pill">${esc(cname(u.country))}</span>`:""}${pl("All-time matches",nz(at("playedMatches")))}${pl("Wins",nz(at("wins")))}${pl("Completions",nz(atc))}${pl("PB",fmtP(at("bestTime")))}<span class="pill">RSG PB <b id="paceman-rsg-pb">Loading…</b></span>${pl("Average",atc&&att!=null?fmtP(att/atc):"—")}</div></div>
    <div class="elo"><div class="mut" style="font-size:12px;margin-bottom:5px">${historicalSeason?"End-of-season Elo":"Current Elo"}</div><div class="n t-${tier}">${elo!=null?elo.toLocaleString():"—"}</div><div class="r">${elo!=null?icon(elo,26):""}<span>${elo!=null?r.n:"Not available"} · Peak Elo ${peak!=null?peak.toLocaleString():"—"}</span></div></div></section>
    <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
    <div class="tiles" id="tiles"></div>
@@ -615,6 +638,7 @@ function renderProfile(){
     <div class="card" id="cardTable"><h2>${P.mode==="ranked"?"Ranked matches":P.mode==="casual"?"Casual matches":"Private room matches"} <span id="cnt2"></span></h2><div class="bar" style="margin:0 0 12px;gap:8px;flex-wrap:wrap"><label for="matchMode">Match type</label><select id="matchMode" aria-label="Match type"><option value="ranked" ${P.mode==="ranked"?"selected":""}>Ranked</option><option value="casual" ${P.mode==="casual"?"selected":""}>Casual</option><option value="private" ${P.mode==="private"?"selected":""}>Private rooms</option></select><label for="matchSort">Sort matches</label><select id="matchSort" aria-label="Sort matches"><option value="recent" ${P.matchSort==="recent"?"selected":""}>Most recent</option><option value="fastest" ${P.matchSort==="fastest"?"selected":""}>Fastest finish (wins only)</option></select></div><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th>${rkd?"<th>Opp. Elo</th>":""}<th>Time</th>${rkd?"<th>Elo</th>":""}<th>Overworld</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div><div class="hint">Click a match for splits and VODs.</div></div>
    </div>`;
   startTwitchStatus(twitch);
+  loadPacemanPB(u);
   const country=String(u.country||"").trim().toUpperCase();
   const isChristmasIsland=country==="CX" || /christmas island/i.test(cname(country));
   const isLyxier=String(u.nickname||"").toLowerCase()==="lyxier";
