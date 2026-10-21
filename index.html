@@ -16,18 +16,11 @@ body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 Inter,system-
 body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:#000}
 @keyframes ambientGradient{0%{background-position:0% 50%}25%{background-position:50% 100%}50%{background-position:100% 50%}75%{background-position:50% 0%}100%{background-position:0% 50%}}
 /* Rank-tinted profile backgrounds; special profiles retain their own artwork. */
-body.rank-profile-bg:not(.christmas-profile-bg):not(.lyxier-profile-bg)::before{
  background-image:linear-gradient(-45deg,var(--rank-bg1),var(--rank-bg2),var(--rank-bg3),var(--rank-bg4),var(--rank-bg1));
  background-size:400% 400%;
  animation:ambientGradient 22s ease infinite;
 }
-body.lyxier-profile-bg::before{background-image:linear-gradient(rgba(10,12,20,.24),rgba(10,12,20,.30)),url("https://femboy.beauty/XJpHkj");background-size:cover;background-position:center center;background-repeat:no-repeat;animation:none;will-change:auto}
-#out.lyxier-profile .card,#out.lyxier-profile .tile{background:rgba(15,17,25,.82);backdrop-filter:blur(2px)}
-body.dark-everything.lyxier-profile-bg::before{background:#000!important;background-image:none!important}
-body.christmas-profile-bg{background:transparent}
-body.christmas-profile-bg::before{background-image:linear-gradient(rgba(10,12,20,.24),rgba(10,12,20,.30)),url("https://femboy.beauty/CjusRP");background-size:cover;background-position:center center;background-repeat:no-repeat;animation:none;will-change:auto}
 @media(prefers-reduced-motion:reduce){body::before{animation:none}}
-@media(max-width:700px){body.christmas-profile-bg::before{background-attachment:scroll}}
 .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
 nav{display:flex;align-items:center;gap:12px;padding:6px 0 22px;flex-wrap:wrap}
 .settings-wrap{position:relative;margin-left:auto;flex:none}.settings-toggle{width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:9px;font-size:18px;background:var(--surface);border:1px solid var(--line);color:var(--text);box-shadow:0 2px 8px #00000012}.settings-toggle:hover{border-color:var(--accent2)}.settings-panel{display:none;position:absolute;right:0;top:43px;z-index:90;width:260px;max-width:calc(100vw - 32px);padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);box-shadow:0 12px 36px #0005}.settings-wrap.open .settings-panel{display:grid;gap:12px}.settings-title{font-size:14px;font-weight:750;margin:0 0 2px}.setting-field{display:grid;gap:5px}.setting-field label{font-size:12px;color:var(--muted)}.setting-field select{width:100%;padding:9px 10px}
@@ -45,19 +38,8 @@ button.go{background:var(--surface2);color:var(--text);border:1px solid var(--li
 .ri{vertical-align:middle;object-fit:contain;flex:none;image-rendering:pixelated}
 .who{display:inline-flex;align-items:center;gap:6px}.supporter-name{background:linear-gradient(90deg,#fff0a6,#ffc928,#fff4bd,#d99a00,#fff0a6);background-size:220% 100%;animation:supporterGold 3.5s linear infinite;-webkit-background-clip:text;background-clip:text;color:transparent!important;font-weight:800}.supporter-pick{display:inline-block;color:#f4c542;font-size:1.02em;line-height:1;filter:drop-shadow(0 0 4px rgba(255,190,35,.35));vertical-align:-.04em}.hero h1 .supporter-name{display:inline-block}@keyframes supporterGold{to{background-position:220% 0}}@media(prefers-reduced-motion:reduce){.supporter-name{animation:none}}.head{width:40px;height:40px;border-radius:5px;object-fit:cover;image-rendering:pixelated;flex:none;background:var(--surface2)}
 
-body.lyxier-profile-bg::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at 50% 43%,transparent 22%,rgba(9,0,7,.38) 70%,rgba(0,0,0,.76) 100%);animation:lyxierVignette 9s ease-in-out infinite alternate}
-#out.lyxier-profile .hero{animation:lyxierPulse 7s ease-in-out infinite}
-#out.lyxier-profile .card:not(.hero){border-color:rgba(105,24,36,.42);box-shadow:0 5px 25px rgba(15,0,4,.26)}
-#out.lyxier-profile h1{text-shadow:0 0 9px rgba(190,14,32,.55),2px 2px 1px rgba(50,0,0,.7)}
-#out.lyxier-profile h2{text-shadow:0 0 10px rgba(125,6,26,.35)}
-#out.lyxier-profile .tile{border-color:rgba(118,19,35,.28)}
 @keyframes lyxierVignette{from{opacity:.68}to{opacity:1}}
 @keyframes lyxierPulse{0%,100%{box-shadow:0 0 16px rgba(160,0,25,.18),inset 0 0 22px rgba(90,0,15,.18)}50%{box-shadow:0 0 32px rgba(180,5,27,.42),inset 0 0 30px rgba(125,0,20,.28)}}
-@media(prefers-reduced-motion:reduce){body.lyxier-profile-bg::after,#out.lyxier-profile .hero{animation:none}}
-/* Lyxier-exclusive Halloween blood drips on the main player card */
-#out.lyxier-profile .hero{position:relative;isolation:isolate;overflow:hidden;border-color:rgba(169,12,30,.75);box-shadow:0 0 22px rgba(160,0,25,.22),inset 0 0 22px rgba(90,0,15,.18)}
-#out.lyxier-profile .hero::before{content:"";position:absolute;top:0;left:0;right:0;height:76px;pointer-events:none;z-index:2;background:linear-gradient(180deg,#65000b 0%,#a3081a 12%,#d01c2b 26%,#7e0010 100%);clip-path:polygon(0 0,100% 0,100% 14px,96% 14px,96% 29px,94.7% 40px,93.6% 29px,93.6% 14px,86% 14px,86% 48px,84.8% 61px,83.6% 48px,83.6% 14px,75% 14px,75% 26px,73.8% 35px,72.6% 26px,72.6% 14px,64% 14px,64% 40px,62.7% 53px,61.4% 40px,61.4% 14px,52% 14px,52% 22px,50.8% 31px,49.6% 22px,49.6% 14px,41% 14px,41% 55px,39.7% 70px,38.4% 55px,38.4% 14px,29% 14px,29% 31px,27.7% 42px,26.4% 31px,26.4% 14px,17% 14px,17% 45px,15.8% 58px,14.6% 45px,14.6% 14px,7% 14px,7% 25px,5.8% 36px,4.6% 25px,4.6% 14px,0 14px);filter:drop-shadow(0 3px 3px rgba(65,0,0,.5))}
-#out.lyxier-profile .hero::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;border-radius:inherit;box-shadow:inset 0 0 32px rgba(135,0,20,.24)}
 .hero{display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;background:linear-gradient(135deg,var(--surface),var(--surface2));border:1px solid var(--line);border-radius:calc(var(--r)*1.15);padding:24px}
 .avatar{width:84px;height:84px;border-radius:calc(var(--r)*.9);image-rendering:pixelated;background:var(--surface2)}
 h1{margin:0;font-size:28px;letter-spacing:-.02em}
@@ -150,7 +132,6 @@ table.pt2 td.num{text-align:right}table.pt2 th.num{text-align:right}
 .hero h1 .profile-rank.podium-1{color:#ffd76a;text-shadow:0 0 5px rgba(255,215,106,.95),0 0 14px rgba(255,190,45,.85),0 0 28px rgba(245,158,11,.55);font-weight:850}
 .hero h1 .profile-rank.podium-2{color:#dce4ef;text-shadow:0 0 5px rgba(235,242,255,.95),0 0 14px rgba(203,213,225,.8),0 0 28px rgba(148,163,184,.55);font-weight:850}
 .hero h1 .profile-rank.podium-3{color:#e7a36e;text-shadow:0 0 5px rgba(255,190,135,.95),0 0 14px rgba(231,163,110,.85),0 0 28px rgba(205,127,50,.55);font-weight:850}
-.profile-custom-emote{height:1.15em;width:auto;max-width:2em;vertical-align:-.16em;object-fit:contain}
 /* One continuous podium gradient per row; transparent cells prevent the gradient from restarting in every column. */
 table.pt2 tbody tr:nth-child(1){background:linear-gradient(105deg,rgba(255,207,64,.30) 0%,rgba(245,158,11,.16) 48%,rgba(245,158,11,.07) 100%)}
 table.pt2 tbody tr:nth-child(2){background:linear-gradient(105deg,rgba(226,232,240,.26) 0%,rgba(148,163,184,.14) 48%,rgba(148,163,184,.06) 100%)}
@@ -193,13 +174,11 @@ table.pt2.fast-table tbody tr:nth-child(-n+3){background:none}table.pt2.fast-tab
 .ranked-footer a{display:inline-flex;align-items:center;justify-content:center;padding:10px 18px;border-radius:10px;background:linear-gradient(90deg,var(--accent2),var(--accent));color:white;text-decoration:none;font-weight:700;white-space:nowrap}
 .ranked-footer a:hover{filter:brightness(1.1)}
 
-#out.christmas-profile .card,#out.christmas-profile .tile{background:rgba(15,17,25,.82);backdrop-filter:blur(2px)}
 
 
 /* Optional all-black appearance; Default leaves the original theme untouched. */
 body.dark-everything{--bg:#000;--surface:#000;--surface2:#080808;--text:#f5f5f5;--muted:#a3a3a3;--line:#292929;--accent:#14b87a;--accent2:#777;--loss:#ff6b6f;--win:#2ee59d;background:#000}
 body.dark-everything::before{background:#000!important;background-image:none!important;animation:none!important}
-body.dark-everything.christmas-profile-bg::before{background:#000!important;background-image:none!important}
 
 
 /* Brief first-load splash screen */
@@ -292,8 +271,8 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 
 /* Compact community stats visual refresh — standard pages only. */
 :root{--bg:#090b0e;--surface:#11151a;--surface2:#191f26;--text:#e6eaf0;--muted:#8b96a3;--line:#28313b;--r:8px}
-body:not(.lyxier-profile-bg):not(.christmas-profile-bg){background:#090b0e}
-body:not(.rank-profile-bg):not(.lyxier-profile-bg):not(.christmas-profile-bg)::before{background:#090b0e}
+body{background:#090b0e}
+body:not(.rank-profile-bg)::before{background:#090b0e}
 .wrap{max-width:1140px;padding:16px 18px 48px}
 nav{gap:9px;padding:4px 0 16px;border-bottom:1px solid var(--line);margin-bottom:18px}
 .logo img{width:46px;height:46px;border-radius:6px}
@@ -306,7 +285,7 @@ nav{gap:9px;padding:4px 0 16px;border-bottom:1px solid var(--line);margin-bottom
 input[type=text],button,select{border-radius:6px}
 button.go{background:#222c35}
 button.go:hover{background:#2b3742}
-body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .hero{background:var(--surface);border-radius:8px;padding:18px;gap:16px}
+body .hero{background:var(--surface);border-radius:8px;padding:18px;gap:16px}
 h1{font-size:25px;letter-spacing:-.025em}
 .sub{font-size:13px;margin-top:4px}
 .pill{border-radius:5px;padding:2px 7px;font-size:12px;background:#1b222a}
@@ -314,13 +293,12 @@ h1{font-size:25px;letter-spacing:-.025em}
 .bar{gap:8px;margin-top:10px}
 .social-links{gap:6px;margin-top:8px}
 .social-link{min-height:34px;padding:6px 10px;border-radius:6px;font-size:13px;box-shadow:none}
-body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .card,
-body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .tile{box-shadow:none;border-radius:8px}
-body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .card{background:var(--surface)}
-body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .tile{background:var(--surface2)}
+body .card,
+body .tile{box-shadow:none;border-radius:8px}
+body .card{background:var(--surface)}
+body .tile{background:var(--surface2)}
 th{font-size:12px;letter-spacing:.015em}
 td{font-variant-numeric:tabular-nums}
-@media(max-width:700px){.wrap{padding:12px 12px 32px}nav{gap:7px;margin-bottom:12px}.logo img{width:40px;height:40px}body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .hero{padding:14px;gap:12px}h1{font-size:22px}.elo .n{font-size:34px}}
 
 
 /* Uniform black appearance for all pages and profiles. */
@@ -331,7 +309,6 @@ body::after{display:none!important}
 body .hero,body .card,body .tile{background-image:none!important;box-shadow:none}
 body .hero,body .card{background:var(--surface)!important}
 body .tile{background:var(--surface2)!important}
-#lyxier-decor,#lyxier-spiders{display:none!important}
 
 /* MCSR-inspired restrained competition layout */
 body{font-family:Inter,Arial,Helvetica,sans-serif;font-size:14px;line-height:1.45}
@@ -467,7 +444,6 @@ function isSupporter(u){
   for(const k of keys){if(!(k in u))continue;const v=u[k];if(v===true||(typeof v==="number"&&v>0)||(typeof v==="string"&&/^(yes|true|active|supporter|tier\s*[1-9]|[1-9])$/i.test(v.trim())))return true;if(v&&typeof v==="object"&&(v.active===true||v.enabled===true||v.tier||v.level||v.name))return true;}
   return false;
 }
-function nameEmoji(name){return "";}
 function emojiName(name,u){return esc(name||"—");}
 function supporterName(u,name){return isSupporter(u)?`<span class="supporter-name">${emojiName(name||u.nickname||"—",u)}</span> `:emojiName(name||u.nickname||"—",u)}
 function countryOptions(){
@@ -521,8 +497,6 @@ $("logo").onclick=e=>{e.preventDefault();go("#!lb/season")};
 $("f").addEventListener("submit",e=>{e.preventDefault();const v=$("q").value.trim();if(v)go("#"+enc(v))});
 window.addEventListener("hashchange",route);
 
-function profileDecoration(u){return "";}
-function refreshDecoratedLeaderboard(){}
 function stopLyxierBounce(){}
 function updateLyxierDecor(){}
 /* ---------- profile ---------- */
