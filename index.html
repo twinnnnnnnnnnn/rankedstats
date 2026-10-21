@@ -298,6 +298,7 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 .prediction-demo .pred-stake-input::-webkit-inner-spin-button,.prediction-demo .pred-stake-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .prediction-demo .pred-stake-input:focus{border-color:var(--accent2);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent2) 18%,transparent)}
 .prediction-demo .pred-stake-input:invalid{border-color:var(--loss)}
+.pred-subtabs{display:flex;gap:8px;margin:16px 0}.pred-subtabs button{padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:var(--surface2);color:var(--text);cursor:pointer}.pred-subtabs button.on{border-color:var(--accent);font-weight:800}.prediction-demo [hidden]{display:none!important}
 </style>
 </head>
 <body>
@@ -416,7 +417,18 @@ const go=h=>{if(location.hash===h)route();else location.hash=h};
 function showPredictionDemo(){
  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==='predictions'));
  const root=document.getElementById('out');
- root.innerHTML='<div class="prediction-demo"><h1>📈 Daily Elo Predictions</h1><p class="pred-note">Prototype · 10 players daily · resets 00:00 JST · 3 predictions per day. Virtual coins only.</p><p class="pred-note">Choose Gain OR Loss and enter a stake within your demo balance. This is a preview: no coins are deducted, and no predictions are submitted until secure settlement and refunds are implemented.</p><div id="dailyPredStatus" class="pred-card">Loading current-season leaderboard…</div><div id="dailyPredPlayers"></div></div>';
+ root.innerHTML='<div class="prediction-demo"><h1>📈 Predictions</h1><div class="pred-subtabs"><button type="button" class="on" data-pred-subtab="predictions">Predictions</button><button type="button" data-pred-subtab="leaderboard">Leaderboard</button></div><div id="predictionsPanel"><h2>Daily Elo Predictions</h2><p class="pred-note">Prototype · 10 players daily · resets 00:00 JST · 3 predictions per day. Virtual coins only.</p><p class="pred-note">Choose Gain OR Loss and enter a stake within your demo balance. This is a preview: no coins are deducted, and no predictions are submitted until secure settlement and refunds are implemented.</p><div id="dailyPredStatus" class="pred-card">Loading current-season leaderboard…</div><div id="dailyPredPlayers"></div></div><div id="predLeaderboardPanel" hidden><h2>🪙 Balance Leaderboard</h2><div id="predLeaderboardRows" class="pred-card">Loading…</div></div></div>';
+ const subtabs=root.querySelectorAll('[data-pred-subtab]');
+ subtabs.forEach(btn=>btn.addEventListener('click',async()=>{
+  const board=btn.dataset.predSubtab==='leaderboard';
+  subtabs.forEach(b=>b.classList.toggle('on',b===btn));
+  document.getElementById('predictionsPanel').hidden=board;
+  document.getElementById('predLeaderboardPanel').hidden=!board;
+  if(board){
+   const rows=document.getElementById('predLeaderboardRows');rows.textContent='Loading balances…';
+   try{const response=await fetch('/api/wallet-leaderboard',{cache:'no-store'});if(!response.ok)throw Error('Unavailable');const data=await response.json();rows.innerHTML=(data.players||[]).length?'<table class="pt2"><thead><tr><th>#</th><th>Discord user</th><th class="num">Balance</th></tr></thead><tbody>'+data.players.map((p,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(p.username)+'</td><td class="num">🪙 '+Number(p.balance).toLocaleString()+'</td></tr>').join('')+'</tbody></table>':'<p class="pred-note">No accounts yet.</p>';}catch(e){rows.textContent='Could not load coin leaderboard.'}
+  }
+ }));
  const status=document.getElementById('dailyPredStatus'),list=document.getElementById('dailyPredPlayers');
  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
  const hash=t=>{let h=2166136261;for(let i=0;i<t.length;i++)h=Math.imul(h^t.charCodeAt(i),16777619);return h>>>0};
