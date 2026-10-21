@@ -1234,7 +1234,8 @@ function renderPT(){
 /* ---------- global events ---------- */
 const out=$("out");
 out.addEventListener("change",async e=>{
-  if(e.target.id==="lbTwitchNames"){leaderboardTwitchNames=e.target.checked;if(T.historical)renderHistorical(false);else renderPT();return;}\n  if(e.target.id==="lbseason")go("#!lb/"+e.target.value);
+  if(e.target.id==="lbTwitchNames"){leaderboardTwitchNames=e.target.checked;if(T.historical)renderHistorical(false);else renderPT();return;}
+  if(e.target.id==="lbseason")go("#!lb/"+e.target.value);
   if(e.target.id==="lbcountry"){
     T.country=e.target.value;T.shown=20;
     showLeaderboard(T.view);
