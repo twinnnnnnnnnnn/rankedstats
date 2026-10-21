@@ -347,7 +347,15 @@ function isSupporter(u){
   for(const k of keys){if(!(k in u))continue;const v=u[k];if(v===true||(typeof v==="number"&&v>0)||(typeof v==="string"&&/^(yes|true|active|supporter|tier\s*[1-9]|[1-9])$/i.test(v.trim())))return true;if(v&&typeof v==="object"&&(v.active===true||v.enabled===true||v.tier||v.level||v.name))return true;}
   return false;
 }
-function supporterName(u,name){return isSupporter(u)?`<span class="supporter-name">${esc(name||u.nickname||"—")}</span> <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:esc(name||u.nickname||"—")}
+function nameEmoji(name){
+  const n=String(name||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  const exact={aquacorde:"🌊",fenniq:"🦊",doogile:"🐶",watermelon1708:"🍉",beefsalad:"🥗",bingpigs:"🐷",woofdoggo:"🐶",cornflakesmcsr:"🥣",milkteafan61:"🧋",yojacat:"🐱",dinonuggieboi:"🦖",blazemind:"🔥",cbirrd:"🐦",petalgoround:"🌸",timmypickle45:"🥒",asteroid20993:"☄️",spider:"🕷️"};
+  if(exact[n])return exact[n];
+  const rules=[[/watermelon|melon/,"🍉"],[/aqua|ocean|wave|water/,"🌊"],[/fennec|fenni|fox/,"🦊"],[/dog|doggo|woof|puppy/,"🐶"],[/cat|kitty|kitten/,"🐱"],[/bird|birrd|parrot/,"🐦"],[/pig|piggy/,"🐷"],[/bee|honey/,"🐝"],[/frog/,"🐸"],[/bunny|rabbit/,"🐰"],[/panda/,"🐼"],[/bear/,"🐻"],[/wolf/,"🐺"],[/dragon/,"🐉"],[/dino/,"🦖"],[/fish/,"🐟"],[/shark/,"🦈"],[/turtle/,"🐢"],[/duck/,"🦆"],[/chicken/,"🐔"],[/apple/,"🍎"],[/banana/,"🍌"],[/cherry/,"🍒"],[/strawberry/,"🍓"],[/peach/,"🍑"],[/lemon/,"🍋"],[/milk/,"🥛"],[/coffee|cofe/,"☕"],[/tea/,"🍵"],[/cookie/,"🍪"],[/bread/,"🍞"],[/cake/,"🍰"],[/pizza/,"🍕"],[/salad/,"🥗"],[/pickle/,"🥒"],[/flower|petal|rose/,"🌸"],[/sun|solar/,"☀️"],[/moon|lunar/,"🌙"],[/star|astro/,"⭐"],[/snow|ice|frost/,"❄️"],[/fire|flame|blaze/,"🔥"],[/lightning|thunder|bolt/,"⚡"],[/cloud/,"☁️"],[/rain/,"🌧️"],[/diamond/,"💎"],[/emerald/,"💚"],[/gold/,"🥇"],[/spider/,"🕷️"]];
+  return rules.find(([re])=>re.test(n))?.[1]||"";
+}
+function emojiName(name){const emoji=nameEmoji(name);return esc(name||"—")+(emoji?' <span class="name-emoji" aria-hidden="true">'+emoji+'</span>':"");}
+function supporterName(u,name){return isSupporter(u)?`<span class="supporter-name">${emojiName(name||u.nickname||"—")}</span> <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:emojiName(name||u.nickname||"—")}
 function countryOptions(){
   const countries=[];
   for(let a=65;a<=90;a++)for(let b=65;b<=90;b++){
@@ -1186,7 +1194,7 @@ function renderHistorical(fetchStats=true){
   el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr><th>#</th>${cols.map(([key,label])=>`<th data-k="${key}" class="${key==="name"?"":"num"}">${label}${k===key?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${shown.map((r,i)=>{
     const u=r.u,st=r.stats||{},waiting=!r.stats;
     const cell=(v,fn)=>`<td class="num">${waiting?"…":f(v,fn)}</td>`;
-    return `<tr><td class="mut">${k==="elo"&&!T.country&&d===-1?(r.rank??i+1):i+1}</td><td><span class="who">${flag(u.country)?`<span title="${esc(cname(u.country))}">${flag(u.country)}</span>`:""}<img class="head" alt="" loading="lazy" src="https://mc-heads.net/avatar/${enc(u.uuid)}/24"><a href="#${enc(u.nickname)}" class="${isSupporter(u)?"supporter-name":""}">${esc(u.nickname)}</a>${profileDecoration(u)}${leaderboardLiveBadge(u)}${isSupporter(u)?` <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:""}</span></td><td class="num"><span class="who">${icon(r.elo,22)}${f(r.elo)}</span></td>${cell(st.wr,x=>x.toFixed(1)+"%")}${cell(st.games)}${cell(st.wins)}${cell(st.pb,fmtP)}${cell(st.avg,fmtP)}</tr>`;
+    return `<tr><td class="mut">${k==="elo"&&!T.country&&d===-1?(r.rank??i+1):i+1}</td><td><span class="who">${flag(u.country)?`<span title="${esc(cname(u.country))}">${flag(u.country)}</span>`:""}<img class="head" alt="" loading="lazy" src="https://mc-heads.net/avatar/${enc(u.uuid)}/24"><a href="#${enc(u.nickname)}" class="${isSupporter(u)?"supporter-name":""}">${emojiName(u.nickname)}</a>${profileDecoration(u)}${leaderboardLiveBadge(u)}${isSupporter(u)?` <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:""}</span></td><td class="num"><span class="who">${icon(r.elo,22)}${f(r.elo)}</span></td>${cell(st.wr,x=>x.toFixed(1)+"%")}${cell(st.games)}${cell(st.wins)}${cell(st.pb,fmtP)}${cell(st.avg,fmtP)}</tr>`;
   }).join("")}</tbody></table>`;
   $("pstat").textContent=shown.length+" / "+rows.length+" players";
   $("lbsent").textContent=T.shown>=rows.length?"End of leaderboard · "+rows.length+" players":"Scroll for more";
