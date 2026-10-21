@@ -741,7 +741,7 @@ function rowHTML(x){
   (r?`<td>${opp.eloRate!=null?opp.eloRate:"—"}</td>`:"")+
   `<td>${i.time}</td>`+
   (r?`<td class="${ch>0?"up":"down"}">${ch==null?"—":(ch>0?"+":"")+ch}</td>`:"")+
-  `<td class="mut">${esc(i.seed)}</td><td>${myVod?"📺":""}${oppVod?'<span title="Opponent VOD available" style="font-size:11px;margin-left:3px">⚔️📺</span>':""}</td><td class="mut">${ago(x.date)}</td></tr>`;
+  `<td class="mut">${esc(i.seed)}</td><td>${myVod?`<svg class="vod-twitch-icon" viewBox="0 0 24 24" width="15" height="15" aria-label="Twitch VOD" role="img" style="vertical-align:-3px;fill:#9146ff"><path d="M4 2 1.5 6v15h5v3h4l3-3h4l5-5V2H4zm16 13-3 3h-5l-3 3v-3H4V4h16v11zM9 7h2v6H9zm5 0h2v6h-2z"/></svg>`:""}${oppVod?'<span title="Opponent VOD available" style="font-size:11px;margin-left:3px">⚔️<svg class="vod-twitch-icon" viewBox="0 0 24 24" width="15" height="15" aria-label="Twitch VOD" role="img" style="vertical-align:-3px;fill:#9146ff"><path d="M4 2 1.5 6v15h5v3h4l3-3h4l5-5V2H4zm16 13-3 3h-5l-3 3v-3H4V4h16v11zM9 7h2v6H9zm5 0h2v6h-2z"/></svg></span>':""}</td><td class="mut">${ago(x.date)}</td></tr>`;
 }
 let twitchStatusTimer=null;
 function startTwitchStatus(login){
