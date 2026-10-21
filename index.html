@@ -240,6 +240,17 @@ body:has(#out.lyxier-profile) #gradient-appearances,body:has(#out.christmas-prof
 .vod-macro button{font-size:12px;padding:6px 10px}
 #modal.vod-expanded .vod-macro{margin-top:14px}
 .split-behind{color:var(--loss);font-size:12px;font-weight:700;white-space:nowrap;margin-left:5px}
+
+/* Match-progress timeline below enlarged VODs */
+.vod-match-timeline{display:none;width:min(1200px,100%);margin:14px auto 0;padding:12px 16px;background:#141522;border:1px solid var(--line);border-radius:12px}
+#modal.vod-expanded .vod-match-timeline{display:block}
+.vod-timeline-top{display:flex;justify-content:space-between;gap:12px;align-items:center;font-weight:700;margin-bottom:8px}
+.vod-timeline-track{width:100%;accent-color:#b276ef;cursor:pointer}
+.vod-timeline-times{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.vod-timeline-markers{position:relative;height:44px;margin:7px 5px 0}
+.vod-timeline-marker{position:absolute;top:2px;transform:translateX(-50%);background:none;border:0;padding:0 3px;cursor:pointer;color:var(--muted);font-size:10px;max-width:80px;white-space:nowrap}
+.vod-timeline-marker::before{content:"";display:block;width:5px;height:12px;background:var(--accent2);margin:0 auto 3px;border-radius:3px}
+.vod-timeline-marker:hover{color:var(--text)}
 </style>
 </head>
 <body>
@@ -830,15 +841,38 @@ function controlBothVods(action){
   }
 }
 
-function closeModal(){vodPlayers.clear();curM=null;const m=$("modal");m.classList.remove("open","vod-expanded");m.innerHTML="";document.body.style.overflow=""}
+let vodTimelineTimer=null;
+function stopVodTimeline(){if(vodTimelineTimer){clearInterval(vodTimelineTimer);vodTimelineTimer=null}}
+function seekVodTimeline(seconds){
+  const t=Math.max(0,Number(seconds)||0);
+  for(const entry of vodPlayers.values())if(entry.ready)try{entry.player.seek(entry.base+10+t)}catch(e){}
+  updateVodTimeline(t);
+}
+function updateVodTimeline(forced){
+  const bar=$("modal").querySelector(".vod-timeline-track");
+  if(!bar)return;
+  let seconds=forced;
+  if(seconds==null){
+    const entry=[...vodPlayers.values()].find(v=>v.ready);
+    if(!entry)return;
+    try{seconds=Math.max(0,entry.player.getCurrentTime()-entry.base-10)}catch(e){return}
+  }
+  const max=Number(bar.max)||1;
+  bar.value=Math.min(max,Math.max(0,seconds));
+  const fmtClock=n=>Math.floor(n/60)+":"+String(Math.floor(n%60)).padStart(2,"0");
+  const label=$("modal").querySelector("[data-vod-clock]");
+  if(label)label.textContent=fmtClock(seconds)+" / "+fmtClock(max);
+}
+function closeModal(){stopVodTimeline();vodPlayers.clear();curM=null;const m=$("modal");m.classList.remove("open","vod-expanded");m.innerHTML="";document.body.style.overflow=""}
 async function openMatch(id){
-  const md=$("modal");vodPlayers.clear();md.classList.remove("vod-expanded");curM=id;md.classList.add("open");document.body.style.overflow="hidden";
+  const md=$("modal");stopVodTimeline();vodPlayers.clear();md.classList.remove("vod-expanded");curM=id;md.classList.add("open");document.body.style.overflow="hidden";
   md.innerHTML=`<div class="mbox"><button class="x" data-close aria-label="Close">[x]</button><div class="msg skel">Loading match #${esc(id)}…</div></div>`;
   try{
     const m=await(MC[id]||(MC[id]=get(API+"/matches/"+id)));
     if(curM!==id)return;
     md.innerHTML=matchHTML(m);
     initVodPlayers(id);
+    vodTimelineTimer=setInterval(()=>{if($("modal").classList.contains("vod-expanded"))updateVodTimeline()},300);
     const c=md.querySelector("[data-close]");if(c)c.focus();
   }catch(e){
     delete MC[id];
@@ -900,7 +934,7 @@ function matchHTML(m){
    <h2>${typeName} match #${esc(m.id)}</h2>
    <div class="mut">${m.date?new Date(m.date*1000).toLocaleString():""}${seed?" · "+esc(seed):""}${m.forfeited?" · forfeited":""}</div>
    <div class="pcs">${pcs}</div>
-   <div class="sec3 vod-section"><h3>VODs</h3>${anyVod?`<div class="vods">${pl.map(p=>vodBox(m,p)).join("")}</div><div class="vod-macro"><button type="button" data-vod-action="play">Play</button><button type="button" data-vod-action="pause">Pause</button><button type="button" data-vod-action="backward">Back 10s</button><button type="button" data-vod-action="forward">Forward 10s</button><button type="button" data-vod-action="restart">Restart</button><button type="button" data-vod-action="mute">Mute</button><button type="button" data-vod-action="unmute">Unmute</button></div><button type="button" class="vod-zoom-btn" data-vod-zoom>⛶ Enlarge VODs</button>`:`<div class="vodbox none"><span>No public VODs for this match.</span></div>`}</div>
+   <div class="sec3 vod-section"><h3>VODs</h3>${anyVod?`<div class="vods">${pl.map(p=>vodBox(m,p)).join("")}</div><div class="vod-macro"><button type="button" data-vod-action="play">Play</button><button type="button" data-vod-action="pause">Pause</button><button type="button" data-vod-action="backward">Back 10s</button><button type="button" data-vod-action="forward">Forward 10s</button><button type="button" data-vod-action="restart">Restart</button><button type="button" data-vod-action="mute">Mute</button><button type="button" data-vod-action="unmute">Unmute</button></div><div class="vod-match-timeline"><div class="vod-timeline-top"><span>Match timeline</span><span data-vod-clock>0:00 / 0:00</span></div><input class="vod-timeline-track" type="range" min="0" max="${Math.max(1,Math.ceil((finalTime||resultTime||0)/1000))}" value="0" step="1" aria-label="Seek both VODs to match time"><div class="vod-timeline-times"><span>Countdown</span><span>Match end</span></div><div class="vod-timeline-markers">${types.map(t=>{const at=minT(t)/1000,total=Math.max(1,(finalTime||resultTime||0)/1000);return '<button type="button" class="vod-timeline-marker" data-vod-seek="'+Math.round(at)+'" style="left:'+Math.min(98,Math.max(2,at/total*100))+'%" title="'+esc(nice(t))+' at '+fmtP(minT(t))+'">'+esc(nice(t))+'</button>'}).join("")}</div></div><button type="button" class="vod-zoom-btn" data-vod-zoom>⛶ Enlarge VODs</button>`:`<div class="vodbox none"><span>No public VODs for this match.</span></div>`}</div>
    <div class="sec3"><h3>Splits</h3>${splits}</div></div>`;
 }
 function seekVod(uuid,ms){
@@ -1127,6 +1161,7 @@ out.addEventListener("click",e=>{
     openMatch(id)}
 });
 $("modal").addEventListener("click",e=>{
+  const marker=e.target.closest("[data-vod-seek]");if(marker){seekVodTimeline(marker.dataset.vodSeek);return;}
   const macro=e.target.closest("[data-vod-action]");if(macro){controlBothVods(macro.dataset.vodAction);return;}
   if(e.target.closest("[data-vod-zoom]")){
     const expanded=$("modal").classList.toggle("vod-expanded");
@@ -1137,6 +1172,7 @@ $("modal").addEventListener("click",e=>{
   const tr=e.target.closest("tr.sp");
   if(tr){tr.querySelectorAll("td[data-seek]").forEach(td=>seekVod(td.dataset.u,+td.dataset.seek))}
 });
+$("modal").addEventListener("input",e=>{if(e.target.matches(".vod-timeline-track"))seekVodTimeline(e.target.value)});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 
 
