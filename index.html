@@ -507,7 +507,7 @@ function renderTiles(){
   t.innerHTML=tiles.map(x=>`<div class="tile"><div class="l">${esc(x[0])}</div><div class="v">${esc(x[1])}</div><div class="d">${esc(x[2])}</div></div>`).join("");
 }
 function rowHTML(x){
-  const u=P.u,i=info(x,u.uuid),r=P.mode==="ranked",opp=i.opp,vod=x.vod&&x.vod.length;
+  const u=P.u,i=info(x,u.uuid),r=P.mode==="ranked",opp=i.opp,vods=x.vod||[],myVod=vods.some(v=>v.uuid===u.uuid),oppVod=vods.some(v=>v.uuid===opp.uuid);
   const ch=i.change;
   // In private-room matches, summarize large lobbies as winner + other players.
   const roomPlayers=x.players||[];
@@ -519,7 +519,7 @@ function rowHTML(x){
   (r?`<td>${opp.eloRate!=null?opp.eloRate:"—"}</td>`:"")+
   `<td>${i.time}</td>`+
   (r?`<td class="${ch>0?"up":"down"}">${ch==null?"—":(ch>0?"+":"")+ch}</td>`:"")+
-  `<td class="mut">${esc(i.seed)}</td><td>${vod?"📺":""}</td><td class="mut">${ago(x.date)}</td></tr>`;
+  `<td class="mut">${esc(i.seed)}</td><td>${myVod?"📺":""}${oppVod?'<span title="Opponent VOD available" style="font-size:11px;margin-left:3px">⚔️📺</span>':""}</td><td class="mut">${ago(x.date)}</td></tr>`;
 }
 let twitchStatusTimer=null;
 function startTwitchStatus(login){
