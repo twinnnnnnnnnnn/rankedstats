@@ -333,6 +333,15 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 <div id="modal" role="dialog" aria-modal="true" aria-label="Match details"></div>
 
 <script>
+// Surface unexpected startup failures instead of leaving an empty page.
+function showStartupError(message){
+ const out=document.getElementById('out');
+ if(!out||out.children.length)return;
+ out.innerHTML='<section class="card" style="margin:24px auto;max-width:700px;padding:24px"><h2>Website failed to load</h2><p>Please copy this error so we can fix it:</p><pre style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></section>';
+ out.querySelector('pre').textContent=String(message||'Unknown error');
+}
+window.addEventListener('error',event=>showStartupError(event.message||event.error?.message));
+window.addEventListener('unhandledrejection',event=>showStartupError(event.reason?.message||event.reason));
 // Keep the splash visible for 2.5 seconds on each page load.
 window.setTimeout(()=>{const splash=document.getElementById('loadingSplash');if(splash)splash.remove()},2500);
 const API="https://api.mcsrranked.com";
