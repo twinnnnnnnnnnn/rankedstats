@@ -323,9 +323,9 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 <div class="wrap">
 <nav>
   <a class="logo" id="logo" href="#!lb/season" aria-label="Season leaderboard"><img alt="Site logo" src="https://femboy.beauty/jzRZs6"></a>
-  <div class="tabs" id="tabs"><button data-t="fast">Fastest Time</button><button data-t="lb">Leaderboard</button><button data-t="profile">Profile</button><button data-t="predictions">Predictions</button></div>
+  <div class="tabs" id="tabs"><button data-t="fast">Fastest Time</button><button data-t="lb">Leaderboard</button><button data-t="profile">Profile</button></div>
   <form id="f"><input id="q" type="text" placeholder="Player name or UUID" aria-label="Player"><button class="go">Search</button></form>
-  <div class="discord-account-wrap" id="discordAccountWrap"><button type="button" class="discord-login-toggle" id="discordLoginToggle" aria-expanded="false">Discord Login</button><div class="discord-account-menu" id="discordAccountMenu"><div class="discord-account-name" id="discordAccountName"></div><div id="discordDemoCoins" style="font-size:12px;color:var(--muted);padding:2px 8px">🪙 100 demo coins</div><button type="button" id="discordAccountLogout">Log out</button></div></div>
+  <div class="discord-account-wrap" id="discordAccountWrap"><button type="button" class="discord-login-toggle" id="discordLoginToggle" aria-expanded="false">Discord Login</button><div class="discord-account-menu" id="discordAccountMenu"><div class="discord-account-name" id="discordAccountName"></div><button type="button" id="discordAccountLogout">Log out</button></div></div>
   <div class="settings-wrap" id="settingsWrap">
     <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Settings" title="Settings" aria-expanded="false">⚙</button>
     <section class="settings-panel" aria-label="Website settings">
@@ -338,7 +338,7 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 <div id="out" style="display:block;visibility:visible;opacity:1;min-height:180px"><section class="card" id="initialLoadStatus" style="padding:24px;margin:24px auto;max-width:740px"><h2>Loading leaderboard…</h2><p>If this message stays on screen, the website JavaScript has not started. Open Developer Tools (F12), select Console, and copy the first red error.</p></section></div>
 <footer class="ranked-footer"><div><strong>Play MCSR Ranked</strong><p>Ready to compete? Visit the official MCSR Ranked website to get started.</p><p class="mut" style="margin-top:6px;font-size:12px">Not an official MCSR Ranked website.</p></div><a href="https://mcsrranked.com/" target="_blank" rel="noopener noreferrer">Download Ranked ↗</a></footer>
 </div>
-<div class="discord-auth-panel" id="discordAuthPanel" role="dialog" aria-modal="true" aria-label="Discord account login"><section class="discord-auth-card"><h2>Discord Account</h2><p>Sign in with Discord to manage your account. Ranked account linking and casino access will be added later.</p><p id="discordAuthStatus" role="status">Checking login availability…</p><div class="discord-auth-actions"><button class="discord-auth-primary" type="button" id="discordAuthStart">Login with Discord</button><button type="button" id="discordAuthClose">Close</button></div><p style="font-size:12px">Discord is used to sign in. Coins and slots remain unavailable until secure account linking and wallet services are implemented.</p></section></div>
+<div class="discord-auth-panel" id="discordAuthPanel" role="dialog" aria-modal="true" aria-label="Discord account login"><section class="discord-auth-card"><h2>Discord Account</h2><p>Sign in with Discord to manage your account. Ranked account linking may be added later.</p><p id="discordAuthStatus" role="status">Checking login availability…</p><div class="discord-auth-actions"><button class="discord-auth-primary" type="button" id="discordAuthStart">Login with Discord</button><button type="button" id="discordAuthClose">Close</button></div></section></div>
 <div id="modal" role="dialog" aria-modal="true" aria-label="Match details"></div>
 
 <script>
@@ -450,110 +450,18 @@ function setTab(v){[...document.querySelectorAll("#tabs button")].forEach(b=>b.c
 function stopProfile(){P=null;if(io){io.disconnect();io=null}}
 const go=h=>{if(location.hash===h)route();else location.hash=h};
 
-// Browser-only prediction prototype: no real bets, wallets or event outcomes.
-async function showPredictionDemo(){
- document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==='predictions'));
- const gateRoot=document.getElementById('out');
- gateRoot.innerHTML='<div class="prediction-demo"><h1>📈 Predictions</h1><div class="pred-card" role="status">Checking Discord login…</div></div>';
- let authorized=false;
- try{
-  const response=await fetch('/api/auth/discord/status',{credentials:'same-origin',cache:'no-store'});
-  if(response.ok){const auth=await response.json();authorized=auth.authenticated===true}
- }catch(e){}
- if(location.hash.indexOf('#!predictions')!==0)return;
- if(!authorized){
-  gateRoot.innerHTML='<div class="prediction-demo"><h1>📈 Predictions</h1><div class="pred-card"><h2>Discord login required</h2><p>Sign in with Discord to access predictions and the coin leaderboard.</p><a class="go" href="/api/auth/discord/start" style="display:inline-block;padding:11px 18px;text-decoration:none;border-radius:10px">Log in with Discord</a></div></div>';
-  return;
- }
- document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==='predictions'));
- const root=document.getElementById('out');
- root.innerHTML='<div class="prediction-demo"><h1>📈 Predictions</h1><div class="pred-card" role="status"><strong>⏸ Predictions are temporarily paused.</strong><p class="pred-note">New predictions are disabled for now. Existing predictions and balances are preserved.</p></div><div class="pred-subtabs"><span class="pred-today" id="predToday"></span><button type="button" class="on" data-pred-subtab="predictions">Predictions</button><button type="button" data-pred-subtab="leaderboard">Leaderboard</button><span class="pred-wallet" id="predWallet" title="Your Discord wallet">👛 <span id="predWalletAmount">—</span></span></div><div id="predictionsPanel"><h2>Daily Average Predictions</h2><p class="pred-note">10 players daily · resets 00:00 JST · 3 predictions per day · virtual coins only.</p><p class="pred-note">Predict whether the next session&#39;s average completed winning run is faster or slower than the last completed session&#39;s average. Losses and forfeits do not count. Both outcomes pay 1.90×; ties or sessions with no completed wins are refunded. Previous Elo predictions keep their original rules.</p><div id="dailyPredStatus" class="pred-card">Loading current-season leaderboard…</div><div id="dailyPredPlayers"></div></div><div id="predLeaderboardPanel" hidden><h2>🪙 Balance Leaderboard</h2><div id="predLeaderboardRows" class="pred-card">Loading…</div></div></div>';
- const dateLabel=root.querySelector('#predToday');
- dateLabel.textContent=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',month:'short',day:'numeric',year:'numeric'}).format(new Date())+' JST';
- const walletAmount=root.querySelector('#predWalletAmount');
- fetch('/api/wallet',{credentials:'same-origin',cache:'no-store'}).then(async response=>{if(!response.ok)throw Error('wallet unavailable');const wallet=await response.json();if(walletAmount.isConnected)walletAmount.textContent=Number(wallet.balance).toLocaleString()+' 🪙'}).catch(()=>{if(walletAmount.isConnected)walletAmount.textContent='Sign in'});
- const subtabs=root.querySelectorAll('[data-pred-subtab]');
- subtabs.forEach(btn=>btn.addEventListener('click',async()=>{
-  const board=btn.dataset.predSubtab==='leaderboard';
-  subtabs.forEach(b=>b.classList.toggle('on',b===btn));
-  document.getElementById('predictionsPanel').hidden=board;
-  document.getElementById('predLeaderboardPanel').hidden=!board;
-  if(board){
-   const rows=document.getElementById('predLeaderboardRows');rows.textContent='Loading balances…';
-   try{const response=await fetch('/api/wallet-leaderboard',{cache:'no-store'});if(!response.ok)throw Error('Unavailable');const data=await response.json();rows.innerHTML=(data.players||[]).length?'<table class="pt2"><thead><tr><th>#</th><th>Discord user</th><th class="num">Balance</th></tr></thead><tbody>'+data.players.map((p,i)=>'<tr><td>'+(i+1)+'</td><td>'+esc(p.username)+'</td><td class="num">🪙 '+Number(p.balance).toLocaleString()+'</td></tr>').join('')+'</tbody></table>':'<p class="pred-note">No accounts yet.</p>';}catch(e){rows.textContent='Could not load coin leaderboard.'}
-  }
- }));
- const status=document.getElementById('dailyPredStatus'),list=document.getElementById('dailyPredPlayers');
- const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
- const hash=t=>{let h=2166136261;for(let i=0;i<t.length;i++)h=Math.imul(h^t.charCodeAt(i),16777619);return h>>>0};
- const shuffle=(arr,salt)=>arr.slice().sort((a,b)=>hash(day+salt+a.nickname)-hash(day+salt+b.nickname));
- fetch('/api/predictions',{credentials:'same-origin',cache:'no-store'}).then(async response=>{const data=await response.json();if(!response.ok)throw Error(data.error||'Unavailable');return data}).then(data=>{
-  if(!list.isConnected)return;
-  status.remove();
-  let balance=data.balance;const players=data.players||[];
-  const usedPlayers=new Set((data.history||[]).filter(p=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(p.placed_at))===data.day).map(p=>p.player_name.toLowerCase()));
-  if(walletAmount.isConnected)walletAmount.textContent=balance.toLocaleString()+' 🪙';
-  const history=document.createElement('div');history.className='pred-card';
-  history.innerHTML='<h3>Your predictions · '+data.remaining+'/3 remaining today</h3>'+(data.history.length?data.history.map(p=>'<p class="pred-note">'+esc(p.player_name)+' · '+esc(p.direction)+' · 🪙 '+p.stake+' · '+(p.odds_basis_points/100).toFixed(2)+'× · '+esc(p.status)+(p.status==='won'?' · 🪙 '+p.payout:'')+'</p>').join(''):'<p class="pred-note">No predictions yet.</p>');
-  list.before(history);
-  list.innerHTML=players.map((u,i)=>'<div class="pred-card" data-daily-pred="'+i+'"><button type="button" class="pred-player-name" data-pred-player="'+i+'" aria-expanded="false">'+esc(u.nickname)+' <span class="pred-player-chevron">⌄</span></button><div class="pred-mini" data-pred-mini="'+i+'" hidden></div><p class="pred-note">#'+u.rank+(u.rank<=10?' · Top 10':u.rank<=50?' · Top 50':' · Top 150')+'</p><p class="pred-note">Last completed session average: <strong>'+fmtP(u.baselineAvgMs)+'</strong></p><div class="pred-options"><button type="button" data-direction="faster">Faster than '+fmtP(u.baselineAvgMs)+'</button><button type="button" data-direction="slower">Slower than '+fmtP(u.baselineAvgMs)+'</button></div><div class="pred-actions"><label class="pred-stake-label">Stake 🪙 <input class="pred-stake-input" type="number" min="1" step="1" max="'+balance+'" value="'+(balance?Math.min(10,balance):'')+'" data-stake inputmode="numeric"> coins</label><button type="button" data-preview>Place prediction</button></div><p class="pred-note" data-feedback role="status">Choose an outcome.</p></div>').join('');
-  list.querySelectorAll('[data-daily-pred]').forEach((card,i)=>{
-   let direction='';const stake=card.querySelector('[data-stake]'),submit=card.querySelector('[data-preview]'),feedback=card.querySelector('[data-feedback]');
-   const alreadyPicked=usedPlayers.has(players[i].nickname.toLowerCase());
-   if(alreadyPicked){card.querySelectorAll('[data-direction]').forEach(b=>b.disabled=true);stake.disabled=true;feedback.textContent='Already predicted this player today. Choose a different player.';}
-   const validate=()=>{const n=Number(stake.value);submit.disabled=alreadyPicked||!direction||!Number.isSafeInteger(n)||n<1||n>balance||data.remaining<=0;};
-   card.querySelectorAll('[data-direction]').forEach(button=>button.addEventListener('click',()=>{direction=button.dataset.direction;card.querySelectorAll('[data-direction]').forEach(b=>{b.classList.toggle('selected',b===button);b.classList.toggle('dimmed',b!==button)});feedback.textContent='Potential payout: 🪙 '+Math.floor(Number(stake.value)*players[i].odds[direction]/100);validate()}));
-   stake.addEventListener('input',validate);
-   submit.addEventListener('click',async()=>{validate();if(submit.disabled)return;submit.disabled=true;feedback.textContent='Placing prediction…';try{const response=await fetch('/api/predictions',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({uuid:players[i].uuid,direction,stake:Number(stake.value)})});const result=await response.json();if(!response.ok)throw Error(result.error||'Unable to place');showPredictionDemo()}catch(e){feedback.textContent=e.message;validate()}});
-   validate();
-  });
-  const selected=players;
-  list.querySelectorAll('[data-pred-player]').forEach(button=>button.addEventListener('click',async()=>{
-   const i=Number(button.dataset.predPlayer),u=selected[i],panel=list.querySelector('[data-pred-mini="'+i+'"]');
-   if(!u||!panel)return;
-   const opening=panel.hidden;
-   list.querySelectorAll('[data-pred-mini]').forEach(p=>p.hidden=true);
-   list.querySelectorAll('[data-pred-player]').forEach(b=>b.setAttribute('aria-expanded','false'));
-   if(!opening)return;
-   panel.hidden=false;button.setAttribute('aria-expanded','true');
-   if(panel.dataset.loaded)return;
-   panel.textContent='Loading last session…';
-   try{
-    const profile={uuid:u.uuid};
-    const matches=await fetchMatches(u.uuid,MT.ranked,null,100,null,null);
-    if(!panel.isConnected)return;
-    const ordered=(Array.isArray(matches)?matches:[]).filter(m=>Number(m.date)>0).sort((a,b)=>Number(b.date)-Number(a.date));
-    const gapHours=Number(u.elo)>=2500?3:Number(u.rank)<=150?2:1,gap=gapHours*3600,now=Date.now()/1000;
-    const sessions=[];let group=[];
-    for(const m of ordered){
-     if(group.length&&Number(group[group.length-1].date)-Number(m.date)>gap){sessions.push(group);group=[]}
-     group.push(m);
-    }
-    if(group.length)sessions.push(group);
-    const recent=sessions.find(g=>now-Number(g[0].date)>gap)||[];
-    const wins=recent.filter(m=>m.result?.uuid===profile.uuid).length;
-    const losses=recent.filter(m=>m.result?.uuid&&m.result.uuid!==profile.uuid).length;
-    const completed=recent.filter(m=>m.result?.uuid===profile.uuid&&!m.forfeited&&!m.decayed&&Number(m.result.time)>0);
-    const avg=completed.length?completed.reduce((sum,m)=>sum+Number(m.result.time),0)/completed.length:null;
-    panel.innerHTML='<div class="pred-mini-stats"><span><b>'+wins+'</b> Wins</span><span><b>'+losses+'</b> Losses</span><span><b>'+(avg===null?'—':fmtP(avg))+'</b> Avg completion</span></div><div class="pred-mini-matches">'+(recent.length?recent.map(m=>{const won=m.result?.uuid===profile.uuid,draw=!m.result?.uuid;return '<span class="pred-match-pill '+(draw?'draw':won?'win':'loss')+'" title="'+(draw?'Draw':won?'Win':'Loss')+'">'+(draw?'D':won?'W':'L')+'</span>'}).join(''):'No completed session found')+'</div><p class="pred-note">Last completed session · '+recent.length+' ranked matches · '+gapHours+'h inactivity cutoff · Average uses completed wins with recorded times.</p>';
-    panel.dataset.loaded='1';
-   }catch(e){if(panel.isConnected){panel.textContent='Could not load last session ('+(e.message||'request failed')+'). Click again to retry.';panel.dataset.loaded='';}}
-  }));
- }).catch(e=>{status.textContent='Predictions unavailable: '+e.message;});
-}
-
 function route(){
   closeModal();if(lio){lio.disconnect();lio=null}
   const raw=location.hash.slice(1);
   const dec=s=>{try{return decodeURIComponent(s)}catch(e){return s}};
-  if(raw.indexOf("!casino")===0)return go("#!predictions");
-  if(raw.indexOf("!predictions")===0)return showPredictionDemo();
+  if(raw.indexOf("!casino")===0)return go("#!lb/season");
+  if(raw.indexOf("!predictions")===0)return go("#!lb/season");
   if(raw.indexOf("!fast")===0)return showFastest();
   if(!raw||raw.indexOf("!lb")===0||raw.indexOf("!players")===0){const p=raw.split("/");return showLeaderboard(p[1]||"season")}
   showProfile(dec(raw));
 }
 $("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;
-  if(b.dataset.t==="predictions")go("#!predictions");else if(b.dataset.t==="profile")go("#"+enc(lastName));else if(b.dataset.t==="fast")go("#!fast");else go("#!lb/season")};
+  if(b.dataset.t==="profile")go("#"+enc(lastName));else if(b.dataset.t==="fast")go("#!fast");else go("#!lb/season")};
 $("logo").onclick=e=>{e.preventDefault();go("#!lb/season")};
 $("f").addEventListener("submit",e=>{e.preventDefault();const v=$("q").value.trim();if(v)go("#"+enc(v))});
 window.addEventListener("hashchange",route);
@@ -1598,18 +1506,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
    signedIn=!!data.authenticated;
    button.textContent=signedIn?'Profile':'Discord Login';
    name.textContent=data.discordUsername||'Discord user';
-   if(signedIn){
-    const coins=document.getElementById('discordDemoCoins');
-    if(coins){
-     coins.textContent='🪙 Loading account balance…';
-     try{
-      const walletResponse=await fetch('/api/wallet',{credentials:'same-origin',cache:'no-store'});
-      if(!walletResponse.ok)throw Error('Wallet unavailable');
-      const wallet=await walletResponse.json();
-      coins.textContent='🪙 '+wallet.balance+' coins · Account wallet';
-     }catch(e){coins.textContent='🪙 Wallet unavailable · Check database setup'}
-    }
-   }
+
   }catch(e){signedIn=false;button.textContent='Discord Login'}
   if(!signedIn)hide();
  }
