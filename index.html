@@ -449,7 +449,7 @@ function showPredictionDemo(){
     if(response.ok){const wallet=await response.json();balance=wallet.balance;walletReady=Number.isSafeInteger(balance)&&balance>=0}
    }catch(e){}
   }
-  status.textContent='Roster for '+day+' JST · '+(walletReady?'Account balance: 🪙 '+balance+' coins':auth.authenticated?'Wallet unavailable — check DATABASE_URL and deployment':'Sign in with Discord to see your balance')+' · Picks are previews only.';
+  status.remove();
   list.innerHTML=selected.map((u,i)=>{
    const rank=users.indexOf(u)+1,tag=rank<=10?'Top 10':rank<=50?'Top 50':'Top 150';
    return '<div class="pred-card" data-daily-pred="'+i+'"><strong>'+esc(u.nickname)+'</strong><p class="pred-note">#'+rank+' · '+tag+'</p><div class="pred-options"><button type="button" data-direction="gain">📈 Gain Elo</button><button type="button" data-direction="loss">📉 Lose Elo</button></div><div class="pred-actions"><label class="pred-stake-label">Stake 🪙 <input class="pred-stake-input" type="number" min="1" step="1" max="'+balance+'" value="'+(balance?Math.min(10,balance):'')+'" data-stake inputmode="numeric"> coins</label><button type="button" data-preview disabled>Preview prediction</button></div><p class="pred-note" data-feedback role="status">Choose one outcome and enter an amount.</p></div>';
