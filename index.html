@@ -732,14 +732,15 @@ let graphKind="elo",splitGraphToken=0;
 async function renderSplitPerformance(){
  const area=$("gArea"),sub=$("gsub");if(!P||!area)return;
  const token=++splitGraphToken,profile=P,uid=P.u.uuid;
- const matches=(P.full?P.st.ranked.list:P.st.ranked.list.slice(0,50)).slice(0,30);
- sub.textContent=" · sampled splits / completed-win finish average";
+ const matches=P.full?P.st.ranked.list:P.st.ranked.list.slice(0,50);
+ sub.textContent=P.full?" · full-season splits / completed-win finish average":" · recent 50 splits / completed-win finish average";
  area.innerHTML='<div class="msg">Loading split data…</div>';
  const details=[];
- for(let i=0;i<matches.length;i+=5){
-  const batch=await Promise.all(matches.slice(i,i+5).map(async m=>{try{return await (MC[m.id]||(MC[m.id]=get(API+"/matches/"+m.id)))}catch(_){return null}}));
+ for(let i=0;i<matches.length;i+=12){
+  const batch=await Promise.all(matches.slice(i,i+12).map(async m=>{try{return await (MC[m.id]||(MC[m.id]=get(API+"/matches/"+m.id)))}catch(_){return null}}));
   if(token!==splitGraphToken||P!==profile||graphKind!=="splits")return;
   details.push(...batch.filter(Boolean));
+  if(P.full)area.innerHTML=`<div class="msg">Loading full-season splits… ${Math.min(i+12,matches.length)} / ${matches.length} matches</div>`;
  }
  const elo=Number(P.u.eloRate??P.u.seasonResult?.last?.eloRate);
  const playerRank=Number.isFinite(elo)?rk(elo).n:null;
@@ -787,7 +788,7 @@ async function renderSplitPerformance(){
  }).join("");
  const ticks=[0,.25,.5,.75,1].map(f=>'<line x1="'+L+'" x2="'+(W-R)+'" y1="'+py(max*f)+'" y2="'+py(max*f)+'" stroke="var(--line)"/><text x="3" y="'+(py(max*f)+4)+'" font-size="12" fill="var(--muted)">'+fmtMs(max*f)+'</text>').join("");
  const labels=data.map((d,i)=>'<text x="'+px(i)+'" y="'+(H-B+18)+'" text-anchor="end" transform="rotate(-30 '+px(i)+' '+(H-B+18)+')" font-size="11" fill="var(--muted)">'+esc(d.name)+'</text>').join("");
- area.innerHTML='<div class="hint" style="margin-bottom:10px">'+series.map(([,color,name])=>'<span style="color:'+color+'">●</span> '+name).join(' &nbsp; ')+'</div><div class="chartbox"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Split performance comparison between player and same-rank opponents">'+ticks+paths+labels+'</svg></div><div class="hint">Times in minutes:seconds · lower is faster. Split points use '+details.length+' sampled ranked matches; Avg. finish uses '+completedWins.length+' completed wins (the same calculation as the profile tile). Same-rank comparison uses '+esc(rankTier||"unknown rank")+' opponents from the sampled matches. '+(hasRankData?"":"No matching-rank opponent split data was available in this sample.")+'</div>';
+ area.innerHTML='<div class="hint" style="margin-bottom:10px">'+series.map(([,color,name])=>'<span style="color:'+color+'">●</span> '+name).join(' &nbsp; ')+'</div><div class="chartbox"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Split performance comparison between player and same-rank opponents">'+ticks+paths+labels+'</svg></div><div class="hint">Times in minutes:seconds · lower is faster. Split points use '+details.length+' '+(P.full?'full-season':'recent')+' ranked matches; Avg. finish uses '+completedWins.length+' completed wins (the same calculation as the profile tile). Same-rank comparison uses '+esc(rankTier||"unknown rank")+' opponents from the sampled matches. '+(hasRankData?"":"No matching-rank opponent split data was available in this sample.")+'</div>';
 }
 function refreshGraph(){
   if(graphKind==="splits"){renderSplitPerformance();return;}
