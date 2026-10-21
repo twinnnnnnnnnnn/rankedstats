@@ -341,6 +341,39 @@ body .hero,body .card,body .tile{background-image:none!important;box-shadow:none
 body .hero,body .card{background:var(--surface)!important}
 body .tile{background:var(--surface2)!important}
 #lyxier-decor,#lyxier-spiders{display:none!important}
+
+/* MCSR-inspired restrained competition layout */
+body{font-family:Inter,Arial,Helvetica,sans-serif;font-size:14px;line-height:1.45}
+.wrap{max-width:1200px;padding:18px 20px 52px}
+nav{min-height:64px;gap:14px;padding:4px 0 14px;margin-bottom:24px;border-bottom:1px solid #242424}
+.logo img{width:44px;height:44px}
+.tabs{border:0;background:none;gap:6px;padding:0}
+.tabs button{font-weight:650;font-size:14px;color:#a8a8a8;padding:10px 13px;border-radius:6px}
+.tabs button.on{color:#f7f7f7;background:#1d1d1d}
+.tabs button:hover:not(.on){background:#151515}
+input[type=text],select,button{font-size:13px}
+input[type=text]{background:#0c0c0c;border-color:#292929;min-height:37px}
+button.go{background:#242424;border-color:#343434;min-height:37px}
+button.go:hover{background:#303030}
+h1{font-size:26px;font-weight:750;letter-spacing:-.025em}
+h2{font-weight:700;letter-spacing:-.01em}
+body .hero{border:1px solid #282828!important;padding:20px!important;gap:18px!important}
+body .card{border-color:#252525!important}
+body .tile{border-color:#242424!important}
+.pill{background:#151515;border:1px solid #303030;border-radius:4px}
+.head,.avatar{border-radius:4px}
+.elo .n{font-size:39px}
+.elo .r{font-size:12px}
+.social-link{border-radius:5px;background:#141414}
+.social-link:hover{background:#1d1d1d;border-color:#555}
+.ranked-footer{background:transparent!important;border:0;border-top:1px solid #252525;border-radius:0;padding:20px 0;margin-top:34px}
+.ranked-footer a{background:#222!important;border:1px solid #363636;color:#eaeaea;border-radius:5px;font-weight:600}
+table{border-collapse:collapse}
+thead{background:#111}
+th{color:#a8a8a8;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.045em}
+tbody tr{border-bottom:1px solid #242424}
+tbody tr:hover{background:#151515}
+@media(max-width:700px){.wrap{padding:12px 12px 32px}nav{gap:8px;margin-bottom:16px}.tabs button{padding:8px;font-size:12px}body .hero{padding:14px!important}}
 </style>
 </head>
 <body>
