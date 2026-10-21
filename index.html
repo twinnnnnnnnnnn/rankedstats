@@ -204,6 +204,16 @@ body.dark-everything.christmas-profile-bg::before{background:#000!important;back
 @keyframes splashFadeOut{to{opacity:0;visibility:hidden}}
 @media(prefers-reduced-motion:reduce){#loadingSplash{animation:none}#loadingSplash .loading-dot{animation:none;opacity:1}}
 
+/* Full-window theater mode; preserve the VOD section and its players. */
+#modal .mbox{transition:width .38s ease,padding .38s ease,background .38s ease}
+#modal.vod-expanded{padding:0;align-items:center;background:rgba(0,0,0,.97)}
+#modal.vod-expanded .mbox{width:100%;max-width:none;min-height:100vh;border:0;border-radius:0;background:#000;padding:16px;display:flex;flex-direction:column;justify-content:center}
+#modal.vod-expanded .mbox>h2,#modal.vod-expanded .mbox>.mut,#modal.vod-expanded .mbox>.pcs{display:none}
+#modal.vod-expanded .vodbox{background:#080808;border:0;padding:5px;min-width:0}
+#modal.vod-expanded .vodbox iframe,#modal.vod-expanded .vod-player{width:100%;aspect-ratio:16/9}
+#modal.vod-expanded .mbox .x{position:fixed;top:12px;right:14px;z-index:10}
+@media(max-width:700px){#modal.vod-expanded .mbox{padding:42px 6px 12px}}
+@media(prefers-reduced-motion:reduce){#modal .mbox{transition:none}}
 /* Single expand control beneath the VOD pair; keep iframes mounted while resizing. */
 .vod-section>.vod-zoom-btn{display:block;margin:12px auto 0;padding:8px 18px}
 #modal.vod-expanded .mbox>.sec3:not(.vod-section){display:none}
