@@ -380,7 +380,7 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
   </div>
 </nav>
 <div id="out" style="display:block;visibility:visible;opacity:1;min-height:180px"><section class="card" id="initialLoadStatus" style="padding:24px;margin:24px auto;max-width:740px"><h2>Loading leaderboard…</h2><p>If this message stays on screen, the website JavaScript has not started. Open Developer Tools (F12), select Console, and copy the first red error.</p></section></div>
-<footer class="ranked-footer"><div><strong>Play MCSR Ranked</strong><p>Ready to compete? Visit the official MCSR Ranked website to get started.</p><p class="mut" style="margin-top:6px;font-size:12px">Not an official MCSR Ranked website.</p></div><a href="https://mcsrranked.com/" target="_blank" rel="noopener noreferrer">Download Ranked ↗</a></footer>
+
 </div>
 <div id="modal" role="dialog" aria-modal="true" aria-label="Match details"></div>
 
@@ -606,7 +606,7 @@ function sessionStatsHTML(){
  const items=[['Matches',session.length],['Wins',wins.length],['Win rate',winRate.toFixed(1)+'%'],['Elo change',changes.length?(eloDelta>0?'+':'')+eloDelta:'—'],['Avg. finish',times.length?fmtP(times.reduce((a,b)=>a+b,0)/times.length):'—'],['Best time',times.length?fmtP(Math.min(...times)):'—']];
  return '<div class="session-grid">'+items.map(([k,v])=>'<div><small class="mut">'+k+'</small><strong'+(k==='Elo change'&&changes.length?' class="'+(eloDelta>0?'session-elo-positive':eloDelta<0?'session-elo-negative':'')+'"':'')+'>'+v+'</strong>'+(k==='Win rate'?'<div class="session-winrate-track" role="img" aria-label="'+wins.length+' wins, '+(session.length-wins.length)+' other matches"><span style="width:'+winRate.toFixed(2)+'%"></span></div>':'')+'</div>').join('')+'</div><p class="mut">Estimated '+(isCurrent?'current':'last')+' session: ranked matches separated by no more than '+gapHours+' hour'+(gapHours===1?'':'s')+' (3h for 2500+ Elo, 2h for top 150, otherwise 1h). Based on loaded history'+(P.st.ranked.done?'.':'; more matches may change these numbers.')+'</p>';
 }
-function refreshSessionStats(){const el=$("sessionStats");if(!el)return;el.innerHTML=sessionStatsHTML();const summary=document.querySelector("#sessionPanel summary");if(summary&&P?.st){const matches=P.st.ranked.list.filter(m=>Number.isFinite(Number(m.date))&&Number(m.date)>0).sort((a,b)=>Number(b.date)-Number(a.date));const top150=(T.globalLb?.users||[]).slice(0,150).some(u=>u.uuid===P.u?.uuid);const hours=Number(P.u?.eloRate)>=2500?3:top150?2:1;const current=matches.length&&Date.now()/1000-Number(matches[0].date)<=hours*3600;summary.innerHTML=(current?"Current Session":"Last Session")+' <span class="mut">(estimated)</span>';}}
+function refreshSessionStats(){const el=$("sessionStats");if(!el)return;el.innerHTML=sessionStatsHTML();const summary=document.querySelector("#sessionPanel summary");if(summary&&P?.st){const matches=P.st.ranked.list.filter(m=>Number.isFinite(Number(m.date))&&Number(m.date)>0).sort((a,b)=>Number(b.date)-Number(a.date));const top150=(T.globalLb?.users||[]).slice(0,150).some(u=>u.uuid===P.u?.uuid);const hours=Number(P.u?.eloRate)>=2500?3:top150?2:1;const current=matches.length&&Date.now()/1000-Number(matches[0].date)<=hours*3600;summary.innerHTML=(current?"Current Session":"Last Session")+'';}}
 function renderProfile(){
   const u=P.u,uid=u.uuid,sn=(u.statistics&&u.statistics.season)||{};
   const at=k=>stat(u,"total",k),atc=at("completions"),att=at("completionTime");
@@ -632,10 +632,10 @@ function renderProfile(){
    <div><h1>${(historicalSeason?seasonStanding.eloRank:u.eloRank)!=null?`<span class="profile-rank ${[1,2,3].includes(Number(historicalSeason?seasonStanding.eloRank:u.eloRank))?`podium-${historicalSeason?seasonStanding.eloRank:u.eloRank}`:""}">#${historicalSeason?seasonStanding.eloRank:u.eloRank}</span> `:""}${flag(u.country)?flag(u.country)+" ":""}<span class="profile-username t-${tier}">${emojiName(u.nickname||"—",u)}</span>${isSupporter(u)?` `:""}${String(u.nickname||"").toLowerCase()==="lyxier"?" 🕷️":""}</h1>${socials}<div class="sub">${u.country?`<span class="pill">${esc(cname(u.country))}</span>`:""}${pl("All-time matches",nz(at("playedMatches")))}${pl("Wins",nz(at("wins")))}${pl("Completions",nz(atc))}${podiumPill("PB",fmtP(at("bestTime")),podiumRank("bestTime"))}${podiumPill("Average",atc&&att!=null?fmtP(att/atc):"—",podiumRank("completionTime"))}</div></div>
    <div class="elo"><div class="mut" style="font-size:12px;margin-bottom:5px">${historicalSeason?"End-of-season Elo":"Current Elo"}</div><div class="n t-${tier}">${elo!=null?elo.toLocaleString():"—"}</div><div class="r">${elo!=null?icon(elo,26):""}<span>${elo!=null?r.n:"Not available"} · Peak Elo ${peak!=null?peak.toLocaleString():"—"}</span></div></div></section>
    <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
-   <div class="tiles" id="tiles"></div><details class="card session-panel" id="sessionPanel"><summary>Current Session <span class="mut">(estimated)</span></summary><div id="sessionStats"></div></details>
+   <div class="tiles" id="tiles"></div><details class="card session-panel" id="sessionPanel"><summary>Current Session</summary><div id="sessionStats"></div></details>
    <div class="main">
     <div class="card" id="cardChart"><h2>Elo history <span id="gsub"></span><span class="seg" id="gm" style="min-width:210px"><button data-g="recent" class="${P.full?"":"on"}">Recent 50</button><button data-g="full" class="${P.full?"on":""}">Full season</button></span></h2><div id="gArea"></div></div>
-    <div class="card" id="cardTable"><h2>${P.mode==="ranked"?"Ranked matches":P.mode==="casual"?"Casual matches":"Private room matches"} <span id="cnt2"></span></h2><div class="bar" style="margin:0 0 12px;gap:8px;flex-wrap:wrap"><label for="matchMode">Match type</label><select id="matchMode" aria-label="Match type"><option value="ranked" ${P.mode==="ranked"?"selected":""}>Ranked</option><option value="casual" ${P.mode==="casual"?"selected":""}>Casual</option><option value="private" ${P.mode==="private"?"selected":""}>Private rooms</option></select><label for="matchSort">Sort matches</label><select id="matchSort" aria-label="Sort matches"><option value="recent" ${P.matchSort==="recent"?"selected":""}>Most recent</option><option value="oldest" ${P.matchSort==="oldest"?"selected":""}>Oldest first</option><option value="fastest" ${P.matchSort==="fastest"?"selected":""}>Fastest finish (wins only)</option></select></div><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th>${rkd?"<th>Opp. Elo</th>":""}<th>Time</th>${rkd?"<th>Elo</th>":""}<th>Overworld</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div><div class="hint">Click a match for splits and VODs.</div></div>
+    <div class="card" id="cardTable"><h2>${P.mode==="ranked"?"Ranked matches":P.mode==="casual"?"Casual matches":"Private room matches"} <span id="cnt2"></span></h2><div class="bar" style="margin:0 0 12px;gap:8px;flex-wrap:wrap"><label for="matchMode">Match type</label><select id="matchMode" aria-label="Match type"><option value="ranked" ${P.mode==="ranked"?"selected":""}>Ranked</option><option value="casual" ${P.mode==="casual"?"selected":""}>Casual</option><option value="private" ${P.mode==="private"?"selected":""}>Private rooms</option></select><label for="matchSort">Sort matches</label><select id="matchSort" aria-label="Sort matches"><option value="recent" ${P.matchSort==="recent"?"selected":""}>Most recent</option><option value="oldest" ${P.matchSort==="oldest"?"selected":""}>Oldest first</option><option value="fastest" ${P.matchSort==="fastest"?"selected":""}>Fastest finish (wins only)</option></select></div><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th>${rkd?"<th>Opp. Elo</th>":""}<th>Time</th>${rkd?"<th>Elo</th>":""}<th>Overworld</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div></div>
    </div>`;
   startTwitchStatus(twitch);
   $("out").classList.remove("lyxier-profile","christmas-profile");
@@ -990,7 +990,7 @@ function matchHTML(m){
     const behind=!r.death&&!r.end&&others.length&&v>Math.min(...others)?(v-Math.min(...others))/1000:null;
     const lag=behind!=null?` <span class="split-behind">+${behind.toFixed(behind<10?2:1)}s</span>`:"";
     return `<td class="${f?"f":""}" data-u="${esc(p.uuid)}" data-seek="${v}">${fmtP(v)}${lag}</td>`};
-  const splits=rowsData.length||extra.length?`<table><thead><tr><th>Split</th>${pl.map(p=>`<th>${esc(p.nickname)}</th>`).join("")}</tr></thead><tbody>${rowsData.concat(extra).map(r=>`<tr class="${r.cnt?"":"sp"}"><td>${esc(r.label)}</td>${pl.map((p,i)=>cell(r,i,p)).join("")}</tr>`).join("")}</tbody></table><div class="hint">Click a split to jump each VOD to that moment.</div>`:`<div class="msg" style="padding:24px">No split data recorded for this match.</div>`;
+  const splits=rowsData.length||extra.length?`<table><thead><tr><th>Split</th>${pl.map(p=>`<th>${esc(p.nickname)}</th>`).join("")}</tr></thead><tbody>${rowsData.concat(extra).map(r=>`<tr class="${r.cnt?"":"sp"}"><td>${esc(r.label)}</td>${pl.map((p,i)=>cell(r,i,p)).join("")}</tr>`).join("")}</tbody></table>`:`<div class="msg" style="padding:24px">No split data recorded for this match.</div>`;
   const anyVod=(m.vod||[]).length>0;
   const seed=m.seed&&m.seed.overworld?String(m.seed.overworld).replace(/_/g," ")+(m.seed.nether?" · "+String(m.seed.nether).replace(/_/g," ")+" bastion":""):"";
   return `<div class="mbox"><button class="x" data-close aria-label="Close">[x]</button>
@@ -1049,7 +1049,7 @@ async function showLeaderboard(view){
   T.shown=20;
   T.historical=null;
   T.sort=T.view==="all"?{k:"wins",d:-1}:{k:"elo",d:-1};
-  $("out").innerHTML=`<div class="card"><div class="ptools"><label for="lbseason">Leaderboard season</label><select id="lbseason" aria-label="Leaderboard season">${seasonOptions()}</select><label for="lbcountry">Country</label><select id="lbcountry" aria-label="Filter leaderboard by country">${countryOptions()}</select><label class="lb-twitch-toggle" title="Show linked Twitch usernames instead of Minecraft names"><input type="checkbox" id="lbTwitchNames" ${leaderboardTwitchNames?"checked":""}> Twitch names</label><span class="sp"></span><span class="mut" id="pstat"></span></div><div class="scroll" style="max-height:none"><div id="ptab"><div class="msg skel">Loading leaderboard…</div></div></div><div class="sent" id="lbsent"></div><div class="hint" id="lbhint"></div></div>`;
+  $("out").innerHTML=`<div class="card"><div class="ptools"><label for="lbseason">Leaderboard season</label><select id="lbseason" aria-label="Leaderboard season">${seasonOptions()}</select><label for="lbcountry">Country</label><select id="lbcountry" aria-label="Filter leaderboard by country">${countryOptions()}</select><label class="lb-twitch-toggle" title="Show linked Twitch usernames instead of Minecraft names"><input type="checkbox" id="lbTwitchNames" ${leaderboardTwitchNames?"checked":""}> Twitch names</label><span class="sp"></span><span class="mut" id="pstat"></span></div><div class="scroll" style="max-height:none"><div id="ptab"><div class="msg skel">Loading leaderboard…</div></div></div><div class="sent" id="lbsent"></div></div>`;
   try{
     if(!T.globalLb){T.globalLb=await get(API+"/leaderboard");const n=Number(T.globalLb.season&&T.globalLb.season.number);if(Number.isInteger(n)&&n>0)T.currentSeason=n;}
     if(req!==T.requestId||!( $("ptab") ))return;
@@ -1084,11 +1084,6 @@ async function showLeaderboard(view){
       T.lb=T.countryLbCache[cacheKey];
     }else T.lb=T.globalLb;
     if(req!==T.requestId||!$("ptab"))return;
-    $("lbhint").textContent=T.country
-      ?cname(T.country)+" leaderboard · country-filtered results from the API, up to 150 players."
-      :T.view==="all"
-        ?"All-time ranked totals for players on the current season leaderboard. Rows fill in gradually because of API rate limits."
-        :"Season "+T.currentSeason+" stats: win rate, matches, PB and average are for the current season. Rows fill in gradually because of API rate limits.";
     shownNames().forEach(loadRow);renderPT();
     if(lio){lio.disconnect();lio=null}
     const se=$("lbsent");
@@ -1182,7 +1177,7 @@ function renderHistorical(fetchStats=true){
   }).join("")}</tbody></table>`;
   $("pstat").textContent=shown.length+" / "+rows.length+" players";
   $("lbsent").textContent=T.shown>=rows.length?"End of leaderboard · "+rows.length+" players":"Scroll for more";
-  $("lbhint").textContent="Season "+T.view+" · Elo order comes from the historical leaderboard. Other columns load from each player's season-specific profile; sorting those columns applies to loaded statistics.";
+   sorting those columns applies to loaded statistics.";
   scheduleLeaderboardLive();
   if(fetchStats)loadHistoricalStats(shown);
 }
