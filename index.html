@@ -161,7 +161,7 @@ table.pt2 tbody tr:nth-child(1) td:first-child{color:#ffd76a;font-weight:850;tex
 table.pt2 tbody tr:nth-child(2) td:first-child{color:#dce4ef;font-weight:850;text-shadow:0 0 10px rgba(203,213,225,.18)}
 table.pt2 tbody tr:nth-child(3) td:first-child{color:#e7a36e;font-weight:850;text-shadow:0 0 10px rgba(205,127,50,.18)}
 .name-emoji.pink-monkey{display:inline-block;filter:sepia(1) saturate(5) hue-rotate(285deg) brightness(1.1)}
-.lb-twitch-toggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;font-size:12px}.lb-twitch-toggle input{accent-color:var(--accent);cursor:pointer}\n.fast-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:16px;align-items:start}.fast-layout aside{position:sticky;top:12px}.fast-player{border:0;background:none;color:var(--text);cursor:pointer;font:inherit;text-decoration:underline;text-underline-offset:3px}.fast-layout ol{padding-left:24px}.fast-layout li{padding:5px 0}@media(max-width:720px){.fast-layout{grid-template-columns:1fr}.fast-layout aside{position:static}}\n/* match modal */
+.lb-twitch-toggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;font-size:12px}.lb-twitch-toggle input{accent-color:var(--accent);cursor:pointer}\n.fast-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}.fast-layout.has-selection{grid-template-columns:minmax(0,1fr) minmax(250px,340px)}.fast-layout aside{display:none;position:sticky;top:12px}.fast-layout.has-selection aside{display:block}.fast-time{border:0;background:none;color:var(--accent2);font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}.fast-player{border:0;background:none;color:var(--text);cursor:pointer;font:inherit;text-decoration:underline;text-underline-offset:3px}.fast-layout ol{padding-left:24px}.fast-layout li{padding:5px 0}@media(max-width:720px){.fast-layout,.fast-layout.has-selection{grid-template-columns:1fr}.fast-layout aside{position:static}}\n/* match modal */
 #modal{position:fixed;inset:0;background:rgba(5,6,12,.62);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px;z-index:40}
 #modal.open{display:flex}
 .mbox{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:calc(var(--r)*1.1);width:min(980px,100%);padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
@@ -1255,16 +1255,17 @@ function fastRows(){
 function renderFastest(){
  const host=$("fastList");if(!host)return;
  const rows=fastRows();
- host.innerHTML=rows.length?'<table class="pt2"><thead><tr><th>#</th><th>Player</th><th class="num">Time</th></tr></thead><tbody>'+rows.slice(0,200).map((r,i)=>'<tr><td class="mut">'+(i+1)+'</td><td><button type="button" class="fast-player" data-fast-user="'+esc(r.u.uuid)+'">'+esc(r.u.nickname)+'</button></td><td class="num">'+fmtP(r.time)+'</td></tr>').join("")+'</tbody></table>':'<div class="msg">Loading player PBs…</div>';
+ host.innerHTML=rows.length?'<table class="pt2"><thead><tr><th>#</th><th>Player</th><th class="num">Time</th></tr></thead><tbody>'+rows.slice(0,200).map((r,i)=>'<tr><td class="mut">'+(i+1)+'</td><td><button type="button" class="fast-player" data-fast-user="'+esc(r.u.uuid)+'">'+esc(r.u.nickname)+'</button></td><td class="num">'+(r.id?'<button type="button" class="fast-time" data-fast-match="'+esc(r.id)+'" title="View match splits">'+fmtP(r.time)+'</button>':fmtP(r.time))+'</td></tr>').join("")+'</tbody></table>':'<div class="msg">Loading player PBs…</div>';
  const status=$("fastStatus");if(status)status.textContent=FAST.loading?"Loading ranked results…":(FAST.duplicates?"Showing completed ranked wins only; older matches may not be included.":"Verified ranked wins from fetched match history; "+rows.length+" players.");
  renderFastSide();
 }
 function renderFastSide(){
  const el=$("fastSide");if(!el)return;
  const u=FAST.users.find(x=>x.uuid===FAST.selected);
- if(!u){el.innerHTML='<div class="mut">Select a player to see their 10 fastest completed wins.</div>';return}
+ const layout=el.closest('.fast-layout');if(layout)layout.classList.toggle('has-selection',!!u);
+ if(!u){el.innerHTML='';return}
  const runs=fastRuns(u).slice(0,10);
- el.innerHTML='<div class="who"><img class="head" alt="" src="https://mc-heads.net/avatar/'+enc(u.uuid)+'/32"><b>'+esc(u.nickname)+'</b></div><p><a href="#'+enc(u.nickname)+'">Open full profile ↗</a></p><h3>10 fastest finishes</h3>'+(runs.length?'<ol>'+runs.map(run=>'<li>'+fmtP(run.time)+'</li>').join("")+'</ol>':'<div class="mut">Fetching match history…</div>')+'<small class="mut">Completed ranked wins only (up to 500 recent matches per player).</small>';
+ el.innerHTML='<div class="who"><img class="head" alt="" src="https://mc-heads.net/avatar/'+enc(u.uuid)+'/32"><b>'+esc(u.nickname)+'</b></div><p><a href="#'+enc(u.nickname)+'">Open full profile ↗</a></p><h3>10 fastest finishes</h3>'+(runs.length?'<ol>'+runs.map(run=>'<li>'+(run.id?'<button type="button" class="fast-time" data-fast-match="'+esc(run.id)+'" title="View match splits">'+fmtP(run.time)+'</button>':fmtP(run.time))+'</li>').join("")+'</ol>':'<div class="mut">Fetching match history…</div>')+'<small class="mut">Completed ranked wins only (up to 500 recent matches per player).</small>';
 }
 async function loadFastRuns(u,token){
  const key=FAST.season+":"+u.uuid;if(FAST.runs.has(key))return;
@@ -1343,7 +1344,8 @@ out.addEventListener("change",async e=>{
 });
 out.addEventListener("change",e=>{if(e.target.id==="matchSort")setMatchSort(e.target.value);if(e.target.id==="matchMode"&&P&&P.st&&MT[e.target.value]!=null&&P.mode!==e.target.value){P.mode=e.target.value;P.matchSort="recent";renderProfile()}});
 out.addEventListener("click",e=>{
-  const fp=e.target.closest("[data-fast-user]");if(fp){FAST.selected=fp.dataset.fastUser;renderFastSide();if(!FAST.runs.has(FAST.selected)){const u=FAST.users.find(x=>x.uuid===FAST.selected);if(u)loadFastRuns(u,FAST.token);}return;}
+  const fm=e.target.closest("[data-fast-match]");if(fm){openMatch(fm.dataset.fastMatch);return;}
+  const fp=e.target.closest("[data-fast-user]");if(fp){FAST.selected=fp.dataset.fastUser;renderFastSide();if(!FAST.runs.has(FAST.season+":"+FAST.selected)){const u=FAST.users.find(x=>x.uuid===FAST.selected);if(u)loadFastRuns(u,FAST.token);}return;}
   if(e.target.closest("#fastMore")){FAST.limit+=50;showFastest();return;}
   const t=e.target;
   const copyBtn=t.closest("[data-copy-discord]");if(copyBtn){
