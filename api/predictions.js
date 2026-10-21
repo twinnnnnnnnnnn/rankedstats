@@ -74,3 +74,7 @@ module.exports=async(req,res)=>{
   await client.query('COMMIT');return res.status(201).json({id:saved.rows[0].id,odds:odds/100,balance:Number(wallet.rows[0].balance)-stake});
  }catch(e){if(client)await client.query('ROLLBACK').catch(()=>{});console.error('Predictions API failed',e);return res.status(503).json({error:'Predictions temporarily unavailable'})}finally{client?.release()}
 };
+
+module.exports.settle=settle;
+module.exports.db=db;
+module.exports.ensurePredictionTables=ensurePredictionTables;
