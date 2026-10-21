@@ -1479,30 +1479,46 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
   },{passive:true});
 })();
 
-// Discord-only account entry point. Authentication must be implemented on the server;
-// never treat a client-side Discord username as proof of Ranked account ownership.
+// Discord account control: show Profile after successful sign-in.
 (()=>{
- const panel=document.getElementById('discordAuthPanel'),open=document.getElementById('discordLoginToggle'),close=document.getElementById('discordAuthClose'),start=document.getElementById('discordAuthStart'),status=document.getElementById('discordAuthStatus');
- if(!panel||!open||!close||!start||!status)return;
+ const panel=document.getElementById('discordAuthPanel'),button=document.getElementById('discordLoginToggle'),close=document.getElementById('discordAuthClose'),start=document.getElementById('discordAuthStart'),status=document.getElementById('discordAuthStatus');
+ if(!panel||!button||!close||!start||!status)return;
+ let signedIn=false;
  const hide=()=>panel.classList.remove('open');
- open.addEventListener('click',async()=>{
-  panel.classList.add('open');status.textContent='Checking Discord sign-in…';start.disabled=true;
+ const refresh=async()=>{
   try{
    const r=await fetch('/api/auth/discord/status',{credentials:'same-origin',cache:'no-store'});
-   if(!r.ok)throw Error('not configured');
+   if(!r.ok)throw Error('unavailable');
    const data=await r.json();
-   if(data.authenticated&&data.discordUsername){
-    status.textContent='Signed in as '+data.discordUsername+(data.rankedVerified?' · Ranked account verified':' · Ranked account not yet verified');
-    start.textContent='Switch Discord account';
-   }else{status.textContent='Discord sign-in is available.';start.textContent='Login with Discord';}
+   signedIn=!!data.authenticated;
+   button.textContent=signedIn?'Profile':'Discord Login';
+   if(signedIn){
+    status.textContent='Discord: '+(data.discordUsername||'Connected')+(data.rankedVerified?' · Ranked verified':' · Ranked verification pending');
+    start.textContent='Log out';
+   }else{
+    status.textContent='Sign in with Discord to access your account profile.';
+    start.textContent='Login with Discord';
+   }
    start.disabled=false;
-  }catch(e){status.textContent='Discord OAuth backend is not configured yet. A Discord application and secure server endpoints are required.';start.disabled=true;}
- });
+  }catch(e){
+   signedIn=false;button.textContent='Discord Login';
+   status.textContent='Discord login is currently unavailable.';
+   start.disabled=true;
+  }
+ };
+ button.addEventListener('click',async()=>{panel.classList.add('open');await refresh()});
  close.addEventListener('click',hide);
  panel.addEventListener('click',e=>{if(e.target===panel)hide()});
  document.addEventListener('keydown',e=>{if(e.key==='Escape')hide()});
- start.addEventListener('click',()=>{window.location.assign('/api/auth/discord/start')});
+ start.addEventListener('click',async()=>{
+  if(!signedIn){window.location.assign('/api/auth/discord/start');return}
+  start.disabled=true;
+  try{const r=await fetch('/api/auth/discord/logout',{method:'POST',credentials:'same-origin'});if(!r.ok)throw Error('logout failed');await refresh();hide()}
+  catch(e){status.textContent='Unable to log out right now.';start.disabled=false}
+ });
+ refresh();
 })();
+
 route();
 </script>
 </body>
