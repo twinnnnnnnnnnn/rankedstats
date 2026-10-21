@@ -406,11 +406,26 @@ const go=h=>{if(location.hash===h)route();else location.hash=h};
 // Browser-only prediction prototype: no real bets, wallets or event outcomes.
 function showPredictionDemo(){
  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==='predictions'));
- document.getElementById('out').innerHTML='<div class="prediction-demo"><h1>🏆 Playoff Predictions</h1><p class="pred-note">TEST MODE · Fictional matchup and demo coins only. Nothing is saved, wagered or connected to MCSR Ranked results.</p><div class="pred-card"><strong>Exhibition prediction · Demo</strong><p>Who will win the sample match?</p><div class="pred-options"><button type="button" data-pick="A">Player A</button><button type="button" data-pick="B">Player B</button></div><div class="pred-actions"><label>Demo stake <select id="predStake"><option>5</option><option selected>10</option><option>25</option><option>50</option></select> coins</label><button type="button" id="predSubmit" disabled>Place demo prediction</button></div><p id="predResult" role="status" class="pred-note">Choose a player to test the interface. Demo balance: 100 coins.</p></div></div>';
- let pick=null;
- const root=document.querySelector('.prediction-demo');
- root.querySelectorAll('[data-pick]').forEach(b=>b.addEventListener('click',()=>{pick=b.dataset.pick;root.querySelectorAll('[data-pick]').forEach(x=>x.classList.toggle('selected',x===b));root.querySelector('#predSubmit').disabled=false}));
- root.querySelector('#predSubmit').addEventListener('click',()=>{const stake=Number(root.querySelector('#predStake').value);root.querySelector('#predResult').textContent='Demo prediction: Player '+pick+' · '+stake+' coins. No coins were deducted; this is a visual test only.'});
+ const root=document.getElementById('out');
+ root.innerHTML='<div class="prediction-demo"><h1>📈 Daily Elo Predictions</h1><p class="pred-note">Prototype · 10 players per day · resets at 00:00 JST · 3 picks per day. Virtual coins only.</p><p class="pred-note">Predict whether each player gains or loses Elo in their next Ranked session. If they do not play, the stake should be refunded. Automatic settlement and refunds are not enabled yet.</p><div id="dailyPredStatus" class="pred-card">Loading current-season leaderboard…</div><div id="dailyPredPlayers"></div></div>';
+ const status=document.getElementById('dailyPredStatus'),list=document.getElementById('dailyPredPlayers');
+ const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const hash=t=>{let h=2166136261;for(let i=0;i<t.length;i++)h=Math.imul(h^t.charCodeAt(i),16777619);return h>>>0};
+ const shuffle=(arr,salt)=>arr.slice().sort((a,b)=>hash(day+salt+a.nickname)-hash(day+salt+b.nickname));
+ get(API+'/leaderboard').then(data=>{
+  if(!document.getElementById('dailyPredPlayers'))return;
+  const users=(data.users||[]).filter(u=>u&&u.nickname);
+  const selected=[...shuffle(users.slice(0,50),'top').slice(0,3),...shuffle(users.slice(50,150),'mid').slice(0,3)];
+  const remaining=users.slice(150);
+  if(remaining.length<4){
+   status.textContent='Only '+users.length+' leaderboard players are available. The 4 outside-top-150 picks require a broader active-player source. No predictions are open until that source is connected.';
+   list.innerHTML=selected.map((u,i)=>'<div class="pred-card"><strong>'+esc(u.nickname)+'</strong><p class="pred-note">'+(i<3?'Top 50':'Rank 51–150')+' · Preview only</p></div>').join('');
+   return;
+  }
+  selected.push(...shuffle(remaining,'outside').slice(0,4));
+  status.textContent='Preview roster for '+day+' (JST). Activity and session eligibility still need verification. Predictions are disabled until server-side tracking and coin refunds are ready.';
+  list.innerHTML=selected.map((u,i)=>'<div class="pred-card"><strong>'+esc(u.nickname)+'</strong><p class="pred-note">'+(i<3?'Top 50':i<6?'Rank 51–150':'Outside top 150')+'</p><div class="pred-options"><button disabled>📈 Gain Elo</button><button disabled>📉 Lose Elo</button></div></div>').join('');
+ }).catch(()=>{status.textContent='Unable to load Ranked players right now. Please try again later.'});
 }
 
 function showCasino(){
