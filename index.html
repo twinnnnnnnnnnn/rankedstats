@@ -301,7 +301,7 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 <div class="wrap">
 <nav>
   <a class="logo" id="logo" href="#!lb/season" aria-label="Season leaderboard"><img alt="Site logo" src="https://femboy.beauty/jzRZs6"></a>
-  <div class="tabs" id="tabs"><button data-t="fast">Fastest Time</button><button data-t="lb">Leaderboard</button><button data-t="profile">Profile</button><button data-t="predictions">Predictions</button></div>
+  <div class="tabs" id="tabs"><button data-t="casino">Casino</button><button data-t="fast">Fastest Time</button><button data-t="lb">Leaderboard</button><button data-t="profile">Profile</button><button data-t="predictions">Predictions</button></div>
   <form id="f"><input id="q" type="text" placeholder="Player name or UUID" aria-label="Player"><button class="go">Search</button></form>
   <div class="discord-account-wrap" id="discordAccountWrap"><button type="button" class="discord-login-toggle" id="discordLoginToggle" aria-expanded="false">Discord Login</button><div class="discord-account-menu" id="discordAccountMenu"><div class="discord-account-name" id="discordAccountName"></div><div id="discordDemoCoins" style="font-size:12px;color:var(--muted);padding:2px 8px">🪙 100 demo coins</div><button type="button" id="discordAccountLogout">Log out</button></div></div>
   <div class="settings-wrap" id="settingsWrap">
@@ -413,17 +413,23 @@ function showPredictionDemo(){
  root.querySelector('#predSubmit').addEventListener('click',()=>{const stake=Number(root.querySelector('#predStake').value);root.querySelector('#predResult').textContent='Demo prediction: Player '+pick+' · '+stake+' coins. No coins were deducted; this is a visual test only.'});
 }
 
+function showCasino(){
+ document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t==='casino'));
+ document.getElementById('out').innerHTML='<div class="prediction-demo"><h1>🎰 Casino</h1><p class="pred-note">Demo only · Virtual coins have no cash value.</p><div class="pred-card"><h2>Welcome to the Casino</h2><p>Prediction games and more will appear here as they are developed.</p><p class="pred-note">No real-money betting, purchases, or cash-out.</p><button type="button" id="casinoPredictions">Try Predictions →</button></div></div>';
+ document.getElementById('casinoPredictions').addEventListener('click',()=>go('#!predictions'));
+}
 function route(){
   closeModal();if(lio){lio.disconnect();lio=null}
   const raw=location.hash.slice(1);
   const dec=s=>{try{return decodeURIComponent(s)}catch(e){return s}};
+  if(raw.indexOf("!casino")===0)return showCasino();
   if(raw.indexOf("!predictions")===0)return showPredictionDemo();
   if(raw.indexOf("!fast")===0)return showFastest();
   if(!raw||raw.indexOf("!lb")===0||raw.indexOf("!players")===0){const p=raw.split("/");return showLeaderboard(p[1]||"season")}
   showProfile(dec(raw));
 }
 $("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;
-  if(b.dataset.t==="predictions")go("#!predictions");else if(b.dataset.t==="profile")go("#"+enc(lastName));else if(b.dataset.t==="fast")go("#!fast");else go("#!lb/season")};
+  if(b.dataset.t==="casino")go("#!casino");else if(b.dataset.t==="predictions")go("#!predictions");else if(b.dataset.t==="profile")go("#"+enc(lastName));else if(b.dataset.t==="fast")go("#!fast");else go("#!lb/season")};
 $("logo").onclick=e=>{e.preventDefault();go("#!lb/season")};
 $("f").addEventListener("submit",e=>{e.preventDefault();const v=$("q").value.trim();if(v)go("#"+enc(v))});
 window.addEventListener("hashchange",route);
