@@ -60,12 +60,14 @@ module.exports = async (req, res) => {
       ADD COLUMN IF NOT EXISTS last_daily_bonus DATE
     `);
 
+    await client.query('ALTER TABLE discord_wallets ADD COLUMN IF NOT EXISTS username TEXT');
+
     // Create a new wallet with the 100-coin welcome bonus.
     await client.query(`
-      INSERT INTO discord_wallets (discord_id)
-      VALUES ($1)
-      ON CONFLICT (discord_id) DO NOTHING
-    `, [session.id]);
+      INSERT INTO discord_wallets (discord_id, username)
+      VALUES ($1, $2)
+      ON CONFLICT (discord_id) DO UPDATE SET username = EXCLUDED.username
+    `, [session.id, String(session.username || 'Discord user').slice(0,80)]);
 
     // Atomic daily bonus: +50 coins, once per JST calendar day.
     const result = await client.query(`
