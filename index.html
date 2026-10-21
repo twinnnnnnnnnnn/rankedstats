@@ -821,6 +821,8 @@ function controlBothVods(action){
       if(action==="play")entry.player.play();
       else if(action==="pause")entry.player.pause();
       else if(action==="restart"){entry.player.seek(entry.base);entry.player.play();}
+      else if(action==="backward")entry.player.seek(Math.max(0,entry.player.getCurrentTime()-10));
+      else if(action==="forward")entry.player.seek(entry.player.getCurrentTime()+10);
       else if(action==="mute")entry.player.setMuted(true);
       else if(action==="unmute")entry.player.setMuted(false);
     }catch(e){}
@@ -895,7 +897,7 @@ function matchHTML(m){
    <h2>${typeName} match #${esc(m.id)}</h2>
    <div class="mut">${m.date?new Date(m.date*1000).toLocaleString():""}${seed?" · "+esc(seed):""}${m.forfeited?" · forfeited":""}</div>
    <div class="pcs">${pcs}</div>
-   <div class="sec3 vod-section"><h3>VODs</h3>${anyVod?`<div class="vods">${pl.map(p=>vodBox(m,p)).join("")}</div><div class="vod-macro"><button type="button" data-vod-action="play">▶ Play both</button><button type="button" data-vod-action="pause">⏸ Pause both</button><button type="button" data-vod-action="restart">↺ Restart both</button><button type="button" data-vod-action="mute">🔇 Mute both</button><button type="button" data-vod-action="unmute">🔊 Unmute both</button></div><button type="button" class="vod-zoom-btn" data-vod-zoom>⛶ Enlarge VODs</button>`:`<div class="vodbox none"><span>No public VODs for this match.</span></div>`}</div>
+   <div class="sec3 vod-section"><h3>VODs</h3>${anyVod?`<div class="vods">${pl.map(p=>vodBox(m,p)).join("")}</div><div class="vod-macro"><button type="button" data-vod-action="play">Play</button><button type="button" data-vod-action="pause">Pause</button><button type="button" data-vod-action="backward">Back 10s</button><button type="button" data-vod-action="forward">Forward 10s</button><button type="button" data-vod-action="restart">Restart</button><button type="button" data-vod-action="mute">Mute</button><button type="button" data-vod-action="unmute">Unmute</button></div><button type="button" class="vod-zoom-btn" data-vod-zoom>⛶ Enlarge VODs</button>`:`<div class="vodbox none"><span>No public VODs for this match.</span></div>`}</div>
    <div class="sec3"><h3>Splits</h3>${splits}</div></div>`;
 }
 function seekVod(uuid,ms){
