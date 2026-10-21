@@ -18,9 +18,12 @@ async function ensurePredictionTables(client) {
  )`);
  await client.query("ALTER TABLE ranked_predictions ADD COLUMN IF NOT EXISTS baseline_avg_ms DOUBLE PRECISION");
  await client.query("ALTER TABLE ranked_predictions ADD COLUMN IF NOT EXISTS result_avg_ms DOUBLE PRECISION");
- // Existing tables may still have the original two-direction constraint.
- await client.query("ALTER TABLE ranked_predictions DROP CONSTRAINT IF EXISTS ranked_predictions_direction_check");
- await client.query("ALTER TABLE ranked_predictions ADD CONSTRAINT ranked_predictions_direction_check CHECK (direction IN ('gain','loss','faster','slower'))");
+ // Migrate the legacy Elo-only constraint once, not on every API request.
+ const constraint=await client.query("SELECT pg_get_constraintdef(oid) AS definition FROM pg_constraint WHERE conrelid='ranked_predictions'::regclass AND conname='ranked_predictions_direction_check'");
+ if(constraint.rows.length&&!/faster/.test(constraint.rows[0].definition)){
+  await client.query("ALTER TABLE ranked_predictions DROP CONSTRAINT ranked_predictions_direction_check");
+  await client.query("ALTER TABLE ranked_predictions ADD CONSTRAINT ranked_predictions_direction_check CHECK (direction IN ('gain','loss','faster','slower'))");
+ }
  await client.query('CREATE INDEX IF NOT EXISTS ranked_predictions_pending_idx ON ranked_predictions (status, placed_at)');
  await client.query('CREATE INDEX IF NOT EXISTS ranked_predictions_user_day_idx ON ranked_predictions (discord_id, jst_day)');
  // Enforce one prediction per player per Discord account per JST day at the database level.
