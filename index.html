@@ -289,6 +289,15 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 .discord-login-toggle{background:#5865f2;color:#fff;border-color:#5865f2;font-weight:750}.discord-login-toggle:hover{filter:brightness(1.1)}.discord-auth-panel{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:#0009;padding:18px}.discord-auth-panel.open{display:flex}.discord-auth-card{width:min(440px,100%);background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:0 20px 70px #0007}.discord-auth-card h2{margin:0 0 10px}.discord-auth-card p{color:var(--muted);font-size:14px}.discord-auth-actions{display:flex;gap:10px;flex-wrap:wrap}.discord-auth-actions button{font-weight:700}.discord-auth-primary{background:#5865f2;color:white;border-color:#5865f2}
 .discord-account-wrap{position:relative;flex:none;margin-left:auto}.discord-account-wrap+.settings-wrap{margin-left:0}.discord-account-menu{display:none;position:absolute;top:calc(100% + 7px);right:0;z-index:95;width:220px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px #0005;padding:10px;gap:8px}.discord-account-wrap.open .discord-account-menu{display:grid}.discord-account-name{font-weight:750;overflow-wrap:anywhere;padding:7px 8px;border-bottom:1px solid var(--line)}#discordAccountLogout{color:var(--loss);font-weight:700;text-align:left}
 .prediction-demo{max-width:760px;margin:20px auto}.prediction-demo h1{margin:0 0 8px}.prediction-demo .pred-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:16px}.prediction-demo .pred-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.prediction-demo .pred-options button{min-height:62px;font-weight:750}.prediction-demo .pred-options button.selected{border-color:var(--accent2);background:var(--surface2);outline:2px solid var(--accent2)}.prediction-demo .pred-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.prediction-demo .pred-note{color:var(--muted);font-size:13px}
+
+/* Daily prediction choice and stake polish */
+.prediction-demo .pred-options button{transition:opacity .18s ease,filter .18s ease,background .18s ease,border-color .18s ease}
+.prediction-demo .pred-options button.dimmed{opacity:.32;filter:grayscale(1);background:var(--surface2);border-color:var(--line)}
+.prediction-demo .pred-stake-label{display:flex;align-items:center;gap:9px;font-weight:650}
+.prediction-demo .pred-stake-input{width:112px;min-width:0;padding:11px 13px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);color:var(--text);font:inherit;font-weight:750;font-variant-numeric:tabular-nums;outline:none;transition:border-color .18s,box-shadow .18s;appearance:textfield;-moz-appearance:textfield}
+.prediction-demo .pred-stake-input::-webkit-inner-spin-button,.prediction-demo .pred-stake-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.prediction-demo .pred-stake-input:focus{border-color:var(--accent2);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent2) 18%,transparent)}
+.prediction-demo .pred-stake-input:invalid{border-color:var(--loss)}
 </style>
 </head>
 <body>
@@ -424,7 +433,7 @@ function showPredictionDemo(){
   status.textContent='Roster for '+day+' JST · '+(auth.authenticated?'Demo balance: 🪙 '+balance+' coins':'Sign in with Discord to see your demo balance')+' · Picks are previews only.';
   list.innerHTML=selected.map((u,i)=>{
    const rank=users.indexOf(u)+1,tag=rank<=10?'Top 10':rank<=50?'Top 50':'Top 150';
-   return '<div class="pred-card" data-daily-pred="'+i+'"><strong>'+esc(u.nickname)+'</strong><p class="pred-note">#'+rank+' · '+tag+'</p><div class="pred-options"><button type="button" data-direction="gain">📈 Gain Elo</button><button type="button" data-direction="loss">📉 Lose Elo</button></div><div class="pred-actions"><label>Stake 🪙 <input type="number" min="1" step="1" max="'+balance+'" value="'+(balance?Math.min(10,balance):'')+'" data-stake style="width:95px"> coins</label><button type="button" data-preview disabled>Preview prediction</button></div><p class="pred-note" data-feedback role="status">Choose one outcome and enter an amount.</p></div>';
+   return '<div class="pred-card" data-daily-pred="'+i+'"><strong>'+esc(u.nickname)+'</strong><p class="pred-note">#'+rank+' · '+tag+'</p><div class="pred-options"><button type="button" data-direction="gain">📈 Gain Elo</button><button type="button" data-direction="loss">📉 Lose Elo</button></div><div class="pred-actions"><label class="pred-stake-label">Stake 🪙 <input class="pred-stake-input" type="number" min="1" step="1" max="'+balance+'" value="'+(balance?Math.min(10,balance):'')+'" data-stake inputmode="numeric"> coins</label><button type="button" data-preview disabled>Preview prediction</button></div><p class="pred-note" data-feedback role="status">Choose one outcome and enter an amount.</p></div>';
   }).join('');
   list.querySelectorAll('[data-daily-pred]').forEach(card=>{
    let direction='';
@@ -437,7 +446,7 @@ function showPredictionDemo(){
    };
    card.querySelectorAll('[data-direction]').forEach(button=>button.addEventListener('click',()=>{
     direction=button.dataset.direction;
-    card.querySelectorAll('[data-direction]').forEach(b=>b.classList.toggle('selected',b===button));
+    card.querySelectorAll('[data-direction]').forEach(b=>{b.classList.toggle('selected',b===button);b.classList.toggle('dimmed',b!==button);b.setAttribute('aria-pressed',String(b===button));});
     validate();
    }));
    stake.addEventListener('input',validate);
