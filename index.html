@@ -303,7 +303,7 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
   <a class="logo" id="logo" href="#!lb/season" aria-label="Season leaderboard"><img alt="Site logo" src="https://femboy.beauty/jzRZs6"></a>
   <div class="tabs" id="tabs"><button data-t="fast">Fastest Time</button><button data-t="lb">Leaderboard</button><button data-t="profile">Profile</button><button data-t="predictions">Predictions</button></div>
   <form id="f"><input id="q" type="text" placeholder="Player name or UUID" aria-label="Player"><button class="go">Search</button></form>
-  <div class="discord-account-wrap" id="discordAccountWrap"><button type="button" class="discord-login-toggle" id="discordLoginToggle" aria-expanded="false">Discord Login</button><div class="discord-account-menu" id="discordAccountMenu"><div class="discord-account-name" id="discordAccountName"></div><button type="button" id="discordAccountLogout">Log out</button></div></div>
+  <div class="discord-account-wrap" id="discordAccountWrap"><button type="button" class="discord-login-toggle" id="discordLoginToggle" aria-expanded="false">Discord Login</button><div class="discord-account-menu" id="discordAccountMenu"><div class="discord-account-name" id="discordAccountName"></div><div id="discordDemoCoins" style="font-size:12px;color:var(--muted);padding:2px 8px">🪙 100 demo coins</div><button type="button" id="discordAccountLogout">Log out</button></div></div>
   <div class="settings-wrap" id="settingsWrap">
     <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Settings" title="Settings" aria-expanded="false">⚙</button>
     <section class="settings-panel" aria-label="Website settings">
@@ -1507,6 +1507,14 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
    signedIn=!!data.authenticated;
    button.textContent=signedIn?'Profile':'Discord Login';
    name.textContent=data.discordUsername||'Discord user';
+   if(signedIn){
+    // Demo-only balance. A production one-time bonus requires server-side storage.
+    const demoKey='mcsr-demo-login-bonus-'+String(data.discordId||data.discordUsername||'discord');
+    try{if(localStorage.getItem(demoKey)===null)localStorage.setItem(demoKey,'100');}catch(e){}
+    const demoBalance=Number(localStorage.getItem(demoKey)||100);
+    const coins=document.getElementById('discordDemoCoins');
+    if(coins)coins.textContent='🪙 '+demoBalance+' demo coins · 100-coin welcome bonus';
+   }
   }catch(e){signedIn=false;button.textContent='Discord Login'}
   if(!signedIn)hide();
  }
