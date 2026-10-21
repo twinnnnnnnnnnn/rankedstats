@@ -331,6 +331,16 @@ th{font-size:12px;letter-spacing:.015em}
 td{font-variant-numeric:tabular-nums}
 @media(max-width:700px){.wrap{padding:12px 12px 32px}nav{gap:7px;margin-bottom:12px}.logo img{width:40px;height:40px}body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .hero{padding:14px;gap:12px}h1{font-size:22px}.elo .n{font-size:34px}}
 
+
+/* Uniform black appearance for all pages and profiles. */
+:root{color-scheme:dark;--bg:#000;--surface:#090909;--surface2:#121212;--text:#f1f1f1;--muted:#a0a0a0;--line:#262626;--accent2:#777}
+body{background:#000!important}
+body::before{background:#000!important;background-image:none!important;animation:none!important}
+body::after{display:none!important}
+body .hero,body .card,body .tile{background-image:none!important;box-shadow:none}
+body .hero,body .card{background:var(--surface)!important}
+body .tile{background:var(--surface2)!important}
+#lyxier-decor,#lyxier-spiders{display:none!important}
 </style>
 </head>
 <body>
@@ -351,7 +361,7 @@ td{font-variant-numeric:tabular-nums}
     <section class="settings-panel" aria-label="Website settings">
       <h2 class="settings-title">Settings</h2>
       <div class="setting-field"><label for="fontChoice">Font</label><select id="fontChoice" aria-label="Website font"><option value="default">Default</option><option value="minecraft">Minecraft font</option><option value="sga">Standard Galactic Alphabet</option></select></div>
-      <div class="setting-field"><label for="backgroundChoice">Background</label><select id="backgroundChoice" aria-label="Website background"><option value="default">Dark (default)</option><option value="dark">Dark (all black)</option></select></div>
+      
     </section>
   </div>
 </nav>
@@ -754,27 +764,10 @@ function renderProfile(){
     <div class="card" id="cardTable"><h2>${P.mode==="ranked"?"Ranked matches":P.mode==="casual"?"Casual matches":"Private room matches"} <span id="cnt2"></span></h2><div class="bar" style="margin:0 0 12px;gap:8px;flex-wrap:wrap"><label for="matchMode">Match type</label><select id="matchMode" aria-label="Match type"><option value="ranked" ${P.mode==="ranked"?"selected":""}>Ranked</option><option value="casual" ${P.mode==="casual"?"selected":""}>Casual</option><option value="private" ${P.mode==="private"?"selected":""}>Private rooms</option></select><label for="matchSort">Sort matches</label><select id="matchSort" aria-label="Sort matches"><option value="recent" ${P.matchSort==="recent"?"selected":""}>Most recent</option><option value="fastest" ${P.matchSort==="fastest"?"selected":""}>Fastest finish (wins only)</option></select></div><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th>${rkd?"<th>Opp. Elo</th>":""}<th>Time</th>${rkd?"<th>Elo</th>":""}<th>Overworld</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div><div class="hint">Click a match for splits and VODs.</div></div>
    </div>`;
   startTwitchStatus(twitch);
-  const country=String(u.country||"").trim().toUpperCase();
-  const isChristmasIsland=country==="CX" || /christmas island/i.test(cname(country));
-  const isLyxier=String(u.nickname||"").toLowerCase()==="lyxier";
-  $("out").classList.toggle("lyxier-profile",isLyxier);
-  document.body.classList.toggle("lyxier-profile-bg",isLyxier);
-  const rankBackgrounds={
-   coal:["#0b0c14","#191c25","#303540","#11131b"],
-   iron:["#11131c","#313949","#657184","#202735"],
-   gold:["#17100a","#53300e","#986019","#2e1c0a"],
-   emerald:["#081911","#0b4530","#147a50","#09291d"],
-   diamond:["#081523","#104b70","#187f98","#102c54"],
-   netherite:["#1b0a26","#54216b","#8931a0","#300e4d"]
-  };
-  const specialBackground=isLyxier||isChristmasIsland;
-  document.body.classList.toggle("rank-profile-bg",!specialBackground&&!!rankBackgrounds[tier]);
-  const palette=rankBackgrounds[tier];
-  if(palette&&!specialBackground)palette.forEach((color,i)=>document.body.style.setProperty("--rank-bg"+(i+1),color));
-  updateLyxierDecor(isLyxier);
-  if(isLyxier)requestAnimationFrame(()=>{if(P?.u===u)startLyxierBounce()});else stopLyxierBounce();
-  $("out").classList.toggle("christmas-profile", isChristmasIsland);
-  document.body.classList.toggle("christmas-profile-bg", isChristmasIsland);
+  $("out").classList.remove("lyxier-profile","christmas-profile");
+  document.body.classList.remove("lyxier-profile-bg","christmas-profile-bg","rank-profile-bg");
+  updateLyxierDecor(false);
+  stopLyxierBounce();
   const st=P.st[P.mode];
   renderMatchRows();
   refreshSessionStats();renderTiles();layout();sentUI();refreshGraph();setupIO();
@@ -1484,11 +1477,11 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 // Persistent website settings: font and background.
 (()=>{
  const select=document.getElementById('fontChoice');
- const background=document.getElementById('backgroundChoice');
+ const background=null;
  const wrap=document.getElementById('settingsWrap');
  const toggle=document.getElementById('settingsToggle');
- if(!select||!background||!wrap||!toggle)return;
- const fontKey='mcsr-stats-font',backgroundKey='mcsr-stats-background';
+ if(!select||!wrap||!toggle)return;
+ const fontKey='mcsr-stats-font';
  toggle.addEventListener('click',()=>{const opened=wrap.classList.toggle('open');toggle.setAttribute('aria-expanded',String(opened));});
  document.addEventListener('click',e=>{if(!wrap.contains(e.target)){wrap.classList.remove('open');toggle.setAttribute('aria-expanded','false')}});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){wrap.classList.remove('open');toggle.setAttribute('aria-expanded','false')}});
@@ -1504,13 +1497,10 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
  let changing=false;
  const observer=new MutationObserver(records=>{if(changing)return;changing=true;const mode=select.value;for(const r of records){for(const n of r.addedNodes)process(n,mode);if(r.type==='characterData')process(r.target,mode)}changing=false});
  function applyFont(mode){document.body.classList.toggle('font-minecraft',mode==='minecraft');changing=true;process(document.body,mode);changing=false;}
- function applyBackground(mode){document.body.classList.toggle('dark-everything',mode==='dark');}
  select.value=localStorage.getItem(fontKey)||'default';
- background.value='dark';localStorage.setItem(backgroundKey,'dark');
- applyFont(select.value);applyBackground(background.value);
+ applyFont(select.value);
  observer.observe(document.body,{subtree:true,childList:true,characterData:true});
  select.addEventListener('change',()=>{localStorage.setItem(fontKey,select.value);applyFont(select.value)});
- background.addEventListener('change',()=>{localStorage.setItem(backgroundKey,background.value);applyBackground(background.value)});
 })();
 // Compact Discord account menu next to Settings.
 (()=>{
