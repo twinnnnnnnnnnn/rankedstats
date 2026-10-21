@@ -212,6 +212,18 @@ body.lyxier-profile-bg #gradient-appearances,body.christmas-profile-bg #gradient
 body:has(#out.lyxier-profile) #gradient-appearances,body:has(#out.christmas-profile) #gradient-appearances{display:none}
 .wrap{position:relative;z-index:1}
 @media(prefers-reduced-motion:reduce){#gradient-appearances img{animation:none!important}}
+
+#modal .mbox{transition:width .4s ease,padding .4s ease,background .4s ease}
+#modal.vod-expanded{padding:0;align-items:center;background:rgba(0,0,0,.97)}
+#modal.vod-expanded .mbox{width:100%;min-height:100vh;border:0;border-radius:0;background:#000;padding:16px;display:flex;flex-direction:column;justify-content:center}
+#modal.vod-expanded .mbox> :not(.vods):not(.x){display:none}
+#modal.vod-expanded .vods{width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#modal.vod-expanded .vodbox{background:#080808;border:0;padding:5px;min-width:0}
+#modal.vod-expanded .vodbox iframe{width:100%;aspect-ratio:16/9}
+#modal.vod-expanded .mbox .x{position:fixed;top:12px;right:14px}
+.vod-zoom-btn{font-size:12px;padding:3px 8px;white-space:nowrap}
+@media(max-width:700px){#modal.vod-expanded .vods{grid-template-columns:1fr}#modal.vod-expanded .mbox{padding:40px 6px 12px}}
+@media(prefers-reduced-motion:reduce){#modal .mbox{transition:none}}
 </style>
 </head>
 <body>
@@ -757,9 +769,9 @@ const tstr=s=>{s=Math.max(0,Math.floor(s));return Math.floor(s/3600)+"h"+Math.fl
 const canEmbed=()=>/^https?:$/.test(location.protocol)&&!!location.hostname;
 const embedSrc=(id,s,play)=>`https://player.twitch.tv/?video=v${id}&parent=${enc(location.hostname)}&time=${tstr(s)}&autoplay=${play?"true":"false"}&muted=true`;
 let curM=null;
-function closeModal(){curM=null;const m=$("modal");m.classList.remove("open");m.innerHTML="";document.body.style.overflow=""}
+function closeModal(){curM=null;const m=$("modal");m.classList.remove("open","vod-expanded");m.innerHTML="";document.body.style.overflow=""}
 async function openMatch(id){
-  const md=$("modal");curM=id;md.classList.add("open");document.body.style.overflow="hidden";
+  const md=$("modal");md.classList.remove("vod-expanded");curM=id;md.classList.add("open");document.body.style.overflow="hidden";
   md.innerHTML=`<div class="mbox"><button class="x" data-close aria-label="Close">[x]</button><div class="msg skel">Loading match #${esc(id)}…</div></div>`;
   try{
     const m=await(MC[id]||(MC[id]=get(API+"/matches/"+id)));
@@ -780,7 +792,7 @@ function vodBox(m,p){
   const off=Math.max(0,(m.date||0)-(v.startsAt||0)-matchDuration-10);
   const link=vid?`https://www.twitch.tv/videos/${vid}?t=${tstr(off)}`:v.url;
   const body=(vid&&canEmbed())?`<iframe id="vod-${esc(p.uuid)}" data-vid="${vid}" data-off="${off}" src="${embedSrc(vid,off,false)}" allowfullscreen title="VOD of ${esc(p.nickname)}"></iframe>`:`<div class="msg">${vid?"Embedded player isn’t available when this page is opened from a file — use the link above.":"This VOD can’t be embedded — use the link above."}</div>`;
-  return `<div class="vodbox"><div class="vh"><b>${esc(p.nickname)}</b><a href="${esc(link)}" target="_blank" rel="noopener">Open on Twitch ↗</a></div>${body}</div>`;
+  return `<div class="vodbox"><div class="vh"><b>${esc(p.nickname)}</b><a href="${esc(link)}" target="_blank" rel="noopener">Open on Twitch ↗</a><button type="button" class="vod-zoom-btn" data-vod-zoom>⛶ Enlarge</button></div>${body}</div>`;
 }
 function matchHTML(m){
   const pl=m.players||[],tl=m.timelines||[],win=m.result&&m.result.uuid;
@@ -1049,6 +1061,11 @@ out.addEventListener("click",e=>{
     openMatch(id)}
 });
 $("modal").addEventListener("click",e=>{
+  if(e.target.closest("[data-vod-zoom]")){
+    const expanded=$("modal").classList.toggle("vod-expanded");
+    $("modal").querySelectorAll("[data-vod-zoom]").forEach(b=>{b.textContent=expanded?"⤢ Return":"⛶ Enlarge";});
+    return;
+  }
   if(e.target===$("modal")||e.target.closest("[data-close]")){closeModal();return}
   const tr=e.target.closest("tr.sp");
   if(tr){tr.querySelectorAll("td[data-seek]").forEach(td=>seekVod(td.dataset.u,+td.dataset.seek))}
