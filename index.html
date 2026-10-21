@@ -416,15 +416,10 @@ function showPredictionDemo(){
   if(!document.getElementById('dailyPredPlayers'))return;
   const users=(data.users||[]).filter(u=>u&&u.nickname);
   const selected=[...shuffle(users.slice(0,50),'top').slice(0,3),...shuffle(users.slice(50,150),'mid').slice(0,3)];
-  const remaining=users.slice(150);
-  if(remaining.length<4){
-   status.textContent='Only '+users.length+' leaderboard players are available. The 4 outside-top-150 picks require a broader active-player source. No predictions are open until that source is connected.';
-   list.innerHTML=selected.map((u,i)=>'<div class="pred-card"><strong>'+esc(u.nickname)+'</strong><p class="pred-note">'+(i<3?'Top 50':'Rank 51–150')+' · Preview only</p></div>').join('');
-   return;
-  }
-  selected.push(...shuffle(remaining,'outside').slice(0,4));
+  const remaining=shuffle(users.slice(50,150).filter(u=>!selected.some(p=>p.nickname===u.nickname)),'extra');
+  selected.push(...remaining.slice(0,4));
   status.textContent='Preview roster for '+day+' (JST). Activity and session eligibility still need verification. Predictions are disabled until server-side tracking and coin refunds are ready.';
-  list.innerHTML=selected.map((u,i)=>'<div class="pred-card"><strong>'+esc(u.nickname)+'</strong><p class="pred-note">'+(i<3?'Top 50':i<6?'Rank 51–150':'Outside top 150')+'</p><div class="pred-options"><button disabled>📈 Gain Elo</button><button disabled>📉 Lose Elo</button></div></div>').join('');
+  list.innerHTML=selected.map((u,i)=>'<div class="pred-card"><strong>'+esc(u.nickname)+'</strong><p class="pred-note">'+(i<3?'Top 50':i<6?'Rank 51–150':'Rank 51–150')+'</p><div class="pred-options"><button disabled>📈 Gain Elo</button><button disabled>📉 Lose Elo</button></div></div>').join('');
  }).catch(()=>{status.textContent='Unable to load Ranked players right now. Please try again later.'});
 }
 
