@@ -1636,7 +1636,11 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
  refresh();
 })();
 
-route();
+try{
+ const result=route();
+ if(result&&typeof result.catch==='function')result.catch(e=>showStartupError(e?.stack||e?.message||e));
+}catch(e){showStartupError(e?.stack||e?.message||e)}
+if(!document.getElementById('out')?.innerHTML.trim())showStartupError('Initial page rendering did not produce content.');
 </script>
 </body>
 </html>
