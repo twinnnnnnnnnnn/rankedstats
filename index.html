@@ -962,10 +962,7 @@ function matchHTML(m){
     const behind=!r.death&&!r.end&&others.length&&v>Math.min(...others)?(v-Math.min(...others))/1000:null;
     const lag=behind!=null?` <span class="split-behind">+${behind.toFixed(behind<10?2:1)}s</span>`:"";
     return `<td class="${f?"f":""}" data-u="${esc(p.uuid)}" data-seek="${v}">${fmtP(v)}${lag}</td>`};
-  const lead=r=>{if(r.cnt||r.death||pl.length!==2||r.vals[0]==null||r.vals[1]==null||r.vals[0]===r.vals[1])return `<td class="mut">—</td>`;
-    const a=r.vals[0]<r.vals[1]?0:1,d=Math.abs(r.vals[0]-r.vals[1])/1000;
-    return `<td class="mut">${esc(pl[a].nickname)} +${d.toFixed(d<10?2:1)}s</td>`};
-  const splits=rowsData.length||extra.length?`<table><thead><tr><th>Split</th>${pl.map(p=>`<th>${esc(p.nickname)}</th>`).join("")}${pl.length===2?"<th>Ahead by</th>":""}</tr></thead><tbody>${rowsData.concat(extra).map(r=>`<tr class="${r.cnt?"":"sp"}"><td>${esc(r.label)}</td>${pl.map((p,i)=>cell(r,i,p)).join("")}${pl.length===2?lead(r):""}</tr>`).join("")}</tbody></table><div class="hint">Click a split to jump each VOD to that moment.</div>`:`<div class="msg" style="padding:24px">No split data recorded for this match.</div>`;
+  const splits=rowsData.length||extra.length?`<table><thead><tr><th>Split</th>${pl.map(p=>`<th>${esc(p.nickname)}</th>`).join("")}</tr></thead><tbody>${rowsData.concat(extra).map(r=>`<tr class="${r.cnt?"":"sp"}"><td>${esc(r.label)}</td>${pl.map((p,i)=>cell(r,i,p)).join("")}</tr>`).join("")}</tbody></table><div class="hint">Click a split to jump each VOD to that moment.</div>`:`<div class="msg" style="padding:24px">No split data recorded for this match.</div>`;
   const anyVod=(m.vod||[]).length>0;
   const seed=m.seed&&m.seed.overworld?String(m.seed.overworld).replace(/_/g," ")+(m.seed.nether?" · "+String(m.seed.nether).replace(/_/g," ")+" bastion":""):"";
   return `<div class="mbox"><button class="x" data-close aria-label="Close">[x]</button>
