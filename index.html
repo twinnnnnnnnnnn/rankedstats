@@ -586,6 +586,28 @@ function startTwitchStatus(login){
   check();twitchStatusTimer=setInterval(check,60000);
 }
 
+// Retry Minecraft head images through independent renderers when a provider fails.
+document.addEventListener("error",event=>{
+ const img=event.target;
+ if(!(img instanceof HTMLImageElement))return;
+ const url=img.currentSrc||img.src;
+ if(img.dataset.headFallback==="2")return;
+ if(img.dataset.headFallback==="1"){
+  img.dataset.headFallback="2";
+  const id=img.dataset.headId;
+  if(id)img.src="https://minotar.net/avatar/"+encodeURIComponent(id)+"/"+(img.dataset.headSize||"32");
+  return;
+ }
+ try{
+  const parsed=new URL(url);
+  if(parsed.hostname!=="mc-heads.net")return;
+  const parts=parsed.pathname.split("/").filter(Boolean);
+  if(!["avatar","head"].includes(parts[0])||!parts[1])return;
+  const id=decodeURIComponent(parts[1]),size=parts[2]||"32";
+  img.dataset.headId=id;img.dataset.headSize=size;img.dataset.headFallback="1";
+  img.src="https://crafatar.com/avatars/"+encodeURIComponent(id)+"?size="+encodeURIComponent(size)+"&overlay";
+ }catch(_){}
+},true);
 function renderProfile(){
   const u=P.u,uid=u.uuid,sn=(u.statistics&&u.statistics.season)||{};
   const at=k=>stat(u,"total",k),atc=at("completions"),att=at("completionTime");
