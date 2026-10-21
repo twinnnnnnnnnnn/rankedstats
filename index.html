@@ -741,18 +741,46 @@ async function renderSplitPerformance(){
   if(token!==splitGraphToken||P!==profile||graphKind!=="splits")return;
   details.push(...batch.filter(Boolean));
  }
- const types=SPL.map(x=>x[0]),names=SPL.map(x=>x[1]);
- const avg=(who,t)=>{const values=[];for(const m of details){const events=(m.timelines||[]).filter(x=>x.type===t&&(who==="self"?x.uuid===uid:x.uuid!==uid));const per=new Map();for(const e of events){const time=Number(e.time);if(Number.isFinite(time)&&time>=0)per.set(e.uuid,Math.min(per.get(e.uuid)??Infinity,time))}values.push(...per.values())}return values.length?values.reduce((a,b)=>a+b,0)/values.length:null};
- const data=types.map((t,i)=>({name:names[i],self:avg("self",t),other:avg("other",t)})).filter(x=>x.self!==null||x.other!==null);
+ const elo=Number(P.u.eloRate??P.u.seasonResult?.last?.eloRate);
+ const playerRank=Number.isFinite(elo)?rk(elo).n:null;
+ const rankColor=Number.isFinite(elo)?graphRankColor(elo):"#b8c2d1";
+ const fmtMs=ms=>{const seconds=Math.max(0,ms/1000);return Math.floor(seconds/60)+":"+String(Math.floor(seconds%60)).padStart(2,"0")+"."+String(Math.round((seconds%1)*10)%10)};
+ const avg=(kind,t)=>{
+  const values=[];
+  for(const m of details){
+   const players=new Map((m.players||[]).map(p=>[p.uuid,p]));
+   const per=new Map();
+   for(const e of m.timelines||[]){
+    if(e.type!==t)continue;
+    const own=e.uuid===uid;
+    if(kind==="self"&&!own||kind!=="self"&&own)continue;
+    if(kind==="rank"){
+     const other=players.get(e.uuid);
+     const rate=Number(other?.eloRate??(m.changes||[]).find(c=>c.uuid===e.uuid)?.eloRate);
+     if(!Number.isFinite(rate)||!playerRank||rk(rate).n!==playerRank)continue;
+    }
+    const time=Number(e.time);
+    if(Number.isFinite(time)&&time>=0)per.set(e.uuid,Math.min(per.get(e.uuid)??Infinity,time));
+   }
+   values.push(...per.values());
+  }
+  return values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
+ };
+ const data=SPL.map(([type,name])=>({name,self:avg("self",type),rank:avg("rank",type),overall:avg("overall",type)})).filter(d=>[d.self,d.rank,d.overall].some(v=>v!==null));
  if(!data.length){area.innerHTML='<div class="msg">No split timelines available for these matches.</div>';return}
- const W=900,H=300,L=62,R=24,T=24,B=64,max=Math.max(...data.flatMap(x=>[x.self,x.other].filter(v=>v!==null)))*1.12;
+ const W=900,H=310,L=66,R=24,T=24,B=70;
+ const max=Math.max(...data.flatMap(d=>[d.self,d.rank,d.overall].filter(v=>v!==null)))*1.12||1000;
  const px=i=>L+i*(W-L-R)/Math.max(1,data.length-1),py=v=>H-B-v/max*(H-T-B);
- const poly=k=>data.map((d,i)=>d[k]===null?null:({x:px(i),y:py(d[k])}));
- const lines=k=>{const a=poly(k);return a.slice(1).map((p,i)=>p&&a[i]?'<line x1="'+a[i].x+'" y1="'+a[i].y+'" x2="'+p.x+'" y2="'+p.y+'" stroke="'+(k==="self"?"#61b6ff":"#ffab62")+'" stroke-width="3"/>':'').join("")};
- const dots=k=>data.map((d,i)=>d[k]===null?"":'<circle cx="'+px(i)+'" cy="'+py(d[k])+'" r="5" fill="'+(k==="self"?"#61b6ff":"#ffab62")+'"><title>'+d.name+': '+(d[k]/1000).toFixed(1)+'s</title></circle>').join("");
- const ticks=[0,.25,.5,.75,1].map(f=>'<line x1="'+L+'" x2="'+(W-R)+'" y1="'+py(max*f)+'" y2="'+py(max*f)+'" stroke="var(--line)"/><text x="4" y="'+(py(max*f)+4)+'" font-size="12" fill="var(--muted)">'+(max*f/1000).toFixed(0)+'s</text>').join("");
+ const series=[["self","#61b6ff","Player"],["rank",rankColor,"Same rank"],["overall","#ffab62","Sampled opponents"]];
+ const paths=series.map(([key,color])=>{
+  let path="",active=false;
+  data.forEach((d,i)=>{if(d[key]===null){active=false;return}path+=(active?" L":" M")+px(i)+" "+py(d[key]);active=true});
+  const dots=data.map((d,i)=>d[key]===null?"":'<circle cx="'+px(i)+'" cy="'+py(d[key])+'" r="5" fill="'+color+'"><title>'+esc(d.name)+' · '+(key==="self"?"Player":key==="rank"?"Same rank":"Sampled opponents")+': '+fmtMs(d[key])+'</title></circle>').join("");
+  return '<path d="'+path+'" fill="none" stroke="'+color+'" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'+dots;
+ }).join("");
+ const ticks=[0,.25,.5,.75,1].map(f=>'<line x1="'+L+'" x2="'+(W-R)+'" y1="'+py(max*f)+'" y2="'+py(max*f)+'" stroke="var(--line)"/><text x="3" y="'+(py(max*f)+4)+'" font-size="12" fill="var(--muted)">'+fmtMs(max*f)+'</text>').join("");
  const labels=data.map((d,i)=>'<text x="'+px(i)+'" y="'+(H-B+18)+'" text-anchor="end" transform="rotate(-30 '+px(i)+' '+(H-B+18)+')" font-size="11" fill="var(--muted)">'+esc(d.name)+'</text>').join("");
- area.innerHTML='<div class="hint" style="margin-bottom:10px"><span style="color:#61b6ff">●</span> Player average &nbsp; <span style="color:#ffab62">●</span> Opponents in sampled matches · lower is faster</div><div class="chartbox"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Average split times for player and opponents">'+ticks+lines("self")+lines("other")+dots("self")+dots("other")+labels+'</svg></div><div class="hint">Based on '+details.length+' recent ranked matches with available data, not the full same-rank or global playerbase. Hover points for times.</div>';
+ area.innerHTML='<div class="hint" style="margin-bottom:10px">'+series.map(([,color,name])=>'<span style="color:'+color+'">●</span> '+name).join(' &nbsp; ')+'</div><div class="chartbox"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Split performance comparison with player, same-rank opponents and all sampled opponents">'+ticks+paths+labels+'</svg></div><div class="hint">Times in minutes:seconds · lower is faster. Based on '+details.length+' sampled ranked matches. Same-rank uses '+esc(playerRank||"unknown rank")+' opponents where rank data exists. Orange is sampled opponents, not the entire global playerbase.</div>';
 }
 function refreshGraph(){
   if(graphKind==="splits"){renderSplitPerformance();return;}
