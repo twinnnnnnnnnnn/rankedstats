@@ -1345,7 +1345,7 @@ out.addEventListener("change",async e=>{
 out.addEventListener("change",e=>{if(e.target.id==="matchSort")setMatchSort(e.target.value);if(e.target.id==="matchMode"&&P&&P.st&&MT[e.target.value]!=null&&P.mode!==e.target.value){P.mode=e.target.value;P.matchSort="recent";renderProfile()}});
 out.addEventListener("click",e=>{
   const fm=e.target.closest("[data-fast-match]");if(fm){openMatch(fm.dataset.fastMatch);return;}
-  const fp=e.target.closest("[data-fast-user]");if(fp){FAST.selected=fp.dataset.fastUser;renderFastSide();if(!FAST.runs.has(FAST.season+":"+FAST.selected)){const u=FAST.users.find(x=>x.uuid===FAST.selected);if(u)loadFastRuns(u,FAST.token);}return;}
+  const fp=e.target.closest("[data-fast-user]");if(fp){FAST.selected=FAST.selected===fp.dataset.fastUser?null:fp.dataset.fastUser;renderFastSide();if(FAST.selected&&!FAST.runs.has(FAST.season+":"+FAST.selected)){const u=FAST.users.find(x=>x.uuid===FAST.selected);if(u)loadFastRuns(u,FAST.token);}return;}
   if(e.target.closest("#fastMore")){FAST.limit+=50;showFastest();return;}
   const t=e.target;
   const copyBtn=t.closest("[data-copy-discord]");if(copyBtn){
