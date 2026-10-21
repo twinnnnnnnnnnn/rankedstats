@@ -509,8 +509,8 @@ async function showPredictionDemo(){
    if(panel.dataset.loaded)return;
    panel.textContent='Loading last session…';
    try{
-    const profile=await getUser(u.uuid||u.nickname);
-    const matches=await fetchMatches(profile.uuid,MT.ranked,null,100,null,null);
+    const profile={uuid:u.uuid};
+    const matches=await fetchMatches(u.uuid,MT.ranked,null,100,null,null);
     if(!panel.isConnected)return;
     const ordered=(Array.isArray(matches)?matches:[]).filter(m=>Number(m.date)>0).sort((a,b)=>Number(b.date)-Number(a.date));
     const gapHours=Number(u.elo)>=2500?3:Number(u.rank)<=150?2:1,gap=gapHours*3600,now=Date.now()/1000;
@@ -527,7 +527,7 @@ async function showPredictionDemo(){
     const avg=completed.length?completed.reduce((sum,m)=>sum+Number(m.result.time),0)/completed.length:null;
     panel.innerHTML='<div class="pred-mini-stats"><span><b>'+wins+'</b> Wins</span><span><b>'+losses+'</b> Losses</span><span><b>'+(avg===null?'—':fmtP(avg))+'</b> Avg completion</span></div><div class="pred-mini-matches">'+(recent.length?recent.map(m=>{const won=m.result?.uuid===profile.uuid,draw=!m.result?.uuid;return '<span class="pred-match-pill '+(draw?'draw':won?'win':'loss')+'" title="'+(draw?'Draw':won?'Win':'Loss')+'">'+(draw?'D':won?'W':'L')+'</span>'}).join(''):'No completed session found')+'</div><p class="pred-note">Last completed session · '+recent.length+' ranked matches · '+gapHours+'h inactivity cutoff · Average uses completed wins with recorded times.</p>';
     panel.dataset.loaded='1';
-   }catch(e){if(panel.isConnected)panel.textContent='Could not load recent matches. Click again to retry.'}
+   }catch(e){if(panel.isConnected){panel.textContent='Could not load last session ('+(e.message||'request failed')+'). Click again to retry.';panel.dataset.loaded='';}}
   }));
  }).catch(e=>{status.textContent='Predictions unavailable: '+e.message;});
 }
