@@ -251,6 +251,25 @@ body:has(#out.lyxier-profile) #gradient-appearances,body:has(#out.christmas-prof
 .vod-timeline-marker{position:absolute;top:2px;transform:translateX(-50%);background:none;border:0;padding:0 3px;cursor:pointer;color:var(--muted);font-size:10px;max-width:80px;white-space:nowrap}
 .vod-timeline-marker::before{content:"";display:block;width:5px;height:12px;background:var(--accent2);margin:0 auto 3px;border-radius:3px}
 .vod-timeline-marker:hover{color:var(--text)}
+
+.vod-match-timeline{width:min(1450px,100%)}
+.vod-race{padding:12px 48px 4px;position:relative}
+.vod-race-lane{position:relative;height:64px}
+.vod-race-name{position:absolute;left:-42px;top:18px;font-size:10px;max-width:42px;overflow:hidden;text-overflow:ellipsis}
+.vod-race-head{position:absolute;left:0;top:0;width:32px;height:32px;transform:translateX(-50%);image-rendering:pixelated;z-index:3;transition:left .25s linear}
+.vod-race-upper .vod-race-head{top:0}
+.vod-race-lower .vod-race-head{top:29px}
+.vod-race-stages{position:relative;height:34px;border-top:2px solid #777;color:#d6d4e4;display:flex;justify-content:space-between;font-size:11px}
+.vod-race-stages>span:first-child,.vod-race-stages>span:last-child{margin-top:6px}
+.vod-race-stage{position:absolute;top:6px;transform:translateX(-50%);white-space:nowrap}
+.vod-race-stage:before{content:"";position:absolute;top:-9px;left:50%;height:7px;border-left:1px solid #999}
+.vod-race-splits{position:absolute;inset:0}
+.vod-race-split{position:absolute;transform:translateX(-50%);border:0;background:transparent;color:#c7c7d6;padding:2px 3px;font-size:11px;white-space:nowrap}
+.vod-race-upper .vod-race-split{bottom:2px}
+.vod-race-lower .vod-race-split{top:0}
+.vod-race-split:disabled{opacity:.3;cursor:default}
+.vod-race-split:not(:disabled):hover{color:var(--accent2)}
+@media(max-width:700px){.vod-race{padding-left:20px;padding-right:20px}.vod-race-name{display:none}.vod-race-stage{font-size:9px}.vod-race-split{font-size:9px}}
 </style>
 </head>
 <body>
@@ -862,6 +881,27 @@ function updateVodTimeline(forced){
   const fmtClock=n=>Math.floor(n/60)+":"+String(Math.floor(n%60)).padStart(2,"0");
   const label=$("modal").querySelector("[data-vod-clock]");
   if(label)label.textContent=fmtClock(seconds)+" / "+fmtClock(max);
+  const race=$("modal").querySelector(".vod-race");
+  if(race){
+    try{
+      const data=JSON.parse($("modal").querySelector(".vod-race-data").textContent);
+      const count=data[0]?.length||0,total=Number(race.dataset.raceTotal)||max;
+      race.querySelectorAll("[data-race-head]").forEach(head=>{
+        const row=data[Number(head.dataset.raceHead)]||[];
+        let stage=0,previous=0;
+        for(let i=0;i<row.length;i++){
+          if(row[i]!=null&&seconds>=row[i]){stage=i+1;previous=row[i]}
+        }
+        let nextIndex=-1;
+        for(let i=stage;i<row.length;i++)if(row[i]!=null&&row[i]>seconds){nextIndex=i;break}
+        const nextTime=nextIndex>=0?row[nextIndex]:total;
+        const targetStage=nextIndex>=0?nextIndex+1:count+1;
+        const fraction=Math.max(0,Math.min(1,(seconds-previous)/Math.max(1,nextTime-previous)));
+        const progress=(stage+(targetStage-stage)*fraction)/(count+1)*100;
+        head.style.left=Math.min(100,Math.max(0,progress))+"%";
+      });
+    }catch(e){}
+  }
 }
 function closeModal(){stopVodTimeline();vodPlayers.clear();curM=null;const m=$("modal");m.classList.remove("open","vod-expanded");m.innerHTML="";document.body.style.overflow=""}
 async function openMatch(id){
@@ -934,7 +974,7 @@ function matchHTML(m){
    <h2>${typeName} match #${esc(m.id)}</h2>
    <div class="mut">${m.date?new Date(m.date*1000).toLocaleString():""}${seed?" · "+esc(seed):""}${m.forfeited?" · forfeited":""}</div>
    <div class="pcs">${pcs}</div>
-   <div class="sec3 vod-section"><h3>VODs</h3>${anyVod?`<div class="vods">${pl.map(p=>vodBox(m,p)).join("")}</div><div class="vod-macro"><button type="button" data-vod-action="play">Play</button><button type="button" data-vod-action="pause">Pause</button><button type="button" data-vod-action="backward">Back 10s</button><button type="button" data-vod-action="forward">Forward 10s</button><button type="button" data-vod-action="restart">Restart</button><button type="button" data-vod-action="mute">Mute</button><button type="button" data-vod-action="unmute">Unmute</button></div><div class="vod-match-timeline"><div class="vod-timeline-top"><span>Match timeline</span><span data-vod-clock>0:00 / 0:00</span></div><input class="vod-timeline-track" type="range" min="0" max="${Math.max(1,Math.ceil((finalTime||resultTime||0)/1000))}" value="0" step="1" aria-label="Seek both VODs to match time"><div class="vod-timeline-times"><span>Countdown</span><span>Match end</span></div><div class="vod-timeline-markers">${types.map(t=>{const at=minT(t)/1000,total=Math.max(1,(finalTime||resultTime||0)/1000);return '<button type="button" class="vod-timeline-marker" data-vod-seek="'+Math.round(at)+'" style="left:'+Math.min(98,Math.max(2,at/total*100))+'%" title="'+esc(nice(t))+' at '+fmtP(minT(t))+'">'+esc(nice(t))+'</button>'}).join("")}</div></div><button type="button" class="vod-zoom-btn" data-vod-zoom>⛶ Enlarge VODs</button>`:`<div class="vodbox none"><span>No public VODs for this match.</span></div>`}</div>
+   <div class="sec3 vod-section"><h3>VODs</h3>${anyVod?`<div class="vods">${pl.map(p=>vodBox(m,p)).join("")}</div><div class="vod-macro"><button type="button" data-vod-action="play">Play</button><button type="button" data-vod-action="pause">Pause</button><button type="button" data-vod-action="backward">Back 10s</button><button type="button" data-vod-action="forward">Forward 10s</button><button type="button" data-vod-action="restart">Restart</button><button type="button" data-vod-action="mute">Mute</button><button type="button" data-vod-action="unmute">Unmute</button></div><div class="vod-match-timeline"><div class="vod-timeline-top"><span>Match progress</span><span data-vod-clock>0:00 / 0:00</span></div><div class="vod-race" data-race-total="${Math.max(1,(finalTime||resultTime||0)/1000)}"><div class="vod-race-lane vod-race-upper"><span class="vod-race-name">${esc(pl[0]?.nickname||"Player 1")}</span><img class="vod-race-head" data-race-head="0" src="https://mc-heads.net/avatar/${esc(pl[0]?.uuid||"")}/36" alt=""><div class="vod-race-splits">${types.map((t,i)=>{const time=pl[0]?tm(pl[0].uuid,t):null;return '<button type="button" class="vod-race-split" data-vod-seek="'+(time!=null?Math.round(time/1000):'')+'" style="left:'+((i+1)/(types.length+1)*100)+'%" '+(time==null?'disabled':'')+'><span>'+ (time!=null?fmtP(time):'—') +'</span></button>'}).join("")}</div></div><div class="vod-race-stages"><span>Start</span>${types.map((t,i)=>'<span class="vod-race-stage" style="left:'+((i+1)/(types.length+1)*100)+'%">'+esc(nice(t))+'</span>').join("")}<span>End</span></div><div class="vod-race-lane vod-race-lower"><span class="vod-race-name">${esc(pl[1]?.nickname||"Player 2")}</span><img class="vod-race-head" data-race-head="1" src="https://mc-heads.net/avatar/${esc(pl[1]?.uuid||"")}/36" alt=""><div class="vod-race-splits">${types.map((t,i)=>{const time=pl[1]?tm(pl[1].uuid,t):null;return '<button type="button" class="vod-race-split" data-vod-seek="'+(time!=null?Math.round(time/1000):'')+'" style="left:'+((i+1)/(types.length+1)*100)+'%" '+(time==null?'disabled':'')+'><span>'+(time!=null?fmtP(time):'—')+'</span></button>'}).join("")}</div></div></div><input class="vod-timeline-track" type="range" min="0" max="${Math.max(1,Math.ceil((finalTime||resultTime||0)/1000))}" value="0" step="1" aria-label="Seek both VODs to match time"><div class="vod-timeline-times"><span>Countdown</span><span>Match end</span></div><script type="application/json" class="vod-race-data">${JSON.stringify(pl.slice(0,2).map(p=>types.map(t=>tm(p.uuid,t)==null?null:tm(p.uuid,t)/1000)))}</script></div><button type="button" class="vod-zoom-btn" data-vod-zoom>⛶ Enlarge VODs</button>`:`<div class="vodbox none"><span>No public VODs for this match.</span></div>`}</div>
    <div class="sec3"><h3>Splits</h3>${splits}</div></div>`;
 }
 function seekVod(uuid,ms){
