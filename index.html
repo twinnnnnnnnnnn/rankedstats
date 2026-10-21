@@ -767,13 +767,13 @@ async function renderSplitPerformance(){
   }
   return values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
  };
- const data=SPL.map(([type,name])=>({name,self:avg("self",type),rank:avg("rank",type),overall:avg("overall",type)})).filter(d=>[d.self,d.rank,d.overall].some(v=>v!==null));
+ const data=SPL.map(([type,name])=>({name,self:avg("self",type),rank:avg("rank",type)})).filter(d=>[d.self,d.rank].some(v=>v!==null));
  if(!data.length){area.innerHTML='<div class="msg">No split timelines available for these matches.</div>';return}
  const W=900,H=310,L=66,R=24,T=24,B=70;
- const max=Math.max(...data.flatMap(d=>[d.self,d.rank,d.overall].filter(v=>v!==null)))*1.12||1000;
+ const max=Math.max(...data.flatMap(d=>[d.self,d.rank].filter(v=>v!==null)))*1.12||1000;
  const px=i=>L+i*(W-L-R)/Math.max(1,data.length-1),py=v=>H-B-v/max*(H-T-B);
  const hasRankData=data.some(d=>d.rank!==null);
- const series=[["self","#61b6ff","Player"],["rank",rankColor,"Same rank ("+(rankTier||"unknown")+")"],["overall","#ffab62","Sampled opponents"]];
+ const series=[["self","#61b6ff","Player"],["rank",rankColor,"Same rank ("+(rankTier||"unknown")+")"]];
  const paths=series.map(([key,color])=>{
   let path="",active=false;
   data.forEach((d,i)=>{if(d[key]===null){active=false;return}path+=(active?" L":" M")+px(i)+" "+py(d[key]);active=true});
@@ -782,7 +782,7 @@ async function renderSplitPerformance(){
  }).join("");
  const ticks=[0,.25,.5,.75,1].map(f=>'<line x1="'+L+'" x2="'+(W-R)+'" y1="'+py(max*f)+'" y2="'+py(max*f)+'" stroke="var(--line)"/><text x="3" y="'+(py(max*f)+4)+'" font-size="12" fill="var(--muted)">'+fmtMs(max*f)+'</text>').join("");
  const labels=data.map((d,i)=>'<text x="'+px(i)+'" y="'+(H-B+18)+'" text-anchor="end" transform="rotate(-30 '+px(i)+' '+(H-B+18)+')" font-size="11" fill="var(--muted)">'+esc(d.name)+'</text>').join("");
- area.innerHTML='<div class="hint" style="margin-bottom:10px">'+series.map(([,color,name])=>'<span style="color:'+color+'">●</span> '+name).join(' &nbsp; ')+'</div><div class="chartbox"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Split performance comparison with player, same-rank opponents and all sampled opponents">'+ticks+paths+labels+'</svg></div><div class="hint">Times in minutes:seconds · lower is faster. Based on '+details.length+' sampled ranked matches. Same-rank uses '+esc(playerRank||"unknown rank")+' opponents where rank data exists. Orange is sampled opponents, not the entire global playerbase.</div>';
+ area.innerHTML='<div class="hint" style="margin-bottom:10px">'+series.map(([,color,name])=>'<span style="color:'+color+'">●</span> '+name).join(' &nbsp; ')+'</div><div class="chartbox"><svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Split performance comparison between player and same-rank opponents">'+ticks+paths+labels+'</svg></div><div class="hint">Times in minutes:seconds · lower is faster. Based on '+details.length+' sampled ranked matches. Same-rank comparison uses '+esc(rankTier||"unknown rank")+' opponents from the sampled matches. '+(hasRankData?"":"No matching-rank opponent split data was available in this sample.")</div>';
 }
 function refreshGraph(){
   if(graphKind==="splits"){renderSplitPerformance();return;}
