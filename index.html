@@ -298,6 +298,39 @@ table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix
 .discord-account-wrap{position:relative;flex:none;margin-left:auto}.discord-account-wrap+.settings-wrap{margin-left:0}.discord-account-menu{display:none;position:absolute;top:calc(100% + 7px);right:0;z-index:95;width:220px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 36px #0005;padding:10px;gap:8px}.discord-account-wrap.open .discord-account-menu{display:grid}.discord-account-name{font-weight:750;overflow-wrap:anywhere;padding:7px 8px;border-bottom:1px solid var(--line)}#discordAccountLogout{color:var(--loss);font-weight:700;text-align:left}
 /* Consistent 8px corners for site panels and controls. */
 .card,.tile,.hero,.settings-panel,.settings-toggle,.tabs,.tabs button,input,select,button{border-radius:8px}
+
+/* Compact community stats visual refresh — standard pages only. */
+:root{--bg:#090b0e;--surface:#11151a;--surface2:#191f26;--text:#e6eaf0;--muted:#8b96a3;--line:#28313b;--r:8px}
+body:not(.lyxier-profile-bg):not(.christmas-profile-bg){background:#090b0e}
+body:not(.rank-profile-bg):not(.lyxier-profile-bg):not(.christmas-profile-bg)::before{background:#090b0e}
+.wrap{max-width:1140px;padding:16px 18px 48px}
+nav{gap:9px;padding:4px 0 16px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.logo img{width:46px;height:46px;border-radius:6px}
+.tabs{background:transparent;border:1px solid var(--line);padding:2px;border-radius:8px;gap:2px}
+.tabs button{padding:7px 11px;font-size:13px;border-radius:5px}
+.tabs button.on{background:#252d36;box-shadow:none}
+.tabs button:hover:not(.on){color:var(--text);background:#1a2027}
+.settings-toggle{border-radius:8px;box-shadow:none}
+.settings-panel{border-radius:8px;box-shadow:0 8px 24px #0007}
+input[type=text],button,select{border-radius:6px}
+button.go{background:#222c35}
+button.go:hover{background:#2b3742}
+body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .hero{background:var(--surface);border-radius:8px;padding:18px;gap:16px}
+h1{font-size:25px;letter-spacing:-.025em}
+.sub{font-size:13px;margin-top:4px}
+.pill{border-radius:5px;padding:2px 7px;font-size:12px;background:#1b222a}
+.elo .n{font-size:40px}
+.bar{gap:8px;margin-top:10px}
+.social-links{gap:6px;margin-top:8px}
+.social-link{min-height:34px;padding:6px 10px;border-radius:6px;font-size:13px;box-shadow:none}
+body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .card,
+body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .tile{box-shadow:none;border-radius:8px}
+body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .card{background:var(--surface)}
+body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .tile{background:var(--surface2)}
+th{font-size:12px;letter-spacing:.015em}
+td{font-variant-numeric:tabular-nums}
+@media(max-width:700px){.wrap{padding:12px 12px 32px}nav{gap:7px;margin-bottom:12px}.logo img{width:40px;height:40px}body:not(.lyxier-profile-bg):not(.christmas-profile-bg) .hero{padding:14px;gap:12px}h1{font-size:22px}.elo .n{font-size:34px}}
+
 </style>
 </head>
 <body>
