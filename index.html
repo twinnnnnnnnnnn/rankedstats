@@ -421,10 +421,10 @@ function showPredictionDemo(){
   if(auth.authenticated){
    try{balance=Math.max(0,Number(localStorage.getItem('mcsr-demo-login-bonus-'+String(auth.discordId||auth.discordUsername||'discord')))||0)}catch(e){}
   }
-  status.textContent='Roster for '+day+' JST · '+(auth.authenticated?'Demo balance: '+balance+' coins':'Sign in with Discord to see your demo balance')+' · Picks are previews only.';
+  status.textContent='Roster for '+day+' JST · '+(auth.authenticated?'Demo balance: 🪙 '+balance+' coins':'Sign in with Discord to see your demo balance')+' · Picks are previews only.';
   list.innerHTML=selected.map((u,i)=>{
    const rank=users.indexOf(u)+1,tag=rank<=10?'Top 10':rank<=50?'Top 50':'Top 150';
-   return '<div class="pred-card" data-daily-pred="'+i+'"><strong>'+esc(u.nickname)+'</strong><p class="pred-note">#'+rank+' · '+tag+'</p><div class="pred-options"><button type="button" data-direction="gain">📈 Gain Elo</button><button type="button" data-direction="loss">📉 Lose Elo</button></div><div class="pred-actions"><label>Stake <input type="number" min="1" step="1" max="'+balance+'" value="'+(balance?Math.min(10,balance):'')+'" data-stake style="width:95px"> coins</label><button type="button" data-preview disabled>Preview prediction</button></div><p class="pred-note" data-feedback role="status">Choose one outcome and enter an amount.</p></div>';
+   return '<div class="pred-card" data-daily-pred="'+i+'"><strong>'+esc(u.nickname)+'</strong><p class="pred-note">#'+rank+' · '+tag+'</p><div class="pred-options"><button type="button" data-direction="gain">📈 Gain Elo</button><button type="button" data-direction="loss">📉 Lose Elo</button></div><div class="pred-actions"><label>Stake 🪙 <input type="number" min="1" step="1" max="'+balance+'" value="'+(balance?Math.min(10,balance):'')+'" data-stake style="width:95px"> coins</label><button type="button" data-preview disabled>Preview prediction</button></div><p class="pred-note" data-feedback role="status">Choose one outcome and enter an amount.</p></div>';
   }).join('');
   list.querySelectorAll('[data-daily-pred]').forEach(card=>{
    let direction='';
@@ -441,7 +441,7 @@ function showPredictionDemo(){
     validate();
    }));
    stake.addEventListener('input',validate);
-   submit.addEventListener('click',()=>{validate();if(!submit.disabled)feedback.textContent='Preview: '+direction.toUpperCase()+' · '+Number(stake.value)+' demo coins. Not placed; balance unchanged.'});
+   submit.addEventListener('click',()=>{validate();if(!submit.disabled)feedback.textContent='Preview: '+direction.toUpperCase()+' · '+Number(stake.value)+' 🪙 demo coins. Not placed; balance unchanged.'});
    validate();
   });
  }).catch(()=>{status.textContent='Unable to load Ranked players right now. Please try again later.'});
