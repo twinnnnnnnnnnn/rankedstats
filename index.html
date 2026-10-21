@@ -172,7 +172,7 @@ table.pt2 tbody tr:nth-child(3) td:first-child{color:#e7a36e;font-weight:850;tex
 .vodbox.none{color:var(--muted);display:flex;justify-content:space-between;gap:10px}
 .vh{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px;font-size:14px}
 .vh a{color:var(--accent2);text-decoration:none}
-.vodbox iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:#000;display:block}
+.vodbox iframe,.vod-player{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;background:#000;display:block}
 .vodbox .msg{padding:24px 10px;font-size:13px}
 .mbox table{min-width:0}
 .mbox td.f{color:var(--win);font-weight:700}
@@ -219,7 +219,7 @@ body:has(#out.lyxier-profile) #gradient-appearances,body:has(#out.christmas-prof
 #modal.vod-expanded .mbox>h2,#modal.vod-expanded .mbox>.mut,#modal.vod-expanded .mbox>.pcs{display:none}
 #modal.vod-expanded .vods{width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 #modal.vod-expanded .vodbox{background:#080808;border:0;padding:5px;min-width:0}
-#modal.vod-expanded .vodbox iframe{width:100%;aspect-ratio:16/9}
+#modal.vod-expanded .vodbox iframe,#modal.vod-expanded .vod-player{width:100%;aspect-ratio:16/9}
 #modal.vod-expanded .mbox .x{position:fixed;top:12px;right:14px}
 .vod-zoom-btn{font-size:12px;padding:3px 8px;white-space:nowrap}
 @media(max-width:700px){#modal.vod-expanded .vods{grid-template-columns:1fr}#modal.vod-expanded .mbox{padding:40px 6px 12px}}
@@ -236,6 +236,9 @@ body:has(#out.lyxier-profile) #gradient-appearances,body:has(#out.christmas-prof
 @keyframes vodTheaterIn{from{opacity:.75;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
 @media(max-width:700px){#modal.vod-expanded .vod-section>.vods{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){#modal.vod-expanded .mbox{animation:none}}
+.vod-macro{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+.vod-macro button{font-size:12px;padding:6px 10px}
+#modal.vod-expanded .vod-macro{margin-top:14px}
 </style>
 </head>
 <body>
@@ -780,15 +783,59 @@ const isCnt=t=>/reset/.test(t)||(/death/.test(t)&&!/dragon/.test(t));
 const tstr=s=>{s=Math.max(0,Math.floor(s));return Math.floor(s/3600)+"h"+Math.floor(s%3600/60)+"m"+(s%60)+"s"};
 const canEmbed=()=>/^https?:$/.test(location.protocol)&&!!location.hostname;
 const embedSrc=(id,s,play)=>`https://player.twitch.tv/?video=v${id}&parent=${enc(location.hostname)}&time=${tstr(s)}&autoplay=${play?"true":"false"}&muted=true`;
-let curM=null;
-function closeModal(){curM=null;const m=$("modal");m.classList.remove("open","vod-expanded");m.innerHTML="";document.body.style.overflow=""}
+let curM=null, vodPlayers=new Map(),twitchSdkPromise=null;
+function ensureTwitchSdk(){
+  if(window.Twitch&&window.Twitch.Player)return Promise.resolve();
+  if(!twitchSdkPromise)twitchSdkPromise=new Promise((resolve,reject)=>{
+    const script=document.createElement("script");script.src="https://player.twitch.tv/js/embed/v1.js";
+    script.onload=resolve;script.onerror=()=>reject(new Error("Twitch player SDK unavailable"));
+    document.head.appendChild(script);
+  });
+  return twitchSdkPromise;
+}
+async function initVodPlayers(matchId){
+  const containers=[...$("modal").querySelectorAll(".vod-player")];
+  if(!containers.length)return;
+  try{
+    await ensureTwitchSdk();
+    if(curM!==matchId)return;
+    for(const el of containers){
+      const vid=el.dataset.vid,off=Number(el.dataset.off)||0;
+      const player=new Twitch.Player(el.id,{width:"100%",height:"100%",video:vid,time:tstr(off),autoplay:false,muted:true,playsinline:true,parent:[location.hostname]});
+      vodPlayers.set(el.id,{player,base:off,ready:false});
+      player.addEventListener(Twitch.Player.READY,()=>{
+        const entry=vodPlayers.get(el.id);if(entry&&entry.player===player)entry.ready=true;
+      });
+    }
+  }catch(err){
+    for(const el of containers){
+      if(!el.isConnected)return;
+      el.innerHTML='<div class="msg">Player controls unavailable — use Open on Twitch.</div>';
+    }
+  }
+}
+function controlBothVods(action){
+  for(const entry of vodPlayers.values()){
+    if(!entry.ready)continue;
+    try{
+      if(action==="play")entry.player.play();
+      else if(action==="pause")entry.player.pause();
+      else if(action==="restart"){entry.player.seek(entry.base);entry.player.play();}
+      else if(action==="mute")entry.player.setMuted(true);
+      else if(action==="unmute")entry.player.setMuted(false);
+    }catch(e){}
+  }
+}
+
+function closeModal(){vodPlayers.clear();curM=null;const m=$("modal");m.classList.remove("open","vod-expanded");m.innerHTML="";document.body.style.overflow=""}
 async function openMatch(id){
-  const md=$("modal");md.classList.remove("vod-expanded");curM=id;md.classList.add("open");document.body.style.overflow="hidden";
+  const md=$("modal");vodPlayers.clear();md.classList.remove("vod-expanded");curM=id;md.classList.add("open");document.body.style.overflow="hidden";
   md.innerHTML=`<div class="mbox"><button class="x" data-close aria-label="Close">[x]</button><div class="msg skel">Loading match #${esc(id)}…</div></div>`;
   try{
     const m=await(MC[id]||(MC[id]=get(API+"/matches/"+id)));
     if(curM!==id)return;
     md.innerHTML=matchHTML(m);
+    initVodPlayers(id);
     const c=md.querySelector("[data-close]");if(c)c.focus();
   }catch(e){
     delete MC[id];
@@ -803,7 +850,7 @@ function vodBox(m,p){
   // Start VOD playback at the 10-second pre-game countdown, not the game start.
   const off=Math.max(0,(m.date||0)-(v.startsAt||0)-matchDuration-10);
   const link=vid?`https://www.twitch.tv/videos/${vid}?t=${tstr(off)}`:v.url;
-  const body=(vid&&canEmbed())?`<iframe id="vod-${esc(p.uuid)}" data-vid="${vid}" data-off="${off}" src="${embedSrc(vid,off,false)}" allowfullscreen title="VOD of ${esc(p.nickname)}"></iframe>`:`<div class="msg">${vid?"Embedded player isn’t available when this page is opened from a file — use the link above.":"This VOD can’t be embedded — use the link above."}</div>`;
+  const body=(vid&&canEmbed())?`<div class="vod-player" id="vod-${esc(p.uuid)}" data-vid="${vid}" data-off="${off}" aria-label="VOD of ${esc(p.nickname)}"></div>`:`<div class="msg">${vid?"Embedded player isn’t available when this page is opened from a file — use the link above.":"This VOD can’t be embedded — use the link above."}</div>`;
   return `<div class="vodbox"><div class="vh"><b>${esc(p.nickname)}</b><a href="${esc(link)}" target="_blank" rel="noopener">Open on Twitch ↗</a></div>${body}</div>`;
 }
 function matchHTML(m){
@@ -848,14 +895,16 @@ function matchHTML(m){
    <h2>${typeName} match #${esc(m.id)}</h2>
    <div class="mut">${m.date?new Date(m.date*1000).toLocaleString():""}${seed?" · "+esc(seed):""}${m.forfeited?" · forfeited":""}</div>
    <div class="pcs">${pcs}</div>
-   <div class="sec3 vod-section"><h3>VODs</h3>${anyVod?`<div class="vods">${pl.map(p=>vodBox(m,p)).join("")}</div><button type="button" class="vod-zoom-btn" data-vod-zoom>⛶ Enlarge VODs</button>`:`<div class="vodbox none"><span>No public VODs for this match.</span></div>`}</div>
+   <div class="sec3 vod-section"><h3>VODs</h3>${anyVod?`<div class="vods">${pl.map(p=>vodBox(m,p)).join("")}</div><div class="vod-macro"><button type="button" data-vod-action="play">▶ Play both</button><button type="button" data-vod-action="pause">⏸ Pause both</button><button type="button" data-vod-action="restart">↺ Restart both</button><button type="button" data-vod-action="mute">🔇 Mute both</button><button type="button" data-vod-action="unmute">🔊 Unmute both</button></div><button type="button" class="vod-zoom-btn" data-vod-zoom>⛶ Enlarge VODs</button>`:`<div class="vodbox none"><span>No public VODs for this match.</span></div>`}</div>
    <div class="sec3"><h3>Splits</h3>${splits}</div></div>`;
 }
 function seekVod(uuid,ms){
   const frame=$("vod-"+uuid);
   if(!frame)return;
+  const entry=vodPlayers.get(frame.id);
+  if(entry&&entry.ready){try{entry.player.seek(entry.base+Math.max(0,Number(ms)||0)/1000)}catch(e){}return;}
   const vid=frame.dataset.vid,base=Number(frame.dataset.off)||0;
-  frame.src=embedSrc(vid,base+Math.max(0,Number(ms)||0)/1000,false);
+  if(frame.tagName==="IFRAME")frame.src=embedSrc(vid,base+Math.max(0,Number(ms)||0)/1000,false);
 }
 
 function layout(){const c=$("cardChart");if(c&&P)c.style.display=P.mode==="ranked"?"":"none"}
@@ -1073,6 +1122,7 @@ out.addEventListener("click",e=>{
     openMatch(id)}
 });
 $("modal").addEventListener("click",e=>{
+  const macro=e.target.closest("[data-vod-action]");if(macro){controlBothVods(macro.dataset.vodAction);return;}
   if(e.target.closest("[data-vod-zoom]")){
     const expanded=$("modal").classList.toggle("vod-expanded");
     $("modal").querySelectorAll("[data-vod-zoom]").forEach(b=>{b.textContent=expanded?"⤢ Return to match":"⛶ Enlarge VODs";});
