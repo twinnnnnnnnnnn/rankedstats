@@ -1235,20 +1235,20 @@ function renderPT(){
 
 /* Fastest ranked completion leaderboard. A player's PB is taken from the API's
    total bestTime statistic; duplicate mode uses completed winning match records. */
-const FAST={token:0,users:[],runs:new Map(),selected:null,duplicates:false,limit:50,loading:false};
-function fastRuns(u){return FAST.runs.get(u.uuid)||[]}
+const FAST={token:0,users:[],runs:new Map(),selected:null,duplicates:false,limit:50,loading:false,season:"all"};
+function fastRuns(u){return FAST.runs.get(FAST.season+":"+u.uuid)||[]}
 function fastWinningRuns(matches,uuid){
- return (Array.isArray(matches)?matches:[]).filter(m=>m.result?.uuid===uuid&&Number(m.result.time)>0&&m.type!==1).map(m=>({time:Number(m.result.time),id:m.id})).sort((a,b)=>a.time-b.time);
+ return (Array.isArray(matches)?matches:[]).filter(m=>m.result?.uuid===uuid&&Number(m.result.time)>0&&Number(m.type)===MT.ranked&&!m.forfeit&&!m.forfeited).map(m=>({time:Number(m.result.time),id:m.id})).sort((a,b)=>a.time-b.time);
 }
 function fastRows(){
  const entries=[];
  for(const u of FAST.users){
-   const pb=stat(u,"total","bestTime");
+   
    if(FAST.duplicates){
      const runs=fastRuns(u);
      if(runs.length)for(const run of runs)entries.push({u,...run});
-     else if(pb>0)entries.push({u,time:pb,id:null});
-   }else if(pb>0)entries.push({u,time:pb,id:null});
+     
+   }else if(fastRuns(u).length)entries.push({u,...fastRuns(u)[0]});
  }
  return entries.sort((a,b)=>a.time-b.time);
 }
@@ -1256,7 +1256,7 @@ function renderFastest(){
  const host=$("fastList");if(!host)return;
  const rows=fastRows();
  host.innerHTML=rows.length?'<table class="pt2"><thead><tr><th>#</th><th>Player</th><th class="num">Time</th></tr></thead><tbody>'+rows.slice(0,200).map((r,i)=>'<tr><td class="mut">'+(i+1)+'</td><td><button type="button" class="fast-player" data-fast-user="'+esc(r.u.uuid)+'">'+esc(r.u.nickname)+'</button></td><td class="num">'+fmtP(r.time)+'</td></tr>').join("")+'</tbody></table>':'<div class="msg">Loading player PBs…</div>';
- const status=$("fastStatus");if(status)status.textContent=FAST.loading?"Loading ranked results…":(FAST.duplicates?"Showing fetched winning runs; older matches may not be included.":"Best ranked times for "+rows.length+" players.");
+ const status=$("fastStatus");if(status)status.textContent=FAST.loading?"Loading ranked results…":(FAST.duplicates?"Showing completed ranked wins only; older matches may not be included.":"Verified ranked wins from fetched match history; "+rows.length+" players.");
  renderFastSide();
 }
 function renderFastSide(){
@@ -1264,29 +1264,29 @@ function renderFastSide(){
  const u=FAST.users.find(x=>x.uuid===FAST.selected);
  if(!u){el.innerHTML='<div class="mut">Select a player to see their 10 fastest completed wins.</div>';return}
  const runs=fastRuns(u).slice(0,10);
- el.innerHTML='<div class="who"><img class="head" alt="" src="https://mc-heads.net/avatar/'+enc(u.uuid)+'/32"><b>'+esc(u.nickname)+'</b></div><p><a href="#'+enc(u.nickname)+'">Open full profile ↗</a></p><h3>10 fastest finishes</h3>'+(runs.length?'<ol>'+runs.map(run=>'<li>'+fmtP(run.time)+'</li>').join("")+'</ol>':'<div class="mut">Fetching match history…</div>')+'<small class="mut">From available ranked match history (up to 500 recent matches).</small>';
+ el.innerHTML='<div class="who"><img class="head" alt="" src="https://mc-heads.net/avatar/'+enc(u.uuid)+'/32"><b>'+esc(u.nickname)+'</b></div><p><a href="#'+enc(u.nickname)+'">Open full profile ↗</a></p><h3>10 fastest finishes</h3>'+(runs.length?'<ol>'+runs.map(run=>'<li>'+fmtP(run.time)+'</li>').join("")+'</ol>':'<div class="mut">Fetching match history…</div>')+'<small class="mut">Completed ranked wins only (up to 500 recent matches per player).</small>';
 }
 async function loadFastRuns(u,token){
- if(FAST.runs.has(u.uuid))return;
+ const key=FAST.season+":"+u.uuid;if(FAST.runs.has(key))return;
  try{
    let matches=[],before=null;
    for(let i=0;i<5;i++){
-     const batch=await fetchMatches(u.uuid,MT.ranked,before,100,null,null);
+     const batch=await fetchMatches(u.uuid,MT.ranked,before,100,null,FAST.season==="all"?null:Number(FAST.season));
      if(!Array.isArray(batch)||!batch.length)break;
      matches.push(...batch);before=batch[batch.length-1].id;
      if(batch.length<100)break;
    }
    if(token!==FAST.token)return;
-   FAST.runs.set(u.uuid,fastWinningRuns(matches,u.uuid));
+   FAST.runs.set(key,fastWinningRuns(matches,u.uuid));
    renderFastest();
- }catch(e){if(token===FAST.token){FAST.runs.set(u.uuid,[]);renderFastest()}}
+ }catch(e){if(token===FAST.token){FAST.runs.set(key,[]);renderFastest()}}
 }
 async function showFastest(){
  $("out").classList.remove("christmas-profile","lyxier-profile");
  document.body.classList.remove("christmas-profile-bg","lyxier-profile-bg");
  updateLyxierDecor(false);stopLyxierBounce();stopProfile();setTab("fast");
  const token=++FAST.token;FAST.loading=true;
- $("out").innerHTML='<div class="card"><div class="ptools"><h2 style="margin:0">Fastest Time</h2><label><input type="checkbox" id="fastDuplicates" '+(FAST.duplicates?'checked':'')+'> Allow duplicate players</label><span class="sp"></span><button type="button" id="fastMore">Load more players</button></div><div class="fast-layout"><div id="fastList"></div><aside class="card" id="fastSide"></aside></div><p class="mut" id="fastStatus"></p></div>';
+ $("out").innerHTML='<div class="card"><div class="ptools"><h2 style="margin:0">Fastest Time</h2><label for="fastSeason">Season</label><select id="fastSeason"><option value="all" '+(FAST.season==="all"?"selected":"")+'>All time</option>'+Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return '<option value="'+n+'" '+(String(FAST.season)===String(n)?"selected":"")+'>Season '+n+'</option>'}).join("")+'</select><label><input type="checkbox" id="fastDuplicates" '+(FAST.duplicates?'checked':'')+'> Allow duplicate players</label><span class="sp"></span><button type="button" id="fastMore">Load more players</button></div><div class="fast-layout"><div id="fastList"></div><aside class="card" id="fastSide"></aside></div><p class="mut" id="fastStatus"></p></div>';
  renderFastest();
  try{
    const board=await get(API+"/leaderboard");
@@ -1300,15 +1300,17 @@ async function showFastest(){
      if(token!==FAST.token)return;
      for(const u of resolved)if(u?.uuid&&!FAST.users.some(x=>x.uuid===u.uuid))FAST.users.push(u);
      renderFastest();
+     for(const u of resolved)if(u?.uuid&&!FAST.runs.has(FAST.season+":"+u.uuid))enqueue(()=>loadFastRuns(u,token));
    }
    FAST.loading=false;renderFastest();
-   if(FAST.duplicates)for(const u of FAST.users)enqueue(()=>loadFastRuns(u,token));
+   
  }catch(e){if(token===FAST.token){FAST.loading=false;$("fastStatus").textContent="Could not load leaderboard: "+String(e.message||e)}}
 }
 
 /* ---------- global events ---------- */
 const out=$("out");
 out.addEventListener("change",async e=>{
+  if(e.target.id==="fastSeason"){FAST.season=e.target.value;FAST.selected=null;showFastest();return;}
   if(e.target.id==="fastDuplicates"){FAST.duplicates=e.target.checked;renderFastest();if(FAST.duplicates){const token=FAST.token;for(const u of FAST.users)if(!FAST.runs.has(u.uuid))enqueue(()=>loadFastRuns(u,token));}return;}
   if(e.target.id==="lbTwitchNames"){leaderboardTwitchNames=e.target.checked;if(T.historical)renderHistorical(false);else renderPT();return;}
   if(e.target.id==="lbseason")go("#!lb/"+e.target.value);
