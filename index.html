@@ -160,12 +160,6 @@ table.pt2 tbody tr:nth-child(-n+3)>td{background:transparent!important}
 table.pt2 tbody tr:nth-child(1) td:first-child{color:#ffd76a;font-weight:850;text-shadow:0 0 12px rgba(255,190,45,.22)}
 table.pt2 tbody tr:nth-child(2) td:first-child{color:#dce4ef;font-weight:850;text-shadow:0 0 10px rgba(203,213,225,.18)}
 table.pt2 tbody tr:nth-child(3) td:first-child{color:#e7a36e;font-weight:850;text-shadow:0 0 10px rgba(205,127,50,.18)}
-/* HackingNoises: animated binary rain on their leaderboard row only. */
-table.pt2 tbody tr.hacking-binary{position:relative;isolation:isolate;background:linear-gradient(105deg,rgba(0,90,35,.27),rgba(0,35,18,.10))!important}
-table.pt2 tbody tr.hacking-binary>td{position:relative;z-index:1;background:transparent!important}
-table.pt2 tbody tr.hacking-binary::before{content:"";position:absolute;inset:0;pointer-events:none;background:url("https://femboy.beauty/tjQamD") center/cover no-repeat;opacity:.48;z-index:0}
-
-@media(prefers-reduced-motion:reduce){table.pt2 tbody tr.hacking-binary::before{animation:none}}
 /* match modal */
 #modal{position:fixed;inset:0;background:rgba(5,6,12,.62);display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px;z-index:40}
 #modal.open{display:flex}
@@ -1200,7 +1194,7 @@ function renderHistorical(fetchStats=true){
   el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr><th>#</th>${cols.map(([key,label])=>`<th data-k="${key}" class="${key==="name"?"":"num"}">${label}${k===key?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${shown.map((r,i)=>{
     const u=r.u,st=r.stats||{},waiting=!r.stats;
     const cell=(v,fn)=>`<td class="num">${waiting?"…":f(v,fn)}</td>`;
-    return `<tr class="${String(u.nickname||"").toLowerCase()==="hackingnoises"?"hacking-binary":""}"><td class="mut">${k==="elo"&&!T.country&&d===-1?(r.rank??i+1):i+1}</td><td><span class="who">${flag(u.country)?`<span title="${esc(cname(u.country))}">${flag(u.country)}</span>`:""}<img class="head" alt="" loading="lazy" src="https://mc-heads.net/avatar/${enc(u.uuid)}/24"><a href="#${enc(u.nickname)}" class="${isSupporter(u)?"supporter-name":""}">${emojiName(u.nickname,u)}</a>${profileDecoration(u)}${leaderboardLiveBadge(u)}${isSupporter(u)?` <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:""}</span></td><td class="num"><span class="who">${icon(r.elo,22)}${f(r.elo)}</span></td>${cell(st.wr,x=>x.toFixed(1)+"%")}${cell(st.games)}${cell(st.wins)}${cell(st.pb,fmtP)}${cell(st.avg,fmtP)}</tr>`;
+    return `<tr><td class="mut">${k==="elo"&&!T.country&&d===-1?(r.rank??i+1):i+1}</td><td><span class="who">${flag(u.country)?`<span title="${esc(cname(u.country))}">${flag(u.country)}</span>`:""}<img class="head" alt="" loading="lazy" src="https://mc-heads.net/avatar/${enc(u.uuid)}/24"><a href="#${enc(u.nickname)}" class="${isSupporter(u)?"supporter-name":""}">${emojiName(u.nickname,u)}</a>${profileDecoration(u)}${leaderboardLiveBadge(u)}${isSupporter(u)?` <span class="supporter-pick" title="MCSR Ranked Supporter" aria-label="Supporter">⛏️</span>`:""}</span></td><td class="num"><span class="who">${icon(r.elo,22)}${f(r.elo)}</span></td>${cell(st.wr,x=>x.toFixed(1)+"%")}${cell(st.games)}${cell(st.wins)}${cell(st.pb,fmtP)}${cell(st.avg,fmtP)}</tr>`;
   }).join("")}</tbody></table>`;
   $("pstat").textContent=shown.length+" / "+rows.length+" players";
   $("lbsent").textContent=T.shown>=rows.length?"End of leaderboard · "+rows.length+" players":"Scroll for more";
@@ -1221,7 +1215,7 @@ function renderPT(){
   el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr><th>#</th>${cols.map(c=>`<th class="${c[2]}" data-k="${c[0]}">${c[1]}${k===c[0]?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${sorted.map((r,i)=>{
     const s=r[v]||{},bad=r.state!=="d",wait=`<span class="mut">${r.state==="e"?"×":"…"}</span>`;
     const c=(x,f,cls)=>`<td class="num ${cls||""}">${bad?wait:x!=null?f(x):"—"}</td>`;
-    return `<tr class="${String(r.name||"").toLowerCase()==="hackingnoises"?"hacking-binary":""}"><td class="mut">${i+1}</td><td><span class="who">${flag(r.country)?`<span title="${esc(cname(r.country))}">${flag(r.country)}</span>`:""}<img class="head" alt="" width="24" height="24" loading="lazy" src="https://mc-heads.net/avatar/${enc(r.uuid||r.name)}/24"><a href="#${enc(r.name)}">${emojiName(r.name,r.uuid?{uuid:r.uuid}:null)}</a>${r.uuid?profileDecoration({uuid:r.uuid}):""}${leaderboardLiveBadge(r.user||{})}</span></td>`+
+    return `<tr><td class="mut">${i+1}</td><td><span class="who">${flag(r.country)?`<span title="${esc(cname(r.country))}">${flag(r.country)}</span>`:""}<img class="head" alt="" width="24" height="24" loading="lazy" src="https://mc-heads.net/avatar/${enc(r.uuid||r.name)}/24"><a href="#${enc(r.name)}">${emojiName(r.name,r.uuid?{uuid:r.uuid}:null)}</a>${r.uuid?profileDecoration({uuid:r.uuid}):""}${leaderboardLiveBadge(r.user||{})}</span></td>`+
       `<td class="num"><span class="who">${bad?wait:icon(r.elo,22)+(r.elo!=null?r.elo:"—")}</span></td>`+
       c(s.wr,x=>x.toFixed(1)+"%")+c(s.games,x=>x)+c(s.wins,x=>x)+
       c(s.pb,fmtP,s.pb!=null&&s.pb===bpb?"best":"")+c(s.avg,fmtP,s.avg!=null&&s.avg===bavg?"best":"")+`</tr>`}).join("")}</tbody></table>`;
