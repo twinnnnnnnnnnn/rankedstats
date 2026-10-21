@@ -479,24 +479,6 @@ function showPredictionDemo(){
     panel.dataset.loaded='1';
    }catch(e){if(panel.isConnected)panel.textContent='Could not load recent matches. Click again to retry.'}
   }));
-  list.querySelectorAll('[data-daily-pred]').forEach(card=>{
-   let direction='';
-   const stake=card.querySelector('[data-stake]'),submit=card.querySelector('[data-preview]'),feedback=card.querySelector('[data-feedback]');
-   const validate=()=>{
-    const n=Number(stake.value),valid=walletReady&&!!direction&&Number.isSafeInteger(n)&&n>=1&&n<=balance;
-    submit.disabled=!valid;
-    if(stake.value&&(!Number.isSafeInteger(n)||n<1||n>balance))feedback.textContent='Enter a whole number from 1 to '+balance+' coins.';
-    else feedback.textContent=direction?'Selected: '+direction.toUpperCase()+' · No coins will be deducted.':'Choose Gain or Loss.';
-   };
-   card.querySelectorAll('[data-direction]').forEach(button=>button.addEventListener('click',()=>{
-    direction=button.dataset.direction;
-    card.querySelectorAll('[data-direction]').forEach(b=>{b.classList.toggle('selected',b===button);b.classList.toggle('dimmed',b!==button);b.setAttribute('aria-pressed',String(b===button));});
-    validate();
-   }));
-   stake.addEventListener('input',validate);
-   submit.addEventListener('click',()=>{validate();if(!submit.disabled)feedback.textContent='Preview: '+direction.toUpperCase()+' · '+Number(stake.value)+' 🪙 demo coins. Not placed; balance unchanged.'});
-   validate();
-  });
  }).catch(e=>{status.textContent='Predictions unavailable: '+e.message;});
 }
 
