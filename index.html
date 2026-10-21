@@ -515,7 +515,7 @@ function rowHTML(x){
   const shownOpp=roomWinner||opp;
   const roomExtra=roomWinner?Math.max(0,roomPlayers.length-2):0;
   return `<tr class="pt" data-id="${x.id}"><td><span class="res ${i.draw||i.dec?"d":i.won?"w":"l"}">${i.res}</span></td>`+
-  `<td><span class="who">${icon(shownOpp.eloRate,18)}<a href="#${enc(shownOpp.nickname||"")}">${esc(shownOpp.nickname||"—")}</a>${roomWinner?` <span class="mut" title="${roomExtra} additional player${roomExtra===1?"":"s"}">+${roomExtra}</span>`:""}</span></td>`+
+  `<td>${i.dec?"":`<span class="who">${icon(shownOpp.eloRate,18)}<a href="#${enc(shownOpp.nickname||"")}">${esc(shownOpp.nickname||"—")}</a>${roomWinner?` <span class="mut" title="${roomExtra} additional player${roomExtra===1?"":"s"}">+${roomExtra}</span>`:""}</span>`}</td>`+
   (r?`<td>${opp.eloRate!=null?opp.eloRate:"—"}</td>`:"")+
   `<td>${i.time}</td>`+
   (r?`<td class="${ch>0?"up":"down"}">${ch==null?"—":(ch>0?"+":"")+ch}</td>`:"")+
