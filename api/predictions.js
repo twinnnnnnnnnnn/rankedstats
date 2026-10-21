@@ -111,7 +111,7 @@ module.exports=async(req,res)=>{
   await client.query('ALTER TABLE ranked_predictions ADD COLUMN IF NOT EXISTS player_rank INTEGER');
   await client.query('ALTER TABLE ranked_predictions ADD COLUMN IF NOT EXISTS player_elo INTEGER');
   const pending=await client.query("SELECT * FROM ranked_predictions WHERE status='pending' AND discord_id=$1 ORDER BY placed_at LIMIT 20",[session.id]);
-  if(pending.rows.length)await settle(client,pending.rows);
+  if(pending.rows.length){try{await settle(client,pending.rows)}catch(e){console.error('Prediction settlement batch skipped:',e.message)}}
   if(req.method==='GET'){
    const [wallet,history,players]=await Promise.all([client.query('SELECT balance FROM discord_wallets WHERE discord_id=$1',[session.id]),client.query('SELECT id,player_name,direction,stake,odds_basis_points,status,payout,result_elo,baseline_avg_ms,result_avg_ms,placed_at FROM ranked_predictions WHERE discord_id=$1 ORDER BY id DESC LIMIT 30',[session.id]),roster()]);
    const odds=players;
