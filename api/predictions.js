@@ -102,6 +102,7 @@ async function settle(client,items){
 module.exports=async(req,res)=>{
  res.setHeader('Cache-Control','no-store');
  if(!['GET','POST'].includes(req.method))return res.status(405).json({error:'Method not allowed'});
+ if(req.method==='POST')return res.status(503).json({error:'Predictions are paused. New predictions are temporarily disabled.'});
  const session=unpack(cookies(req).discord_session);
  if(!session||session.exp<Date.now()||!/^[0-9]+$/.test(String(session.id||'')))return res.status(401).json({error:'Discord login required'});
  if(!process.env.DATABASE_URL)return res.status(503).json({error:'Database unavailable'});
