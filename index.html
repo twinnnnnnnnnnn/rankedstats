@@ -426,11 +426,14 @@ function showPredictionDemo(){
   const users=(data.users||[]).filter(u=>u&&u.nickname);
   const selected=[...shuffle(users.slice(0,50),'top').slice(0,3),...shuffle(users.slice(50,150),'mid').slice(0,3)];
   selected.push(...shuffle(users.slice(50,150).filter(u=>!selected.some(p=>p.nickname===u.nickname)),'extra').slice(0,4));
-  let balance=0;
+  let balance=0,walletReady=false;
   if(auth.authenticated){
-   try{balance=Math.max(0,Number(localStorage.getItem('mcsr-demo-login-bonus-'+String(auth.discordId||auth.discordUsername||'discord')))||0)}catch(e){}
+   try{
+    const response=await fetch('/api/wallet',{credentials:'same-origin',cache:'no-store'});
+    if(response.ok){const wallet=await response.json();balance=wallet.balance;walletReady=Number.isSafeInteger(balance)&&balance>=0}
+   }catch(e){}
   }
-  status.textContent='Roster for '+day+' JST · '+(auth.authenticated?'Demo balance: 🪙 '+balance+' coins':'Sign in with Discord to see your demo balance')+' · Picks are previews only.';
+  status.textContent='Roster for '+day+' JST · '+(walletReady?'Account balance: 🪙 '+balance+' coins':auth.authenticated?'Wallet unavailable — check DATABASE_URL and deployment':'Sign in with Discord to see your balance')+' · Picks are previews only.';
   list.innerHTML=selected.map((u,i)=>{
    const rank=users.indexOf(u)+1,tag=rank<=10?'Top 10':rank<=50?'Top 50':'Top 150';
    return '<div class="pred-card" data-daily-pred="'+i+'"><strong>'+esc(u.nickname)+'</strong><p class="pred-note">#'+rank+' · '+tag+'</p><div class="pred-options"><button type="button" data-direction="gain">📈 Gain Elo</button><button type="button" data-direction="loss">📉 Lose Elo</button></div><div class="pred-actions"><label class="pred-stake-label">Stake 🪙 <input class="pred-stake-input" type="number" min="1" step="1" max="'+balance+'" value="'+(balance?Math.min(10,balance):'')+'" data-stake inputmode="numeric"> coins</label><button type="button" data-preview disabled>Preview prediction</button></div><p class="pred-note" data-feedback role="status">Choose one outcome and enter an amount.</p></div>';
@@ -439,7 +442,7 @@ function showPredictionDemo(){
    let direction='';
    const stake=card.querySelector('[data-stake]'),submit=card.querySelector('[data-preview]'),feedback=card.querySelector('[data-feedback]');
    const validate=()=>{
-    const n=Number(stake.value),valid=auth.authenticated&&!!direction&&Number.isSafeInteger(n)&&n>=1&&n<=balance;
+    const n=Number(stake.value),valid=walletReady&&!!direction&&Number.isSafeInteger(n)&&n>=1&&n<=balance;
     submit.disabled=!valid;
     if(stake.value&&(!Number.isSafeInteger(n)||n<1||n>balance))feedback.textContent='Enter a whole number from 1 to '+balance+' coins.';
     else feedback.textContent=direction?'Selected: '+direction.toUpperCase()+' · No coins will be deducted.':'Choose Gain or Loss.';
@@ -1557,12 +1560,16 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
    button.textContent=signedIn?'Profile':'Discord Login';
    name.textContent=data.discordUsername||'Discord user';
    if(signedIn){
-    // Demo-only balance. A production one-time bonus requires server-side storage.
-    const demoKey='mcsr-demo-login-bonus-'+String(data.discordId||data.discordUsername||'discord');
-    try{if(localStorage.getItem(demoKey)===null)localStorage.setItem(demoKey,'100');}catch(e){}
-    const demoBalance=Number(localStorage.getItem(demoKey)||100);
     const coins=document.getElementById('discordDemoCoins');
-    if(coins)coins.textContent='🪙 '+demoBalance+' demo coins · 100-coin welcome bonus';
+    if(coins){
+     coins.textContent='🪙 Loading account balance…';
+     try{
+      const walletResponse=await fetch('/api/wallet',{credentials:'same-origin',cache:'no-store'});
+      if(!walletResponse.ok)throw Error('Wallet unavailable');
+      const wallet=await walletResponse.json();
+      coins.textContent='🪙 '+wallet.balance+' coins · Account wallet';
+     }catch(e){coins.textContent='🪙 Wallet unavailable · Check database setup'}
+    }
    }
   }catch(e){signedIn=false;button.textContent='Discord Login'}
   if(!signedIn)hide();
