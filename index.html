@@ -735,7 +735,7 @@ function renderProfile(){
     <div class="card" id="cardChart"><h2>Elo history <span id="gsub"></span><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button id="predictToggle" class="mini" type="button" aria-pressed="false">Show Elo prediction</button><span class="seg" id="gm" style="min-width:210px"><button data-g="recent" class="${P.full?"":"on"}">Recent 50</button><button data-g="full" class="${P.full?"on":""}">Full season</button></span></span></h2><div id="gArea"></div></div>
     <div class="card" id="cardTable"><h2>${P.mode==="ranked"?"Ranked matches":P.mode==="casual"?"Casual matches":"Private room matches"} <span id="cnt2"></span></h2><div class="bar" style="margin:0 0 12px;gap:8px;flex-wrap:wrap"><label for="matchMode">Match type</label><select id="matchMode" aria-label="Match type"><option value="ranked" ${P.mode==="ranked"?"selected":""}>Ranked</option><option value="casual" ${P.mode==="casual"?"selected":""}>Casual</option><option value="private" ${P.mode==="private"?"selected":""}>Private rooms</option></select><label for="matchSort">Sort matches</label><select id="matchSort" aria-label="Sort matches"><option value="recent" ${P.matchSort==="recent"?"selected":""}>Most recent</option><option value="oldest" ${P.matchSort==="oldest"?"selected":""}>Oldest first</option><option value="fastest" ${P.matchSort==="fastest"?"selected":""}>Fastest finish (wins only)</option></select><label class="lb-twitch-toggle" title="Show linked Twitch usernames instead of Minecraft names"><input type="checkbox" id="matchTwitchNames" ${P.matchTwitchNames?"checked":""}> Twitch names</label></div><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th><th>Time</th>${rkd?"<th>Elo</th>":""}<th>Seed</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div></div>
    </div>`;
-  refreshPlayerTribute();
+  
   startTwitchStatus(twitch);
   $("out").classList.remove("lyxier-profile","christmas-profile");
   document.body.classList.remove("lyxier-profile-bg","christmas-profile-bg","rank-profile-bg");
@@ -1389,14 +1389,16 @@ function twitchLogin(u){
 }
 
 function normalizeNameForCompare(v){
- return String(v||"").toLowerCase().replace(/[013457]/g,c=>({"0":"o","1":"l","3":"e","4":"a","5":"s","7":"t"}[c]||c)).replace(/[^a-z]/g,"");
+ return String(v||"").toLowerCase().replace(/[^a-z0-9]/g,"");
 }
 function twitchNameLooksCleaner(ign,login){
- if(!ign||!login||ign.toLowerCase()===login.toLowerCase())return false;
- const mc=String(ign),tw=String(login);
- if(!/^[a-z]+$/i.test(tw)||!/[0-9_]/.test(mc))return false;
- const a=normalizeNameForCompare(mc),b=normalizeNameForCompare(tw);
- return !!a&&!!b&&(a===b||a.includes(b)||b.includes(a));
+ if(!ign||!login)return false;
+ const mc=String(ign).toLowerCase(),tw=String(login).toLowerCase();
+ if(mc===tw)return false;
+ const mcWord=mc.replace(/[_\- .]*\d{2,}$/,"").replace(/[^a-z0-9]/g,"");
+ const a=normalizeNameForCompare(mcWord),b=normalizeNameForCompare(tw);
+ if(!a||!b)return false;
+ return a===b || (a.length>=5 && b.length>=5 && (a.startsWith(b)||b.startsWith(a)));
 }
 const twitchPartnerCache=new Map();
 function preferredPlayerName(ign,u){
@@ -1404,14 +1406,15 @@ function preferredPlayerName(ign,u){
  return login&&(twitchNameLooksCleaner(ign,login)||twitchPartnerCache.get(login)===true)?login:(ign||u?.nickname||"—");
 }
 function cleanPlayerDisplayName(value){
- return String(value||"—")
-  .replace(/:[a-z0-9_+-]+:/gi,"")
+ let name=String(value||"—")
   .replace(/\b(?:alt|mcsr)\b/gi," ")
   .replace(/_/g,"")
-  .replace(/[0-9]/g,c=>({"0":"o","1":"i","2":"z","3":"e","4":"a","5":"s","6":"g","7":"t","8":"b","9":"g"}[c]||c))
   .replace(/[.\-]+/g," ")
   .replace(/\s+/g," ")
-  .trim()||"—";
+  .trim();
+ // If a taken username has a clear word followed by a numeric suffix, show the word.
+ name=name.replace(/^([a-z]{5,})\d{2,}$/i,"$1");
+ return name||"—";
 }
 function leaderboardDisplayName(ign,u){
  const mc=ign||u?.nickname||"—",login=twitchLogin(u),chosen=preferredPlayerName(mc,u);
