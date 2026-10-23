@@ -533,6 +533,7 @@ function stopProfile(){P=null;if(io){io.disconnect();io=null}}
 const go=h=>{if(location.hash===h)route();else location.hash=h};
 
 function route(){
+  if(window.setAustralianMode)window.setAustralianMode(false);
   closeModal();if(lio){lio.disconnect();lio=null}
   const raw=location.hash.slice(1);
   const dec=s=>{try{return decodeURIComponent(s)}catch(e){return s}};
@@ -601,6 +602,7 @@ function showProfile(name){
         for(const scope of ["season","total"])u.statistics[scope]=mergeNumericTree(u.statistics[scope]||{},other.statistics?.[scope]||{});
       }
     }
+    if(window.setAustralianMode)window.setAustralianMode(countryCode(u)==="AU");
     const mk=()=>({list:[],done:false,p:null,err:null,cursors:{},sourceDone:{}});
     Object.assign(tok,{u,combinedUser:u,baseUser:base,sourceUsers,merged:!!group&&sourceUsers.length>1,mode:"ranked",full:false,matchSort:"recent",matchTwitchNames:false,profileSeason:"current",st:{ranked:mk(),private:mk(),casual:mk()}});
     sel=null;selId=null;renderProfile();
