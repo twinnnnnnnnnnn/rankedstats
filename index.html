@@ -592,7 +592,7 @@ function showProfile(name){
       }
     }
     const mk=()=>({list:[],done:false,p:null,err:null,cursors:{},sourceDone:{}});
-    Object.assign(tok,{u,baseUser:base,sourceUsers,merged:!!group&&sourceUsers.length>1,mode:"ranked",full:false,matchSort:"recent",matchTwitchNames:false,profileSeason:"current",st:{ranked:mk(),private:mk(),casual:mk()}});
+    Object.assign(tok,{u,combinedUser:u,baseUser:base,sourceUsers,merged:!!group&&sourceUsers.length>1,mode:"ranked",full:false,matchSort:"recent",matchTwitchNames:false,profileSeason:"current",st:{ranked:mk(),private:mk(),casual:mk()}});
     sel=null;selId=null;renderProfile();
   }).catch(e=>{
     if(P!==tok)return;
@@ -1545,7 +1545,7 @@ out.addEventListener("change",async e=>{
     const season=Number(e.target.value),tok=P;
     P.profileSeason=String(season);
     if(season===T.currentSeason){
-      P.u=P.baseUser;
+      P.u=P.combinedUser||P.baseUser;
       const mk=()=>({list:[],done:false,p:null,err:null});
       P.st={ranked:mk(),private:mk(),casual:mk()};P.full=false;P.matchSort="recent";
       renderProfile();return
@@ -1554,10 +1554,18 @@ out.addEventListener("change",async e=>{
     try{
       // The user endpoint, unlike the leaderboard endpoint, contains season-specific
       // statistics (wins, played matches, PB, etc.).
-      const user=await get(API+"/users/"+enc(tok.baseUser.uuid)+"?season="+season);
+      const sources=tok.sourceUsers?.length?tok.sourceUsers:[tok.baseUser];
+      const seasonUsers=await Promise.all(sources.map(src=>get(API+"/users/"+enc(src.uuid)+"?season="+season)));
       if(P!==tok||String(P.profileSeason)!==String(season))return;
+      const user=seasonUsers[0];
       if(!user||!user.uuid)throw Error("Season-specific player data unavailable");
-      tok.u=user;
+      const combined={...user};
+      if(tok.merged&&seasonUsers.length>1){
+        combined.nickname="HDMICables";combined.statistics={...(user.statistics||{})};
+        for(const other of seasonUsers.slice(1))for(const scope of ["season","total"])
+          combined.statistics[scope]=mergeNumericTree(combined.statistics[scope]||{},other.statistics?.[scope]||{});
+      }
+      tok.u=combined;
       const mk=()=>({list:[],done:false,p:null,err:null});
       tok.st={ranked:mk(),private:mk(),casual:mk()};tok.full=false;tok.matchSort="recent";
       renderProfile();
