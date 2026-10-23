@@ -362,57 +362,9 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 @media(max-width:620px){.player-tribute{grid-template-columns:1fr;gap:14px;text-align:center;padding:22px 16px 34px}.player-tribute .tribute-art{width:132px;height:132px}.tribute-title{font-size:25px}.tribute-meta{justify-content:center}.player-tribute:after{left:8px;right:8px;text-align:center;font-size:7px}}
 
 
-.speed-meme{display:flex;align-items:flex-end;gap:16px;margin:14px 0;padding:12px 16px;border:1px solid #454545;background:#111;overflow:hidden}.speed-meme-art{display:block;width:108px;min-width:108px;height:92px;align-self:flex-end;overflow:visible}.speed-meme-art svg{display:block;width:100%;height:100%;overflow:visible}.speed-meme-copy{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}.speed-meme-copy strong{display:block;color:#f3f3f3;font-size:14px;letter-spacing:.04em}.speed-meme-copy span{display:block;color:#aaa;font-size:12px;margin-top:5px;line-height:1.5}.speed-meme-copy b{color:#c7ff7b}@media(max-width:480px){.speed-meme{gap:9px;padding:10px}.speed-meme-art{width:80px;min-width:80px;height:76px}.speed-meme-copy strong{font-size:12px}}
-.skin-viewer-card{margin-top:14px;background:#090909;border:1px solid var(--line);padding:0}
-.skin-viewer-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:14px;align-items:stretch}
-.skin-viewer-stage{position:relative;height:clamp(420px,58vw,620px);min-height:420px;background:radial-gradient(ellipse at 50% 35%,#202020 0%,#0a0a0a 65%);overflow:hidden}
-.skin-viewer-stage canvas{display:block;width:100%!important;height:100%!important;min-height:0;touch-action:none}
-.skin-viewer-controls{display:flex;flex-direction:column;gap:8px}
-.skin-viewer-controls button{border:1px solid #303030;background:#171717;color:var(--text);padding:10px;text-align:left}
-.skin-viewer-controls button:hover{background:#242424}
-#skinPlaceMode[aria-pressed="true"]{border-color:#b6f36a;color:#c9ff89;background:#17200f}#profileSkinStage.is-placing{cursor:move}#profileSkinStage.is-placing canvas{cursor:move}
-.skin-viewer-help{font-size:12px;color:var(--muted);line-height:1.5}
-.skin-viewer-status{font-size:12px;color:var(--muted);margin-top:7px}
-
-
-.skin-viewer-card{border-color:#30352b;box-shadow:0 0 0 1px #14170f,0 10px 28px #0008}
-.skin-viewer-card>summary{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid #242820;background:linear-gradient(90deg,#151a11,#0a0b09)}
-.skin-viewer-card>summary:before{content:"▶";color:#b6f36a;font-size:11px;margin-right:8px}
-.skin-viewer-stage{background-color:#090c08;background-image:linear-gradient(#20291c18 1px,transparent 1px),linear-gradient(90deg,#20291c18 1px,transparent 1px);background-size:24px 24px}
-.skin-viewer-controls{gap:9px}
-.skin-runner-brand{font:700 11px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.1em;color:#c2f879;display:flex;align-items:center;gap:7px;border-bottom:1px solid #292e22;padding:3px 0 9px}
-.skin-runner-live{width:7px;height:7px;background:#b6f36a;border-radius:50%;box-shadow:0 0 9px #b6f36a;display:inline-block}
-.skin-runner-seed{margin-left:auto;color:#777f6d;font-weight:400;letter-spacing:0}
-.skin-pose-title{display:flex;justify-content:space-between;font:700 10px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.09em;color:#8e9880;margin-top:2px}
-.skin-pose-title span{color:#b6f36a}
-.skin-pose-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
-.skin-pose-grid button,.skin-camera-controls button{border:1px solid #30372a!important;background:#11140f!important;color:#cdd3c5!important;font:12px ui-monospace,SFMono-Regular,Consolas,monospace!important;padding:9px 5px!important;text-align:center!important}
-.skin-pose-grid button:hover,.skin-camera-controls button:hover{border-color:#839b5a!important;background:#1b2115!important}
-.skin-pose-grid button.active{border-color:#b6f36a!important;background:#253219!important;color:#d7ff9b!important;box-shadow:inset 0 -2px #b6f36a}
-.skin-animation-speed{font:10px ui-monospace,SFMono-Regular,Consolas,monospace;color:#8e9880;letter-spacing:.07em;display:grid;grid-template-columns:1fr auto;gap:7px}
-.skin-animation-speed span{color:#c2f879}
-.skin-animation-speed input{grid-column:1/-1;width:100%;accent-color:#b6f36a}
-.skin-camera-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
-.skin-background-options button{font:10px ui-monospace,SFMono-Regular,Consolas,monospace!important;text-transform:uppercase}
-.skin-viewer-status{font:10px ui-monospace,SFMono-Regular,Consolas,monospace;padding:7px;background:#0e110b;border-left:2px solid #b6f36a}
-@media(max-width:650px){.skin-pose-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-
-.skin-viewer-card{padding:0}
-.skin-viewer-card>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;font-weight:600}
-.skin-viewer-card>summary::-webkit-details-marker{display:none}
-.skin-viewer-card>summary:after{content:"＋";font-size:18px;color:var(--muted)}
-.skin-viewer-card[open]>summary:after{content:"−"}
-.skin-viewer-inner{padding:0 14px 14px}
-.skin-viewer-stage{background-color:#0a0a0a;background-size:cover;background-position:center;background-repeat:no-repeat;transition:background-image .15s}
-.skin-background-options{display:flex;gap:6px;flex-wrap:wrap}
-.skin-background-options button{font-size:12px;padding:8px 9px!important;text-align:center!important}
-.skin-background-options button.active{border-color:#999;background:#303030}
-.skin-background-upload{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted)}
-.skin-background-upload input{max-width:100%;font-size:12px}
-
-@media(max-width:650px){.skin-viewer-layout{grid-template-columns:1fr}.skin-viewer-stage{height:480px;min-height:480px}.skin-viewer-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.skin-viewer-help,.skin-viewer-status{grid-column:1/-1}}
-
-</style>
+ .profile-model{width:112px;min-width:112px;height:156px;position:relative;align-self:center;overflow:hidden;background:transparent}
+ .profile-model canvas{display:block;width:100%!important;height:100%!important;touch-action:pan-y;outline:none}
+ @media(max-width:620px){.profile-model{width:76px;min-width:76px;height:120px}}</style>
 </style>
 <script src="https://cdn.jsdelivr.net/npm/skinview3d@3.2.0/bundles/skinview3d.bundle.js" defer></script>
 </head>
@@ -756,130 +708,27 @@ function sessionStatsHTML(){
 function refreshSessionStats(){const el=$("sessionStats");if(!el)return;el.innerHTML=sessionStatsHTML();const summary=document.querySelector("#sessionPanel summary");if(summary&&P?.st){const matches=P.st.ranked.list.filter(m=>Number.isFinite(Number(m.date))&&Number(m.date)>0).sort((a,b)=>Number(b.date)-Number(a.date));const top150=(T.globalLb?.users||[]).slice(0,150).some(u=>u.uuid===P.u?.uuid);const hours=Number(P.u?.eloRate)>=2500?3:top150?2:1;const current=matches.length&&Date.now()/1000-Number(matches[0].date)<=hours*3600;summary.innerHTML=(current?"Current Session":"Last Session")+'';}}
 async function loadTopClip(login,range="7d",section=document.querySelector("[data-twitch-clips]")){if(!section||!login)return;try{const res=await fetch("/api/twitch-clips?login="+encodeURIComponent(login)+"&range="+encodeURIComponent(range));if(!res.ok)throw new Error("clip lookup failed");const data=await res.json();if(!data.clips||!data.clips.length){section.hidden=true;return;}const clip=data.clips[0];const frame=section.querySelector("iframe");const link=section.querySelector(".clip-embed-fallback a");if(!frame||!clip.slug){section.hidden=true;return;}frame.src="https://clips.twitch.tv/embed?clip="+encodeURIComponent(clip.slug)+"&parent=rankedstats.vercel.app&autoplay=false";frame.title=clip.title||"Top Twitch clip";if(link)link.href="https://www.twitch.tv/"+encodeURIComponent(login)+"/clip/"+encodeURIComponent(clip.slug);const heading=section.querySelector(".clip-finder-head strong");if(heading)heading.textContent=range==="24hr"?"TOP CLIP OF THE DAY":"TOP CLIP OF THE WEEK";section.hidden=false;}catch(_){section.hidden=true;}}
 function setupProfileSkinViewer(uuid){
-  const canvas=$("profileSkinCanvas"),stage=$("profileSkinStage"),status=$("skinViewerStatus"),panel=$("profileSkinPanel");
-  if(!canvas||!stage||!status)return;
+  const canvas=$("profilePlayerCanvas"),stage=$("profilePlayerModel");
+  if(!canvas||!stage||!window.skinview3d)return;
   if(window.profileSkinViewer){try{window.profileSkinViewer._profileResizeObserver?.disconnect();window.profileSkinViewer.dispose()}catch(_){}window.profileSkinViewer=null}
-  if(window.profileSkinCustomBgUrl){try{URL.revokeObjectURL(window.profileSkinCustomBgUrl)}catch(_){}window.profileSkinCustomBgUrl=null}
-  const backgrounds={default:"",bastion:"https://upload.wikimedia.org/wikipedia/commons/3/3b/Minecraft_Bastion_Remnants.png",overworld:"https://upload.wikimedia.org/wikipedia/commons/f/fc/Minecraft_dappled_forest.png",nether:"https://upload.wikimedia.org/wikipedia/commons/c/cd/Screenshot_from_the_Minecraft_Nether.png"};
-  let customBg="",poseName="idle",animSpeed=1;
-  const applyBg=key=>{
-    const url=key==="custom"?customBg:(backgrounds[key]||"");
-    stage.style.backgroundImage=url?'linear-gradient(#0002,#0002),url("'+url.replace(/["\\]/g,"")+'")':"";
-    stage.style.backgroundColor=url?"#080808":"#0a0a0a";
-    document.querySelectorAll("[data-skin-bg]").forEach(b=>b.classList.toggle("active",b.dataset.skinBg===key));
-    if(status.isConnected)status.textContent=key==="default"?"READY // PLAIN BACKGROUND":key==="custom"?"READY // CUSTOM BACKGROUND":"READY // "+key.toUpperCase()+" SCENE";
-  };
-  const fail=()=>{if(status.isConnected)status.textContent="ERROR // COULDN’T LOAD PLAYER SKIN"};
-  if(!window.skinview3d){status.textContent="ERROR // 3D VIEWER LIBRARY DIDN’T LOAD";return}
   try{
-    const viewer=new skinview3d.SkinViewer({canvas,width:Math.max(260,stage.clientWidth||420),height:Math.max(420,stage.clientHeight||480),skin:"https://mc-heads.net/skin/"+encodeURIComponent(uuid),background:null});
-    window.profileSkinViewer=viewer;viewer.setSize(Math.max(260,stage.clientWidth||420),Math.max(420,stage.clientHeight||480));
-    viewer.renderer.setClearColor(0x000000,0);viewer.controls.enableRotate=true;viewer.controls.enableZoom=true;viewer.controls.enablePan=false;
-    viewer.zoom=0.72;viewer.camera.position.set(20,12,32);viewer.controls.target.set(0,0,0);
-    const skinUrl="https://mc-heads.net/skin/"+encodeURIComponent(uuid);
-    viewer.loadSkin(skinUrl).then(()=>{if(status.isConnected)status.textContent="READY // DRAG TO ROTATE"}).catch(fail);
-    const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(260,stage.clientWidth||420),h=Math.max(420,stage.clientHeight||480);viewer.setSize(w,h);viewer.camera.aspect=w/h;viewer.camera.updateProjectionMatrix()};
-    if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(canvas.parentElement);viewer._profileResizeObserver=ro}
-    let breakdanceFrame=0,breakdanceParts=[];
-    const stopBreakdance=()=>{
-      if(breakdanceFrame)cancelAnimationFrame(breakdanceFrame);
-      breakdanceFrame=0;
-      for(const part of breakdanceParts){part.object.rotation.copy(part.rotation);part.object.position.copy(part.position)}
-      breakdanceParts=[];
+    const width=Math.max(76,stage.clientWidth||112),height=Math.max(120,stage.clientHeight||156);
+    const viewer=new skinview3d.SkinViewer({canvas,width,height,skin:"https://mc-heads.net/skin/"+encodeURIComponent(uuid),background:null});
+    window.profileSkinViewer=viewer;viewer.setSize(width,height);viewer.renderer.setClearColor(0x000000,0);
+    viewer.controls.enableRotate=false;viewer.controls.enableZoom=false;viewer.controls.enablePan=false;
+    viewer.zoom=0.88;viewer.camera.position.set(18,8,34);viewer.controls.target.set(0,0,0);
+    const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(76,stage.clientWidth||112),h=Math.max(120,stage.clientHeight||156);viewer.setSize(w,h);viewer.camera.aspect=w/h;viewer.camera.updateProjectionMatrix()};
+    if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(stage);viewer._profileResizeObserver=ro}
+    const lookAtPointer=e=>{
+      if(!viewer.playerObject)return;
+      const r=stage.getBoundingClientRect(),x=Math.max(0,Math.min(1,(e.clientX-r.left)/Math.max(1,r.width))),y=Math.max(0,Math.min(1,(e.clientY-r.top)/Math.max(1,r.height)));
+      viewer.playerObject.rotation.y=(x-.5)*1.65;
+      const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=(y-.5)*-.28;
     };
-    const startBreakdance=()=>{
-      stopBreakdance();viewer.animation=null;
-      const root=viewer.playerObject,skin=root&&(root.skin||root);if(!root||!skin)return false;
-      for(const name of ["body","head","leftArm","rightArm","leftLeg","rightLeg"]){const object=skin[name];if(object)breakdanceParts.push({object,rotation:object.rotation.clone(),position:object.position.clone(),name})}
-      if(!breakdanceParts.length)return false;
-      const origin=performance.now();
-      const animate=now=>{
-        if(!canvas.isConnected||window.profileSkinViewer!==viewer||poseName!=="breakdance"){stopBreakdance();return}
-        const t=(now-origin)*.001*animSpeed,w=Math.sin(t*5.5),w2=Math.sin(t*5.5+Math.PI);
-        const get=name=>breakdanceParts.find(p=>p.name===name)?.object;
-        const body=get("body"),head=get("head"),la=get("leftArm"),ra=get("rightArm"),ll=get("leftLeg"),rl=get("rightLeg");
-        if(body){body.rotation.x=Math.sin(t*2.7)*.42;body.rotation.y=Math.sin(t*1.6)*.28;body.rotation.z=Math.sin(t*3.2)*.35;body.position.y=Math.abs(Math.sin(t*5.5))*.7}
-        if(head){head.rotation.x=Math.sin(t*2.7+.5)*.2;head.rotation.y=Math.sin(t*1.6)*.25}
-        if(la){la.rotation.x=Math.sin(t*5.5)*1.55;la.rotation.z=-.6+Math.sin(t*3.1)*.85}
-        if(ra){ra.rotation.x=Math.sin(t*5.5+Math.PI)*1.55;ra.rotation.z=.6+Math.sin(t*3.1+Math.PI)*.85}
-        if(ll){ll.rotation.x=w*1.15;ll.rotation.z=-.22+Math.max(0,w)*.55}
-        if(rl){rl.rotation.x=w2*1.15;rl.rotation.z=.22-Math.max(0,w2)*.55}
-        breakdanceFrame=requestAnimationFrame(animate);
-      };
-      breakdanceFrame=requestAnimationFrame(animate);return true;
-    };
-    const setPose=(key)=>{
-      poseName=key;stopBreakdance();
-      const make=name=>typeof skinview3d[name]==="function"?new skinview3d[name]():null;
-      const choices={idle:["IdleAnimation","DEFAULT"],run:["RunningAnimation","RUNNING"],orange:["WalkingAnimation","ORANGE JUSTICE"],floss:["WaveAnimation","FLOSS"],take:["CrouchAnimation","TAKE THE L"],hype:["RunningAnimation","HYPE"],wave:["WaveAnimation","WAVE"],hit:["HitAnimation","HIT IT"]};
-      const [animationName,label]=key==="breakdance"?["","BREAKDANCING"]:(choices[key]||choices.idle);
-      let animation=key==="breakdance"?null:make(animationName);
-      if(key!=="breakdance"&&!animation&&key!=="idle")animation=make("IdleAnimation");
-      viewer.animation=animation;if(viewer.animation)viewer.animation.speed=animSpeed;
-      if(key==="breakdance")startBreakdance();
-      document.querySelectorAll("[data-skin-pose]").forEach(b=>b.classList.toggle("active",b.dataset.skinPose===key));
-      if(status.isConnected)status.textContent="EMOTE // "+label+" · "+animSpeed.toFixed(1)+"×"+(key==="breakdance"?(breakdanceFrame?"":" · ANIMATION UNAVAILABLE"):(animation?"":" · FALLBACK IDLE"));
-    };
-    document.querySelectorAll("[data-skin-pose]").forEach(b=>b.onclick=()=>setPose(b.dataset.skinPose));
-    let placingModel=false;
-    const placeButton=$("skinPlaceMode"),placeHelp=$("skinPlacementHelp");
-    const basePosition=viewer.playerObject?viewer.playerObject.position.clone():null;
-    const setPlacementMode=enabled=>{
-      placingModel=!!enabled;
-      if(placeButton){placeButton.setAttribute("aria-pressed",String(placingModel));placeButton.textContent=placingModel?"✥ Place model: ON":"✥ Place model: OFF"}
-      stage.classList.toggle("is-placing",placingModel);
-      viewer.controls.enableRotate=!placingModel;
-      viewer.controls.enablePan=false;
-      if(placeHelp)placeHelp.textContent=placingModel?"Placement ON · drag the model to move it. Camera rotation is paused.":"Placement OFF · drag to rotate the camera; turn placement on to move the model.";
-    };
-    let drag=null;
-    canvas.addEventListener("pointerdown",e=>{
-      if(!placingModel||!viewer.playerObject)return;
-      e.preventDefault();e.stopPropagation();
-      drag={id:e.pointerId,x:e.clientX,y:e.clientY};
-      try{canvas.setPointerCapture(e.pointerId)}catch(_){}
-    },true);
-    canvas.addEventListener("pointermove",e=>{
-      if(!drag||drag.id!==e.pointerId||!viewer.playerObject)return;
-      e.preventDefault();e.stopPropagation();
-      const scale=22/Math.max(240,stage.clientWidth||420);
-      viewer.playerObject.position.x+=(e.clientX-drag.x)*scale;
-      viewer.playerObject.position.y-=(e.clientY-drag.y)*scale;
-      drag.x=e.clientX;drag.y=e.clientY;
-    },true);
-    const endPlacementDrag=e=>{if(drag&&drag.id===e.pointerId){drag=null;e.stopPropagation()}};
-    canvas.addEventListener("pointerup",endPlacementDrag,true);
-    canvas.addEventListener("pointercancel",endPlacementDrag,true);
-    if(placeButton)placeButton.onclick=()=>setPlacementMode(!placingModel);
-    if($("skinResetPlacement"))$("skinResetPlacement").onclick=()=>{
-      if(viewer.playerObject&&basePosition)viewer.playerObject.position.copy(basePosition);
-      if(placeHelp)placeHelp.textContent="Model position reset to center.";
-    };
-
-    if($("skinAnimSpeed"))$("skinAnimSpeed").oninput=e=>{animSpeed=Number(e.target.value)||1;const label=$("skinAnimSpeedValue");if(label)label.textContent=animSpeed.toFixed(1)+"×";if(viewer.animation)viewer.animation.speed=animSpeed;setPose(poseName)};
-    if($("skinResetCamera"))$("skinResetCamera").onclick=()=>{viewer.camera.position.set(20,12,32);viewer.controls.target.set(0,0,0);viewer.controls.update();resize()};
-    if($("skinTurnFront"))$("skinTurnFront").onclick=()=>{viewer.camera.position.set(0,8,34);viewer.controls.target.set(0,0,0);viewer.controls.update()};
-    if($("skinTurnBack"))$("skinTurnBack").onclick=()=>{viewer.camera.position.set(0,8,-34);viewer.controls.target.set(0,0,0);viewer.controls.update()};
-    if($("skinBackgroundUpload"))$("skinBackgroundUpload").onchange=e=>{
-      const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith("image/")){status.textContent="ERROR // CHOOSE AN IMAGE FILE";return}
-      if(window.profileSkinCustomBgUrl)URL.revokeObjectURL(window.profileSkinCustomBgUrl);
-      window.profileSkinCustomBgUrl=URL.createObjectURL(file);customBg=window.profileSkinCustomBgUrl;applyBg("custom");
-    };
-    if($("skinClearBackground"))$("skinClearBackground").onclick=()=>{customBg="";if(window.profileSkinCustomBgUrl){URL.revokeObjectURL(window.profileSkinCustomBgUrl);window.profileSkinCustomBgUrl=null}const upload=$("skinBackgroundUpload");if(upload)upload.value="";applyBg("default")};
-    document.querySelectorAll("[data-skin-bg]").forEach(b=>b.onclick=()=>applyBg(b.dataset.skinBg));
-    if($("skinDownload"))$("skinDownload").onclick=()=>{
-      try{
-        viewer.render();const w=viewer.renderer.domElement.width,h=viewer.renderer.domElement.height;
-        const out=document.createElement("canvas");out.width=w;out.height=h;const ctx=out.getContext("2d");
-        const finish=()=>{try{ctx.drawImage(viewer.renderer.domElement,0,0,w,h);const link=document.createElement("a");link.download=(P?.u?.nickname||"minecraft-skin")+"-"+poseName+".png";link.href=out.toDataURL("image/png");link.click()}catch(_){status.textContent="EXPORT ERROR // TRY ANOTHER BACKGROUND"}};
-        const bg=stage.style.backgroundImage;
-        if(bg&&bg!=="none"){const match=bg.match(/url\(["']?(.*?)["']?\)/);if(match){const img=new Image();img.crossOrigin="anonymous";img.onload=()=>{ctx.drawImage(img,0,0,w,h);finish()};img.onerror=()=>finish();img.src=match[1]}else finish()}
-        else{ctx.fillStyle="#0a0a0a";ctx.fillRect(0,0,w,h);finish()}
-      }catch(_){status.textContent="EXPORT ERROR // TRY AGAIN"}
-    };
-    if(panel)panel.addEventListener("toggle",()=>{if(panel.open)requestAnimationFrame(resize)});
-    resize();applyBg("default");setPose("idle");
-  }catch(_){fail()}
+    stage.addEventListener("pointermove",lookAtPointer);
+    stage.addEventListener("pointerleave",()=>{if(viewer.playerObject){viewer.playerObject.rotation.y=0;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0}});
+    viewer.loadSkin("https://mc-heads.net/skin/"+encodeURIComponent(uuid)).catch(()=>{});resize();
+  }catch(_){}
 }
 function renderProfile(){
   const u=P.u,uid=u.uuid,sn=(u.statistics&&u.statistics.season)||{};
@@ -905,40 +754,10 @@ function renderProfile(){
   const clipRangeUrl=range=>"https://www.twitch.tv/"+encodeURIComponent(clipTwitchName)+"/clips?filter=clips&range="+range;
   const twitchClips=twitch?`<section class="twitch-clips" hidden data-twitch-clips data-login="${esc(clipTwitchName)}"><div class="clip-finder-head"><strong>TOP CLIP OF THE WEEK</strong><div class="clip-range-switch"><button type="button" class="clip-range active" data-clip-range="7d">7 DAYS</button><button type="button" class="clip-range" data-clip-range="24hr">24 HR</button></div></div><div class="clip-embed-wrap"><iframe title="Top Twitch clip" src="about:blank" loading="lazy" allowfullscreen></iframe><div class="clip-embed-fallback"><a href="${clipRangeUrl("7d")}" target="_blank" rel="noopener noreferrer">Open clip on Twitch ↗</a></div></div></section>`:"";
   $("out").innerHTML=
-  `<section class="hero"><img class="avatar" alt="" src="https://laby.net/api/v3/render/bust/${enc(uid)}.webp?width=84&height=84">
+  `<section class="hero"><div class="profile-model" id="profilePlayerModel" aria-label="3D Minecraft player model following the cursor"><canvas id="profilePlayerCanvas" aria-label="3D Minecraft player model"></canvas></div>
    <div><h1>${(historicalSeason?seasonStanding.eloRank:u.eloRank)!=null?`<span class="profile-rank ${[1,2,3].includes(Number(historicalSeason?seasonStanding.eloRank:u.eloRank))?`podium-${historicalSeason?seasonStanding.eloRank:u.eloRank}`:""}">#${historicalSeason?seasonStanding.eloRank:u.eloRank}</span> `:""}${flag(u.country)?flag(u.country)+" ":""}<span class="profile-username t-${tier}">${emojiName(u.nickname||"—",u)}</span></h1>${socials}${twitchClips}<div class="sub">${pl("All-time matches",nz(at("playedMatches")))}${pl("Wins",nz(at("wins")))}${pl("Completions",nz(atc))}${podiumPill("PB",fmtP(at("bestTime")),podiumRank("bestTime"))}${podiumPill("Average",atc&&att!=null?fmtP(att/atc):"—",podiumRank("completionTime"))}</div></div>
    <div class="elo"><div class="mut" style="font-size:12px;margin-bottom:5px">${historicalSeason?"End-of-season Elo":"Current Elo"}</div><div class="n t-${tier}">${elo!=null?elo.toLocaleString():"—"}</div><div class="r">${elo!=null?icon(elo,26):""}<span>${elo!=null?r.n:"Not available"} · Peak Elo ${peak!=null?peak.toLocaleString():"—"}</span></div></div></section>
-   ${(att!=null&&atc>0&&att/atc<600000&&at("bestTime")!=null&&at("bestTime")<420000) ? '<section class="speed-meme card" aria-label="Speedrun achievement meme"><svg class="speed-meme-art" viewBox="0 0 120 100" role="img" aria-label="Pointing meme character"><ellipse cx="58" cy="96" rx="42" ry="3" fill="#000" opacity=".75"/><path d="M24 88 Q12 69 19 46 L31 20 Q38 9 48 20 L65 30 Q74 38 71 51 L66 69 L88 59 L111 49 Q117 47 118 53 Q118 59 108 64 L78 82 L62 95 Z" fill="#eee" stroke="#111" stroke-width="3"/><path d="M32 39 L44 43 M53 39 L63 43" stroke="#111" stroke-width="4" stroke-linecap="round"/><path d="M39 55 Q48 62 58 54" fill="none" stroke="#111" stroke-width="3"/><path d="M20 46 L4 36 M20 52 L3 51" stroke="#eee" stroke-width="5" stroke-linecap="round"/><path d="M22 46 L4 36 M22 52 L3 51" stroke="#111" stroke-width="2" stroke-linecap="round"/></svg><div class="speed-meme-copy"><strong>POINTING SOYJAK // SUB-10 AVERAGE</strong><span>Average <b>'+fmtP(att/atc)+'</b> · PB <b>'+fmtP(at("bestTime"))+'</b><br>Bro is NOT playing around.</span></div></section>' : ''}
-   <details class="skin-viewer-card card" id="profileSkinPanel" aria-label="3D Minecraft skin renderer">
-    <summary>3D skin viewer <span style="font-size:12px;color:var(--muted);font-weight:400">Drag to rotate · click to collapse</span></summary>
-    <div class="skin-viewer-inner">
-     <div class="skin-viewer-layout">
-      <div class="skin-viewer-stage" id="profileSkinStage"><canvas id="profileSkinCanvas" aria-label="Interactive 3D player skin"></canvas></div>
-      <div class="skin-viewer-controls">
-       <div class="skin-runner-brand"><span class="skin-runner-live"></span> RUNNER LAB <span class="skin-runner-seed">SEED #${String(Math.floor(Math.random()*999999)).padStart(6,'0')}</span></div>
-       <div class="skin-pose-title">FORTNITE-STYLE EMOTES <span>ANIMATION LAB</span></div>
-       <div class="skin-pose-grid">
-        <button type="button" data-skin-pose="idle" class="active">▣ Default</button>
-        <button type="button" data-skin-pose="run">⚡ Running</button>
-        <button type="button" data-skin-pose="orange">🕺 Orange Justice</button>
-        <button type="button" data-skin-pose="floss">〰 Floss</button>
-        <button type="button" data-skin-pose="take">🙌 Take the L</button>
-        <button type="button" data-skin-pose="hype">💃 Hype</button>
-        <button type="button" data-skin-pose="wave">✦ Wave</button>
-        <button type="button" data-skin-pose="hit">👊 Hit It</button>
-        <button type="button" data-skin-pose="breakdance">✦ Breakdancing</button>
-       </div>
-       <label class="skin-animation-speed">ANIMATION SPEED <span id="skinAnimSpeedValue">1.0×</span><input id="skinAnimSpeed" type="range" min="0.4" max="2.8" step="0.1" value="1"></label>
-       <div class="skin-camera-controls"><button type="button" id="skinResetCamera">↻ Reset camera</button><button type="button" id="skinTurnFront">Front</button><button type="button" id="skinTurnBack">Back</button><button type="button" id="skinDownload">↓ Export PNG</button><button type="button" id="skinPlaceMode" aria-pressed="false">✥ Place model: OFF</button><button type="button" id="skinResetPlacement">Reset model position</button></div><div class="skin-viewer-help" id="skinPlacementHelp">Placement: off. Turn it on, then drag the model to position it in the scene. Turn it off to rotate the camera again.</div>
-       <div class="skin-background-upload"><label for="skinBackgroundUpload">Custom background image</label><input type="file" id="skinBackgroundUpload" accept="image/*"><button type="button" id="skinClearBackground">Remove background</button></div>
-       <div><div style="font-size:12px;color:var(--muted);margin-bottom:5px">Scene backgrounds</div><div class="skin-background-options"><button type="button" data-skin-bg="default" class="active">Plain</button><button type="button" data-skin-bg="bastion">Bastion</button><button type="button" data-skin-bg="overworld">Overworld</button><button type="button" data-skin-bg="nether">Nether</button></div></div>
-       <div class="skin-viewer-help">Drag to orbit the camera. Scroll or pinch to zoom. Download PNG exports the 3D view with its current background.</div>
-       <div class="skin-viewer-status" id="skinViewerStatus">Loading skin…</div>
-      </div>
-     </div>
-     <div style="font-size:10px;color:var(--muted);margin-top:8px">Background art: <a href="https://wallpapers.com/wallpapers/minecraft-nether-bastion-remnants-p7l9m32e9igopczj.html" target="_blank" rel="noopener noreferrer">Bastion wallpaper reference</a> · <a href="https://commons.wikimedia.org/wiki/File:Minecraft_dappled_forest.png" target="_blank" rel="noopener noreferrer">Overworld</a> · <a href="https://commons.wikimedia.org/wiki/File:Screenshot_from_the_Minecraft_Nether.png" target="_blank" rel="noopener noreferrer">Nether</a></div>
-    </div>
-   </details>
+   
     <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
    <div class="tiles" id="tiles"></div><details class="card session-panel" id="sessionPanel"><summary>Current Session</summary><div id="sessionStats"></div></details>
    <div class="main">
