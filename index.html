@@ -364,7 +364,7 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 <div class="wrap">
 <nav>
   <a class="logo" id="logo" href="#!lb/season" aria-label="Season leaderboard"><img alt="Site logo" src="https://femboy.beauty/jzRZs6"></a>
-  <div class="tabs" id="tabs"><button data-t="fast">Fastest Time</button><button data-t="lb">Leaderboard</button><button data-t="useless">Useless Stats</button><button data-t="profile">Profile</button></div>
+  <div class="tabs" id="tabs"><button data-t="fast">Fastest Time</button><button data-t="lb">Leaderboard</button><button data-t="useless">Useless Stats</button><button data-t="tributes">Tributes</button><button data-t="profile">Profile</button></div>
   <form id="f"><input id="q" type="text" placeholder="Player name or UUID" aria-label="Player"><button class="go">Search</button></form>
   <div class="settings-wrap" id="settingsWrap">
     <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Settings" title="Settings" aria-expanded="false">⚙</button>
@@ -504,11 +504,12 @@ function route(){
   if(raw.indexOf("!predictions")===0)return go("#!lb/season");
   if(raw.indexOf("!fast")===0)return showFastest();
   if(raw.indexOf("!useless")===0){const p=raw.split("/");return showUselessStats(p[1]||"season",p[2]||"ff")}
+  if(raw.indexOf("!tributes")===0){const p=raw.split("/");return showTributes(p.slice(1).join("/")||lastName)}
   if(!raw||raw.indexOf("!lb")===0||raw.indexOf("!players")===0){const p=raw.split("/");return showLeaderboard(p[1]||"season")}
   showProfile(dec(raw));
 }
 $("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;
-  if(b.dataset.t==="profile")openRandomRankedProfile();else if(b.dataset.t==="fast")go("#!fast");else if(b.dataset.t==="useless")go("#!useless/season/ff");else go("#!lb/season")};
+  if(b.dataset.t==="profile")openRandomRankedProfile();else if(b.dataset.t==="fast")go("#!fast");else if(b.dataset.t==="useless")go("#!useless/season/ff");else if(b.dataset.t==="tributes")go("#!tributes/"+encodeURIComponent(P?.u?.nickname||lastName||"Feinberg"));else go("#!lb/season")};
 // Choose only a player whose actual current leaderboard rank is 1–150.
 async function openRandomRankedProfile(){
   const btn=document.querySelector('#tabs button[data-t="profile"]');
@@ -689,8 +690,7 @@ function renderProfile(){
   `<section class="hero"><img class="avatar" alt="" src="https://laby.net/api/v3/render/bust/${enc(uid)}.webp?width=84&height=84">
    <div><h1>${(historicalSeason?seasonStanding.eloRank:u.eloRank)!=null?`<span class="profile-rank ${[1,2,3].includes(Number(historicalSeason?seasonStanding.eloRank:u.eloRank))?`podium-${historicalSeason?seasonStanding.eloRank:u.eloRank}`:""}">#${historicalSeason?seasonStanding.eloRank:u.eloRank}</span> `:""}${flag(u.country)?flag(u.country)+" ":""}<span class="profile-username t-${tier}">${emojiName(u.nickname||"—",u)}</span></h1>${socials}${twitchClips}<div class="sub">${pl("All-time matches",nz(at("playedMatches")))}${pl("Wins",nz(at("wins")))}${pl("Completions",nz(atc))}${podiumPill("PB",fmtP(at("bestTime")),podiumRank("bestTime"))}${podiumPill("Average",atc&&att!=null?fmtP(att/atc):"—",podiumRank("completionTime"))}</div></div>
    <div class="elo"><div class="mut" style="font-size:12px;margin-bottom:5px">${historicalSeason?"End-of-season Elo":"Current Elo"}</div><div class="n t-${tier}">${elo!=null?elo.toLocaleString():"—"}</div><div class="r">${elo!=null?icon(elo,26):""}<span>${elo!=null?r.n:"Not available"} · Peak Elo ${peak!=null?peak.toLocaleString():"—"}</span></div></div></section>
-   <div id="playerTributeMount"></div>
-   <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
+    <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
    <div class="tiles" id="tiles"></div><details class="card session-panel" id="sessionPanel"><summary>Current Session</summary><div id="sessionStats"></div></details>
    <div class="main">
     <div class="card" id="cardChart"><h2>Elo history <span id="gsub"></span><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button id="predictToggle" class="mini" type="button" aria-pressed="false">Show Elo prediction</button><span class="seg" id="gm" style="min-width:210px"><button data-g="recent" class="${P.full?"":"on"}">Recent 50</button><button data-g="full" class="${P.full?"on":""}">Full season</button></span></span></h2><div id="gArea"></div></div>
@@ -1564,6 +1564,20 @@ function playerTributeHTML(){
  return `<section class="player-tribute" aria-label="Fictional player tribute"><img class="tribute-art" src="${image}" alt="${esc(name)} Minecraft avatar" loading="lazy" onerror="this.style.visibility='hidden'"><div><div class="tribute-kicker">A completely fictional historical record · parody</div><h2 class="tribute-title">In memoriam: ${esc(name)}</h2><p class="tribute-copy">${esc(paragraph)}</p><div class="tribute-meta"><span>CAUSE: ${esc(cause.toUpperCase())}</span><span>ERA: ${esc(era.toUpperCase())}</span><a href="${google}" target="_blank" rel="noopener noreferrer">Search player images ↗</a></div></div></section>`;
 }
 function refreshPlayerTribute(){const el=document.getElementById("playerTributeMount");if(el)el.innerHTML=playerTributeHTML();}
+async function showTributes(name){
+ $("out").classList.remove("christmas-profile","lyxier-profile");
+ document.body.classList.remove("christmas-profile-bg","lyxier-profile-bg");
+ updateLyxierDecor(false);stopLyxierBounce();stopProfile();setTab("tributes");
+ const target=String(name||lastName||"Feinberg").trim()||"Feinberg";
+ const token={name:target};P=token;lastName=target;$("q").value=target;
+ $("out").innerHTML='<section class="card"><div class="ptools"><h2 style="margin:0">Player Tributes</h2><span class="mut">Completely fictional parody records</span></div><form id="tributeSearch" class="ptools" style="margin:12px 0"><input id="tributePlayerName" placeholder="Player name or UUID" aria-label="Player name or UUID" value="'+esc(target)+'"><button class="mini" type="submit">Generate tribute</button></form><div id="tributeResult" class="msg">Loading player…</div></section>';
+ const form=$("tributeSearch");form?.addEventListener("submit",e=>{e.preventDefault();const v=$("tributePlayerName")?.value?.trim();if(v)go("#!tributes/"+encodeURIComponent(v));});
+ try{
+  const u=await getUser(target);if(P!==token)return;
+  Object.assign(token,{u,baseUser:u,mode:"ranked",full:false,matchSort:"recent",matchTwitchNames:false,profileSeason:"current",st:{ranked:{list:[],done:false,p:null,err:null},private:{list:[],done:false,p:null,err:null},casual:{list:[],done:false,p:null,err:null}}});
+  const host=$("tributeResult");if(host)host.outerHTML='<div id="tributeResult">'+playerTributeHTML()+'</div>';
+ }catch(e){if(P!==token)return;const host=$("tributeResult");if(host)host.innerHTML='<div class="msg">Could not load '+esc(target)+': '+esc(e?.message||e)+'</div>';}
+}
 </script>
 <script>
 /* UI localization: translate rendered interface text, not usernames or API data. */
