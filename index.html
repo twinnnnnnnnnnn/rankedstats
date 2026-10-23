@@ -1334,9 +1334,17 @@ function preferredPlayerName(ign,u){
  const login=twitchLogin(u);
  return login&&(twitchNameLooksCleaner(ign,login)||twitchPartnerCache.get(login)===true)?login:(ign||u?.nickname||"—");
 }
+function cleanPlayerDisplayName(value){
+ return String(value||"—")
+  .replace(/:[a-z0-9_+-]+:/gi,"")
+  .replace(/_/g,"")
+  .replace(/[0-9]/g,c=>({"0":"o","1":"i","2":"z","3":"e","4":"a","5":"s","6":"g","7":"t","8":"b","9":"g"}[c]||c))
+  .replace(/\s+/g," ")
+  .trim()||"—";
+}
 function leaderboardDisplayName(ign,u){
  const mc=ign||u?.nickname||"—",login=twitchLogin(u),chosen=preferredPlayerName(mc,u);
- return '<span class="lb-player-label'+(chosen===login&&login?' twitch-name-default':'')+'" data-mc-name="'+esc(mc)+'" data-twitch-name="'+esc(login)+'">'+esc(chosen)+'</span>';
+ return '<span class="lb-player-label'+(chosen===login&&login?' twitch-name-default':'')+'" data-mc-name="'+esc(mc)+'" data-twitch-name="'+esc(login)+'">'+esc(cleanPlayerDisplayName(chosen))+'</span>';
 }
 async function enhanceTwitchPlayerNames(){
  const nodes=[...document.querySelectorAll(".lb-player-label[data-twitch-name]")];
@@ -1346,7 +1354,7 @@ async function enhanceTwitchPlayerNames(){
  await Promise.all(Array.from({length:Math.min(4,logins.length)},worker));
  for(const n of document.querySelectorAll(".lb-player-label[data-twitch-name]")){
    const login=n.dataset.twitchName;
-   if(login&&twitchPartnerCache.get(login)===true){n.textContent=login;n.classList.add("twitch-name-default");}
+   if(login&&twitchPartnerCache.get(login)===true){n.textContent=cleanPlayerDisplayName(login);n.classList.add("twitch-name-default");}
  }
 }
 function leaderboardLiveBadge(u){
