@@ -362,7 +362,7 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 @media(max-width:620px){.player-tribute{grid-template-columns:1fr;gap:14px;text-align:center;padding:22px 16px 34px}.player-tribute .tribute-art{width:132px;height:132px}.tribute-title{font-size:25px}.tribute-meta{justify-content:center}.player-tribute:after{left:8px;right:8px;text-align:center;font-size:7px}}
 
 
-.skin-viewer-card{margin-top:14px;background:#090909;border:1px solid var(--line);padding:14px}
+.skin-viewer-card{margin-top:14px;background:#090909;border:1px solid var(--line);padding:0}
 .skin-viewer-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:14px;align-items:stretch}
 .skin-viewer-stage{position:relative;min-height:300px;background:radial-gradient(ellipse at 50% 35%,#202020 0%,#0a0a0a 65%);overflow:hidden}
 .skin-viewer-stage canvas{display:block;width:100%;height:100%;min-height:300px;touch-action:none}
@@ -371,6 +371,20 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 .skin-viewer-controls button:hover{background:#242424}
 .skin-viewer-help{font-size:12px;color:var(--muted);line-height:1.5}
 .skin-viewer-status{font-size:12px;color:var(--muted);margin-top:7px}
+
+.skin-viewer-card{padding:0}
+.skin-viewer-card>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;font-weight:600}
+.skin-viewer-card>summary::-webkit-details-marker{display:none}
+.skin-viewer-card>summary:after{content:"＋";font-size:18px;color:var(--muted)}
+.skin-viewer-card[open]>summary:after{content:"−"}
+.skin-viewer-inner{padding:0 14px 14px}
+.skin-viewer-stage{background-color:#0a0a0a;background-size:cover;background-position:center;background-repeat:no-repeat;transition:background-image .15s}
+.skin-background-options{display:flex;gap:6px;flex-wrap:wrap}
+.skin-background-options button{font-size:12px;padding:8px 9px!important;text-align:center!important}
+.skin-background-options button.active{border-color:#999;background:#303030}
+.skin-background-upload{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted)}
+.skin-background-upload input{max-width:100%;font-size:12px}
+
 @media(max-width:650px){.skin-viewer-layout{grid-template-columns:1fr}.skin-viewer-stage,.skin-viewer-stage canvas{min-height:270px}.skin-viewer-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.skin-viewer-help,.skin-viewer-status{grid-column:1/-1}}
 
 </style>
@@ -717,34 +731,70 @@ function sessionStatsHTML(){
 function refreshSessionStats(){const el=$("sessionStats");if(!el)return;el.innerHTML=sessionStatsHTML();const summary=document.querySelector("#sessionPanel summary");if(summary&&P?.st){const matches=P.st.ranked.list.filter(m=>Number.isFinite(Number(m.date))&&Number(m.date)>0).sort((a,b)=>Number(b.date)-Number(a.date));const top150=(T.globalLb?.users||[]).slice(0,150).some(u=>u.uuid===P.u?.uuid);const hours=Number(P.u?.eloRate)>=2500?3:top150?2:1;const current=matches.length&&Date.now()/1000-Number(matches[0].date)<=hours*3600;summary.innerHTML=(current?"Current Session":"Last Session")+'';}}
 async function loadTopClip(login,range="7d",section=document.querySelector("[data-twitch-clips]")){if(!section||!login)return;try{const res=await fetch("/api/twitch-clips?login="+encodeURIComponent(login)+"&range="+encodeURIComponent(range));if(!res.ok)throw new Error("clip lookup failed");const data=await res.json();if(!data.clips||!data.clips.length){section.hidden=true;return;}const clip=data.clips[0];const frame=section.querySelector("iframe");const link=section.querySelector(".clip-embed-fallback a");if(!frame||!clip.slug){section.hidden=true;return;}frame.src="https://clips.twitch.tv/embed?clip="+encodeURIComponent(clip.slug)+"&parent=rankedstats.vercel.app&autoplay=false";frame.title=clip.title||"Top Twitch clip";if(link)link.href="https://www.twitch.tv/"+encodeURIComponent(login)+"/clip/"+encodeURIComponent(clip.slug);const heading=section.querySelector(".clip-finder-head strong");if(heading)heading.textContent=range==="24hr"?"TOP CLIP OF THE DAY":"TOP CLIP OF THE WEEK";section.hidden=false;}catch(_){section.hidden=true;}}
 function setupProfileSkinViewer(uuid){
-  const canvas=$("profileSkinCanvas"),status=$("skinViewerStatus");
-  if(!canvas||!status)return;
+  const canvas=$("profileSkinCanvas"),stage=$("profileSkinStage"),status=$("skinViewerStatus"),panel=$("profileSkinPanel");
+  if(!canvas||!stage||!status)return;
   if(window.profileSkinViewer){try{window.profileSkinViewer._profileResizeObserver?.disconnect();window.profileSkinViewer.dispose()}catch(_){}window.profileSkinViewer=null}
-  const skinUrl="https://mc-heads.net/skin/"+encodeURIComponent(uuid);
+  if(window.profileSkinCustomBgUrl){try{URL.revokeObjectURL(window.profileSkinCustomBgUrl)}catch(_){}window.profileSkinCustomBgUrl=null}
+  const backgrounds={
+    default:"",
+    bastion:"https://upload.wikimedia.org/wikipedia/commons/3/3b/Minecraft_Bastion_Remnants.png",
+    overworld:"https://upload.wikimedia.org/wikipedia/commons/b/b1/Minecraft_overworld.png",
+    nether:"https://upload.wikimedia.org/wikipedia/commons/3/3f/Minecraft_The_Nether.png"
+  };
+  let currentBg="default",customBg="";
+  const applyBg=(key)=>{
+    currentBg=key;
+    const url=key==="custom"?customBg:(backgrounds[key]||"");
+    stage.style.backgroundImage=url?'linear-gradient(#0002,#0002),url("'+url.replace(/["\\]/g,"")+'")':"";
+    stage.style.backgroundColor=url?"#080808":"#0a0a0a";
+    document.querySelectorAll("[data-skin-bg]").forEach(b=>b.classList.toggle("active",b.dataset.skinBg===key));
+    if(status.isConnected)status.textContent=key==="default"?"Plain background":key==="custom"?"Custom background applied":key.charAt(0).toUpperCase()+key.slice(1)+" background selected";
+  };
   const fail=()=>{if(status.isConnected)status.textContent="Couldn’t load this player’s skin."};
   if(!window.skinview3d){status.textContent="3D viewer library didn’t load. Refresh to retry.";return}
   try{
-    const viewer=new skinview3d.SkinViewer({canvas,width:canvas.clientWidth||420,height:320,skin:skinUrl,background:null});
+    const viewer=new skinview3d.SkinViewer({canvas,width:canvas.clientWidth||420,height:320,skin:"https://mc-heads.net/skin/"+encodeURIComponent(uuid),background:null});
     window.profileSkinViewer=viewer;
     viewer.width=canvas.clientWidth||420;viewer.height=320;
     viewer.renderer.setClearColor(0x000000,0);
     viewer.controls.enableRotate=true;viewer.controls.enableZoom=true;viewer.controls.enablePan=false;
-    viewer.zoom=0.9;
-    viewer.camera.position.set(28,18,42);
+    viewer.zoom=0.9;viewer.camera.position.set(28,18,42);
+    const skinUrl="https://mc-heads.net/skin/"+encodeURIComponent(uuid);
     viewer.loadSkin(skinUrl).then(()=>{if(status.isConnected)status.textContent="Skin loaded · drag to rotate"}).catch(fail);
-    const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(220,canvas.parentElement.clientWidth);viewer.setSize(w,320)};
+    const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;viewer.setSize(Math.max(220,canvas.parentElement.clientWidth),320)};
     if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(canvas.parentElement);viewer._profileResizeObserver=ro}
     if($("skinResetCamera"))$("skinResetCamera").onclick=()=>{viewer.camera.position.set(28,18,42);viewer.controls.target.set(0,0,0);viewer.controls.update()};
     if($("skinTurnFront"))$("skinTurnFront").onclick=()=>{viewer.camera.position.set(0,12,48);viewer.controls.target.set(0,0,0);viewer.controls.update()};
     if($("skinTurnBack"))$("skinTurnBack").onclick=()=>{viewer.camera.position.set(0,12,-48);viewer.controls.target.set(0,0,0);viewer.controls.update()};
+    if($("skinBackgroundUpload"))$("skinBackgroundUpload").onchange=e=>{
+      const file=e.target.files&&e.target.files[0];if(!file)return;
+      if(!file.type.startsWith("image/")){status.textContent="Choose an image file.";return}
+      if(window.profileSkinCustomBgUrl)URL.revokeObjectURL(window.profileSkinCustomBgUrl);
+      window.profileSkinCustomBgUrl=URL.createObjectURL(file);customBg=window.profileSkinCustomBgUrl;applyBg("custom");
+    };
+    if($("skinClearBackground"))$("skinClearBackground").onclick=()=>{customBg="";if(window.profileSkinCustomBgUrl){URL.revokeObjectURL(window.profileSkinCustomBgUrl);window.profileSkinCustomBgUrl=null}const upload=$("skinBackgroundUpload");if(upload)upload.value="";applyBg("default")};
+    document.querySelectorAll("[data-skin-bg]").forEach(b=>b.onclick=()=>applyBg(b.dataset.skinBg));
     if($("skinDownload"))$("skinDownload").onclick=()=>{
       try{
         viewer.render();
-        const link=document.createElement("a");link.download=(P?.u?.nickname||"minecraft-skin")+"-3d.png";
-        link.href=viewer.renderer.domElement.toDataURL("image/png");link.click();
+        const w=viewer.renderer.domElement.width,h=viewer.renderer.domElement.height;
+        const out=document.createElement("canvas");out.width=w;out.height=h;
+        const ctx=out.getContext("2d");
+        const finish=()=>{
+          try{ctx.drawImage(viewer.renderer.domElement,0,0,w,h);const link=document.createElement("a");link.download=(P?.u?.nickname||"minecraft-skin")+"-3d.png";link.href=out.toDataURL("image/png");link.click()}
+          catch(_){status.textContent="Couldn’t export image. Try another background image."}
+        };
+        const bg=stage.style.backgroundImage;
+        if(bg&&bg!=="none"){
+          const img=new Image();img.crossOrigin="anonymous";
+          const match=bg.match(/url\(["']?(.*?)["']?\)/);
+          if(match){img.onload=()=>{ctx.drawImage(img,0,0,w,h);finish()};img.onerror=()=>finish();img.src=match[1]}
+          else finish();
+        }else{ctx.fillStyle="#0a0a0a";ctx.fillRect(0,0,w,h);finish()}
       }catch(_){status.textContent="Couldn’t export the image. Try again after the skin loads."}
     };
-    resize();
+    if(panel)panel.addEventListener("toggle",()=>{if(panel.open)requestAnimationFrame(resize)});
+    resize();applyBg("default");
   }catch(_){fail()}
 }
 function renderProfile(){
@@ -774,20 +824,25 @@ function renderProfile(){
   `<section class="hero"><img class="avatar" alt="" src="https://laby.net/api/v3/render/bust/${enc(uid)}.webp?width=84&height=84">
    <div><h1>${(historicalSeason?seasonStanding.eloRank:u.eloRank)!=null?`<span class="profile-rank ${[1,2,3].includes(Number(historicalSeason?seasonStanding.eloRank:u.eloRank))?`podium-${historicalSeason?seasonStanding.eloRank:u.eloRank}`:""}">#${historicalSeason?seasonStanding.eloRank:u.eloRank}</span> `:""}${flag(u.country)?flag(u.country)+" ":""}<span class="profile-username t-${tier}">${emojiName(u.nickname||"—",u)}</span></h1>${socials}${twitchClips}<div class="sub">${pl("All-time matches",nz(at("playedMatches")))}${pl("Wins",nz(at("wins")))}${pl("Completions",nz(atc))}${podiumPill("PB",fmtP(at("bestTime")),podiumRank("bestTime"))}${podiumPill("Average",atc&&att!=null?fmtP(att/atc):"—",podiumRank("completionTime"))}</div></div>
    <div class="elo"><div class="mut" style="font-size:12px;margin-bottom:5px">${historicalSeason?"End-of-season Elo":"Current Elo"}</div><div class="n t-${tier}">${elo!=null?elo.toLocaleString():"—"}</div><div class="r">${elo!=null?icon(elo,26):""}<span>${elo!=null?r.n:"Not available"} · Peak Elo ${peak!=null?peak.toLocaleString():"—"}</span></div></div></section>
-   <section class="skin-viewer-card card" aria-label="3D Minecraft skin renderer">
-    <h2>3D skin viewer <span>Drag to rotate · scroll to zoom</span></h2>
-    <div class="skin-viewer-layout">
-     <div class="skin-viewer-stage"><canvas id="profileSkinCanvas" aria-label="Interactive 3D player skin"></canvas></div>
-     <div class="skin-viewer-controls">
-      <button type="button" id="skinResetCamera">↻ Reset camera</button>
-      <button type="button" id="skinTurnFront">Front view</button>
-      <button type="button" id="skinTurnBack">Back view</button>
-      <button type="button" id="skinDownload">↓ Download PNG</button>
-      <div class="skin-viewer-help">Drag to orbit the camera. Use the mouse wheel or pinch to zoom. The PNG downloads with a transparent background.</div>
-      <div class="skin-viewer-status" id="skinViewerStatus">Loading skin…</div>
+   <details class="skin-viewer-card card" id="profileSkinPanel" aria-label="3D Minecraft skin renderer">
+    <summary>3D skin viewer <span style="font-size:12px;color:var(--muted);font-weight:400">Drag to rotate · click to collapse</span></summary>
+    <div class="skin-viewer-inner">
+     <div class="skin-viewer-layout">
+      <div class="skin-viewer-stage" id="profileSkinStage"><canvas id="profileSkinCanvas" aria-label="Interactive 3D player skin"></canvas></div>
+      <div class="skin-viewer-controls">
+       <button type="button" id="skinResetCamera">↻ Reset camera</button>
+       <button type="button" id="skinTurnFront">Front view</button>
+       <button type="button" id="skinTurnBack">Back view</button>
+       <button type="button" id="skinDownload">↓ Download PNG</button>
+       <div class="skin-background-upload"><label for="skinBackgroundUpload">Custom background image</label><input type="file" id="skinBackgroundUpload" accept="image/*"><button type="button" id="skinClearBackground">Remove background</button></div>
+       <div><div style="font-size:12px;color:var(--muted);margin-bottom:5px">Scene backgrounds</div><div class="skin-background-options"><button type="button" data-skin-bg="default" class="active">Plain</button><button type="button" data-skin-bg="bastion">Bastion</button><button type="button" data-skin-bg="overworld">Overworld</button><button type="button" data-skin-bg="nether">Nether</button></div></div>
+       <div class="skin-viewer-help">Drag to orbit the camera. Scroll or pinch to zoom. Download PNG exports the 3D view with its current background.</div>
+       <div class="skin-viewer-status" id="skinViewerStatus">Loading skin…</div>
+      </div>
      </div>
+     <div style="font-size:10px;color:var(--muted);margin-top:8px">Background art: <a href="https://wallpapers.com/wallpapers/minecraft-nether-bastion-remnants-p7l9m32e9igopczj.html" target="_blank" rel="noopener noreferrer">Bastion wallpaper reference</a> · <a href="https://commons.wikimedia.org/wiki/File:Minecraft_overworld.png" target="_blank" rel="noopener noreferrer">Overworld</a> · <a href="https://commons.wikimedia.org/wiki/File:Minecraft_The_Nether.png" target="_blank" rel="noopener noreferrer">Nether</a></div>
     </div>
-   </section>
+   </details>
     <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
    <div class="tiles" id="tiles"></div><details class="card session-panel" id="sessionPanel"><summary>Current Session</summary><div id="sessionStats"></div></details>
    <div class="main">
