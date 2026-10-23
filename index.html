@@ -1488,12 +1488,20 @@ function fastRows(){
    const runs=fastRuns(u);
    if(runs.length)entries.push({u,...runs[0]});
  }
- return entries.sort((a,b)=>a.time-b.time).slice(0,FAST.limit);
+ const grouped=new Map();
+ for(const row of entries){
+   const group=mergedPlayerGroup(row.u.nickname),key=group?group.primary.toLowerCase():row.u.uuid;
+   const prior=grouped.get(key);
+   if(!prior){grouped.set(key,{...row,mergedGroup:group});continue;}
+   if(row.time<prior.time)grouped.set(key,{...row,u:group?prior.u:row.u,mergedGroup:group});
+   if(group&&row.u.nickname.toLowerCase()===group.primary.toLowerCase())prior.u=row.u;
+ }
+ return [...grouped.values()].sort((a,b)=>a.time-b.time).slice(0,FAST.limit);
 }
 function renderFastest(){
  const host=$("fastList");if(!host)return;
  const rows=fastRows();
- host.innerHTML=rows.length?'<table class="pt2 fast-table"><thead><tr><th>#</th><th>Player</th><th class="fast-time-col">Time</th><th>Seed</th></tr></thead><tbody>'+rows.map((r,i)=>'<tr><td class="mut">'+(i+1)+'</td><td>'+flagSlot(countryCode(r.u))+' <img class="fast-head" alt="" loading="lazy" src="https://laby.net/api/v3/render/bust/'+enc(r.u.uuid)+'.webp?width=40&height=40"> <span class="fast-player-name">'+esc((FAST.twitchNames&&twitchLogin(r.u))||r.u.nickname)+'</span></td><td class="fast-time-col">'+(r.id?'<button type="button" class="fast-time" data-fast-match="'+esc(r.id)+'" title="View match splits">'+fmtP(r.time)+'</button>':fmtP(r.time))+'</td><td>'+structureCell(r.seed,true)+'</td><td>'+structureCell(r.bastion,false)+'</td></tr>').join("")+'</tbody></table>':'<div class="msg">Loading player PBs…</div>';
+ host.innerHTML=rows.length?'<table class="pt2 fast-table"><thead><tr><th>#</th><th>Player</th><th class="fast-time-col">Time</th><th>Seed</th></tr></thead><tbody>'+rows.map((r,i)=>'<tr><td class="mut">'+(i+1)+'</td><td>'+flagSlot(countryCode(r.u))+' <img class="fast-head" alt="" loading="lazy" src="https://laby.net/api/v3/render/bust/'+enc(r.u.uuid)+'.webp?width=40&height=40"> <span class="fast-player-name">'+esc((FAST.twitchNames&&twitchLogin(r.u))||mergedPlayerGroup(r.u.nickname)?.primary||r.u.nickname)+'</span></td><td class="fast-time-col">'+(r.id?'<button type="button" class="fast-time" data-fast-match="'+esc(r.id)+'" title="View match splits">'+fmtP(r.time)+'</button>':fmtP(r.time))+'</td><td>'+structureCell(r.seed,true)+'</td><td>'+structureCell(r.bastion,false)+'</td></tr>').join("")+'</tbody></table>':'<div class="msg">Loading player PBs…</div>';
  const status=$("fastStatus");if(status)status.textContent=FAST.loading?"Loading…":"";
 }
 function renderFastSide(){renderFastest();}
