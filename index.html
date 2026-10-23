@@ -345,7 +345,17 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 .hero img.avatar{background:transparent!important;background-image:none!important;mix-blend-mode:normal!important}
  .structure-type{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}.structure-icon{width:29px;height:29px;object-fit:contain;image-rendering:auto;vertical-align:middle}.structure-short{font-size:12px;letter-spacing:.02em} .fast-table td{vertical-align:middle}
 <style>.seed-pair{display:flex;align-items:center;gap:9px;white-space:nowrap}.seed-pair .structure-icon{vertical-align:middle} .ff-tag{color:#f05252;font-size:10px;font-weight:700;margin-left:5px;white-space:nowrap;vertical-align:middle}
-</style></style>
+</style>
+/* Randomized, explicitly fictional player tributes */
+.player-tribute{display:grid;grid-template-columns:76px minmax(0,1fr);gap:14px;margin:14px 0 18px;padding:15px;border:1px solid var(--line);background:linear-gradient(115deg,rgba(255,255,255,.035),transparent 65%);}
+.player-tribute .tribute-art{width:76px;height:76px;object-fit:contain;background:rgba(255,255,255,.025);border:1px solid var(--line);}
+.tribute-kicker{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:5px;}
+.tribute-title{font-family:Lora,Georgia,serif;font-size:20px;line-height:1.25;margin:0 0 8px;font-weight:600;}
+.tribute-copy{font-size:13px;line-height:1.75;color:var(--text);max-width:900px;margin:0;}
+.tribute-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:9px;font-size:10px;color:var(--muted);}
+.tribute-meta a{color:var(--text);text-decoration:underline;text-underline-offset:3px;}
+@media(max-width:520px){.player-tribute{grid-template-columns:54px minmax(0,1fr);gap:10px;padding:11px}.player-tribute .tribute-art{width:54px;height:54px}.tribute-title{font-size:17px}}
+</style>
 </head>
 <body>
 
@@ -385,6 +395,24 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
  }
  window.addEventListener('load',function(){setTimeout(show,3500)});
 })();
+
+function tributeHash(value){let h=2166136261;for(const ch of String(value||"")){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0;}
+function playerTributeHTML(){
+ if(!P||!P.u)return "";
+ const u=P.u,uid=String(u.uuid||u.nickname||"unknown"),hash=tributeHash(uid),pick=(a,salt=0)=>a[(hash+salt)%a.length];
+ const causes=["slipping on a suspiciously well-oiled banana peel","being sentenced by a village court for misplacing one crafting table","challenging a goose to a best-of-three duel","a tragic collision with a door they confidently thought was open","trying to speedbridge over a puddle","being bonked by a falling anvil labelled ‘skill issue’","getting lost inside a single, mildly confusing staircase","eating a suspiciously enchanted baked potato","being outplayed by a sentient traffic cone","a duel against 37 librarians who refused to lower their prices","attempting to water-bucket clutch onto a decorative painting","being swallowed by a historically inaccurate map","a creeper disguised as a tax collector","forgetting that gravity was enabled","getting ratioed by a medieval jester"];
+ const eras=["the late 1300s","the year 1423","the Bronze Age, somehow","the winter of 1847","a Tuesday in 1066","the year 300 BCE","the suspiciously specific date of 12 April 1731","the Ming dynasty","the distant future of 2401","a forgotten kingdom before calendars existed","the year 1999, despite all evidence","the reign of a king nobody remembers"];
+ const total=u.statistics?.total||{},elo=Number(u.eloRate),wins=Number(total.wins),completions=Number(total.completions);
+ const matches=P.st?.ranked?.list||[],latest=matches.filter(m=>!m.decayed).slice().sort((a,b)=>Number(b.date||0)-Number(a.date||0))[0];
+ let recent="their latest recorded ranked match remains shrouded in mystery";
+ if(latest){if(latest.forfeited)recent="their latest recorded ranked match ended in a forfeit";else if(latest.result?.uuid===u.uuid)recent="their latest recorded ranked match ended in victory";else if(latest.result?.uuid)recent="their latest recorded ranked match ended in defeat";else recent="their latest recorded ranked match ended in a draw";}
+ const cause=pick(causes),era=pick(eras,7),name=String(u.nickname||"This competitor");
+ const paragraph=`According to entirely fictional archives, ${name} departed this mortal leaderboard in ${era}, after ${cause}. Their record lists ${Number.isFinite(elo)?elo.toLocaleString()+" Elo":"an unclassified Elo rating"}, ${Number.isFinite(wins)?wins.toLocaleString():"unknown"} wins, and ${Number.isFinite(completions)?completions.toLocaleString():"uncounted"} completions. Recent evidence suggests ${recent}. Historians remain divided, villagers remain traumatised, and the banana peel has declined every interview. Their legend survives in ranked match history.`;
+ const image="https://laby.net/api/v3/render/bust/"+encodeURIComponent(uid)+".webp?width=152&height=152";
+ const google="https://www.google.com/search?tbm=isch&q="+encodeURIComponent(name+" Minecraft MCSR Ranked");
+ return `<section class="player-tribute" aria-label="Fictional player tribute"><img class="tribute-art" src="${image}" alt="${esc(name)} Minecraft avatar" loading="lazy" onerror="this.style.visibility='hidden'"><div><div class="tribute-kicker">A completely fictional historical record · parody</div><h2 class="tribute-title">In memoriam: ${esc(name)}</h2><p class="tribute-copy">${esc(paragraph)}</p><div class="tribute-meta"><span>CAUSE: ${esc(cause.toUpperCase())}</span><span>ERA: ${esc(era.toUpperCase())}</span><a href="${google}" target="_blank" rel="noopener noreferrer">Search player images ↗</a></div></div></section>`;
+}
+function refreshPlayerTribute(){const el=document.getElementById("playerTributeMount");if(el)el.innerHTML=playerTributeHTML();}
 </script>
 <script>
 // Surface unexpected startup failures instead of leaving an empty page.
@@ -676,12 +704,14 @@ function renderProfile(){
   `<section class="hero"><img class="avatar" alt="" src="https://laby.net/api/v3/render/bust/${enc(uid)}.webp?width=84&height=84">
    <div><h1>${(historicalSeason?seasonStanding.eloRank:u.eloRank)!=null?`<span class="profile-rank ${[1,2,3].includes(Number(historicalSeason?seasonStanding.eloRank:u.eloRank))?`podium-${historicalSeason?seasonStanding.eloRank:u.eloRank}`:""}">#${historicalSeason?seasonStanding.eloRank:u.eloRank}</span> `:""}${flag(u.country)?flag(u.country)+" ":""}<span class="profile-username t-${tier}">${emojiName(u.nickname||"—",u)}</span></h1>${socials}${twitchClips}<div class="sub">${pl("All-time matches",nz(at("playedMatches")))}${pl("Wins",nz(at("wins")))}${pl("Completions",nz(atc))}${podiumPill("PB",fmtP(at("bestTime")),podiumRank("bestTime"))}${podiumPill("Average",atc&&att!=null?fmtP(att/atc):"—",podiumRank("completionTime"))}</div></div>
    <div class="elo"><div class="mut" style="font-size:12px;margin-bottom:5px">${historicalSeason?"End-of-season Elo":"Current Elo"}</div><div class="n t-${tier}">${elo!=null?elo.toLocaleString():"—"}</div><div class="r">${elo!=null?icon(elo,26):""}<span>${elo!=null?r.n:"Not available"} · Peak Elo ${peak!=null?peak.toLocaleString():"—"}</span></div></div></section>
+   <div id="playerTributeMount"></div>
    <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
    <div class="tiles" id="tiles"></div><details class="card session-panel" id="sessionPanel"><summary>Current Session</summary><div id="sessionStats"></div></details>
    <div class="main">
     <div class="card" id="cardChart"><h2>Elo history <span id="gsub"></span><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button id="predictToggle" class="mini" type="button" aria-pressed="false">Show Elo prediction</button><span class="seg" id="gm" style="min-width:210px"><button data-g="recent" class="${P.full?"":"on"}">Recent 50</button><button data-g="full" class="${P.full?"on":""}">Full season</button></span></span></h2><div id="gArea"></div></div>
     <div class="card" id="cardTable"><h2>${P.mode==="ranked"?"Ranked matches":P.mode==="casual"?"Casual matches":"Private room matches"} <span id="cnt2"></span></h2><div class="bar" style="margin:0 0 12px;gap:8px;flex-wrap:wrap"><label for="matchMode">Match type</label><select id="matchMode" aria-label="Match type"><option value="ranked" ${P.mode==="ranked"?"selected":""}>Ranked</option><option value="casual" ${P.mode==="casual"?"selected":""}>Casual</option><option value="private" ${P.mode==="private"?"selected":""}>Private rooms</option></select><label for="matchSort">Sort matches</label><select id="matchSort" aria-label="Sort matches"><option value="recent" ${P.matchSort==="recent"?"selected":""}>Most recent</option><option value="oldest" ${P.matchSort==="oldest"?"selected":""}>Oldest first</option><option value="fastest" ${P.matchSort==="fastest"?"selected":""}>Fastest finish (wins only)</option></select><label class="lb-twitch-toggle" title="Show linked Twitch usernames instead of Minecraft names"><input type="checkbox" id="matchTwitchNames" ${P.matchTwitchNames?"checked":""}> Twitch names</label></div><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th><th>Time</th>${rkd?"<th>Elo</th>":""}<th>Seed</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div></div>
    </div>`;
+  refreshPlayerTribute();
   startTwitchStatus(twitch);
   $("out").classList.remove("lyxier-profile","christmas-profile");
   document.body.classList.remove("lyxier-profile-bg","christmas-profile-bg","rank-profile-bg");
@@ -777,6 +807,7 @@ function loadMore(mode,count){
     if(!add.length)st.done=true;
     st.list.push(...add);
     if(P!==tok)return;
+    refreshPlayerTribute();
     if(mode==="ranked")refreshSessionStats();
     if(tok.mode===mode&&$("tb")){if(tok.matchSort==="fastest"||tok.matchSort==="oldest")renderMatchRows();else $("tb").insertAdjacentHTML("beforeend",visibleMatches(mode,add).map(rowHTML).join(""))}
     if(tok.mode===mode){
