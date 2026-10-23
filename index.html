@@ -1174,19 +1174,42 @@ function calc(u,sc){
   return{games,wins:w,wr:games>0&&w!=null?w/games*100:null,pb:stat(u,sc,"bestTime"),avg:c&&t!=null?t/c:null};
 }
 function loadRow(name){
-  const k=name.toLowerCase();if(RC[k])return;
-  const r=RC[k]={name,state:"q"};
+  const group=mergedPlayerGroup(name),canonical=group?group.primary:name,k=canonical.toLowerCase();if(RC[k])return;
+  const r=RC[k]={name:canonical,state:"q"};
   enqueue(async()=>{
     try{
-      const u=await getUser(name);
-      Object.assign(r,{name:u.nickname,uuid:u.uuid,country:countryCode(u),elo:u.eloRate,rank:u.eloRank,season:calc(u,"season"),all:calc(u,"total"),user:u,state:"d"});
+      const requested=group?[group.primary,...group.aliases]:[name];
+      const users=(await Promise.all(requested.map(n=>getUser(n).catch(()=>null)))).filter(Boolean);
+      if(!users.length)throw Error("Player not found");
+      const primary=users.find(u=>u.nickname?.toLowerCase()===canonical.toLowerCase())||users[0],u={...primary};
+      if(group&&users.length>1){
+        u.nickname=canonical;u.statistics={...(primary.statistics||{})};
+        for(const other of users){if(other===primary)continue;
+          for(const scope of ["season","total"])u.statistics[scope]=mergeNumericTree(u.statistics[scope]||{},other.statistics?.[scope]||{});
+          for(const scope of ["season","total"])for(const cat of Object.keys(u.statistics[scope]||{})){
+            const stat=u.statistics[scope][cat];if(stat&&typeof stat==="object"&&typeof stat.ranked==="number"&&/bestTime/i.test(cat)){}
+          }
+        }
+        // Best times are minima, while played/completion counters are additive.
+        for(const scope of ["season","total"]){
+          const bests=users.map(x=>x.statistics?.[scope]).filter(Boolean);
+          for(const cat of Object.keys(u.statistics[scope]||{}))if(/bestTime/i.test(cat)){
+            const vals=bests.map(x=>x[cat]?.ranked).filter(v=>Number(v)>0);
+            if(vals.length)u.statistics[scope][cat]={...(u.statistics[scope][cat]||{}),ranked:Math.min(...vals)};
+          }
+        }
+      }
+      Object.assign(r,{name:canonical,uuid:u.uuid,country:countryCode(u),elo:primary.eloRate,rank:primary.eloRank,season:calc(u,"season"),all:calc(u,"total"),user:u,state:"d"});
     }catch(e){r.state="e";r.err=e.message}
     tick();
   });
 }
 let raf=0;
 function tick(){if(raf||!$("ptab"))return;raf=requestAnimationFrame(()=>{raf=0;renderPT()})}
-const shownNames=()=>(T.lb?T.lb.users:[]).slice(0,T.shown).map(u=>u.nickname);
+const shownNames=()=>{
+ const names=(T.lb?T.lb.users:[]).slice(0,T.shown).map(u=>mergedPlayerGroup(u.nickname)?.primary||u.nickname);
+ return [...new Set(names)];
+};
 function seasonOptions(){return Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(T.view)===String(n)?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")+`<option value="all" ${T.view==="all"?"selected":""}>All time</option>`;}
 async function showLeaderboard(view){
   // Leaderboards must never inherit a Christmas Island profile background.
@@ -1451,7 +1474,11 @@ function renderPT(){
   const v=T.view==="all"?"all":"season",names=shownNames(),rows=names.map(n=>RC[n.toLowerCase()]).filter(Boolean).filter(r=>!T.country||r.country===T.country);
   const k=T.sort.k,d=T.sort.d;
   const val=r=>{if(r.state!=="d")return null;if(k==="name")return r.name;if(k==="elo")return r.elo;const s=r[v];return s&&s[k]!=null?s[k]:null};
-  const boardRanks=new Map((T.lb?.users||[]).map((u,i)=>[u.nickname.toLowerCase(),{i,elo:u.seasonResult?.eloRate??u.eloRate}]));
+  const boardRanks=new Map();
+  (T.lb?.users||[]).forEach((u,i)=>{
+    const group=mergedPlayerGroup(u.nickname),key=(group?group.primary:u.nickname).toLowerCase(),entry={i,elo:u.seasonResult?.eloRate??u.eloRate,primary:!group||u.nickname.toLowerCase()===group.primary.toLowerCase()};
+    const old=boardRanks.get(key);if(!old||entry.primary||!old.primary)boardRanks.set(key,entry);
+  });
   const sorted=rows.slice().sort((a,b)=>{if(k==="elo"&&v==="season"){const x=boardRanks.get(a.name.toLowerCase()),y=boardRanks.get(b.name.toLowerCase());return d*((x?.elo??-Infinity)-(y?.elo??-Infinity))||(x?.i??0)-(y?.i??0)}const x=val(a),y=val(b);if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;if(typeof x==="string")return d*x.localeCompare(y);return d*(x-y)});
   const lead=key=>{const a=rows.map(r=>r[v]&&r[v][key]).filter(x=>x!=null&&x>0);return a.length?Math.min(...a):null};
   const bpb=lead("pb"),bavg=lead("avg");
