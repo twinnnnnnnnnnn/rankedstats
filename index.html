@@ -651,6 +651,7 @@ function showProfile(name){
     const mk=()=>({list:[],done:false,p:null,err:null,cursors:{},sourceDone:{}});
     Object.assign(tok,{u,combinedUser:u,baseUser:base,sourceUsers,merged:!!group&&sourceUsers.length>1,mode:"ranked",full:false,matchSort:"recent",matchTwitchNames:false,profileSeason:"current",st:{ranked:mk(),private:mk(),casual:mk()}});
     sel=null;selId=null;renderProfile();
+    rankedLiveStart(tok);
   }).catch(e=>{
     if(P!==tok)return;
     const message=String(e&&e.message||e||"Unknown error");
@@ -1769,6 +1770,68 @@ if(!document.getElementById('out')?.innerHTML.trim())showStartupError('Initial p
   observer.observe(document.body,{subtree:true,childList:true,characterData:true});
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
+})();
+</script>
+
+<style>
+#ranked-live-banner{border:1px solid #e5484d;padding:12px 16px;margin:12px 0;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#ranked-live-banner button,#ranked-live-close{border:1px solid var(--line);background:var(--surface2);color:var(--text);padding:7px 13px;cursor:pointer;border-radius:0;font:inherit}
+#ranked-live-viewer{position:fixed;inset:0;z-index:99999;background:#09090b;color:#eee;overflow:auto;padding:20px}
+#ranked-live-viewer .live-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px}
+#ranked-live-viewer .live-streams{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#ranked-live-viewer iframe{width:100%;aspect-ratio:16/9;border:0;background:#111}
+#ranked-live-viewer .live-unavailable{aspect-ratio:16/9;background:#151515;display:grid;place-items:center;color:#aaa}
+@media(max-width:800px){#ranked-live-viewer .live-streams{grid-template-columns:1fr}}
+</style>
+<script>
+(function(){
+let currentMatch=null,watching=false,activeTimer=null;
+function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function uuid(s){return String(s||'').replace(/-/g,'').toLowerCase()}
+function twitch(url){
+ try{const u=new URL(url);if(!['twitch.tv','www.twitch.tv','m.twitch.tv','player.twitch.tv'].includes(u.hostname))return null;
+ const name=u.hostname==='player.twitch.tv'?u.searchParams.get('channel'):u.pathname.split('/').filter(Boolean)[0];
+ return /^[a-zA-Z0-9_]{3,25}$/.test(name||'')?name:null;
+ }catch{return null}
+}
+function locate(match,profile){return (match.players||[]).some(p=>uuid(p.uuid)===uuid(profile.uuid))}
+function mountBanner(match,profile){
+ const out=document.getElementById('out');if(!out)return;
+ let el=document.getElementById('ranked-live-banner');if(!el){el=document.createElement('div');el.id='ranked-live-banner';out.prepend(el)}
+ const opponent=(match.players||[]).find(p=>uuid(p.uuid)!==uuid(profile.uuid));
+ el.innerHTML='<span><b style="color:#e5484d">● In a match</b> · '+safe(profile.nickname)+' vs '+safe(opponent?.nickname||'Opponent')+'</span><button type="button" id="ranked-live-watch">Watch ↗</button>';
+ document.getElementById('ranked-live-watch').onclick=()=>openViewer(match);
+}
+function openViewer(match){
+ document.getElementById('ranked-live-viewer')?.remove();watching=true;
+ const overlay=document.createElement('div');overlay.id='ranked-live-viewer';
+ const players=(match.players||[]).slice(0,2);
+ overlay.innerHTML='<div class="live-head"><div><b style="color:#e5484d">● LIVE</b> &nbsp;'+players.map(p=>safe(p.nickname)).join(' vs ')+'</div><button id="ranked-live-close">✕ Close</button></div><div class="live-streams">'+players.map(p=>{
+ const data=match.data?.[p.uuid]||match.data?.[uuid(p.uuid)]||{};
+ const channel=twitch(data.liveUrl);
+ const stream=channel?'<iframe title="'+safe(p.nickname)+' Twitch stream" src="https://player.twitch.tv/?channel='+encodeURIComponent(channel)+'&parent='+encodeURIComponent(location.hostname)+'&autoplay=true&muted=true" allowfullscreen allow="autoplay; fullscreen"></iframe>':'<div class="live-unavailable">No public stream available</div>';
+ return '<section><h3>'+safe(p.nickname)+'</h3>'+stream+'</section>';
+ }).join('')+'</div>';
+ document.body.appendChild(overlay);
+ document.getElementById('ranked-live-close').onclick=()=>{watching=false;overlay.remove()};
+}
+window.rankedLiveStart=function(token){
+ clearInterval(activeTimer);currentMatch=null;watching=false;document.getElementById('ranked-live-viewer')?.remove();
+ async function poll(){
+ if(window.P!==token||!token.u){clearInterval(activeTimer);return}
+ try{
+ const response=await fetch('https://api.mcsrranked.com/live',{cache:'no-store'});
+ if(!response.ok)throw Error('Live API unavailable');
+ const payload=await response.json();
+ if(window.P!==token)return;
+ const match=(payload.data?.liveMatches||[]).find(m=>locate(m,token.u));
+ currentMatch=match||null;
+ if(match){mountBanner(match,token.u);if(watching)openViewer(match)}
+ else{document.getElementById('ranked-live-banner')?.remove();if(watching){watching=false;document.getElementById('ranked-live-viewer')?.remove()}}
+ }catch(e){console.warn('Live match check:',e)}
+ }
+ poll();activeTimer=setInterval(poll,20000);
+};
 })();
 </script>
 </body>
