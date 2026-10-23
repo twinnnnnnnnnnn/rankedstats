@@ -370,6 +370,7 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 .skin-viewer-controls{display:flex;flex-direction:column;gap:8px}
 .skin-viewer-controls button{border:1px solid #303030;background:#171717;color:var(--text);padding:10px;text-align:left}
 .skin-viewer-controls button:hover{background:#242424}
+#skinPlaceMode[aria-pressed="true"]{border-color:#b6f36a;color:#c9ff89;background:#17200f}#profileSkinStage.is-placing{cursor:move}#profileSkinStage.is-placing canvas{cursor:move}
 .skin-viewer-help{font-size:12px;color:var(--muted);line-height:1.5}
 .skin-viewer-status{font-size:12px;color:var(--muted);margin-top:7px}
 
@@ -783,7 +784,7 @@ function setupProfileSkinViewer(uuid){
       poseName=key;
       const make=(name)=>typeof skinview3d[name]==="function"?new skinview3d[name]():null;
       // These are Fortnite-emote-inspired motion presets using skinview3d animations, not ripped Fortnite assets.
-      const choices={idle:["IdleAnimation","DEFAULT"],run:["RunningAnimation","RUNNING"],orange:["WalkingAnimation","ORANGE JUSTICE"],floss:["WaveAnimation","FLOSS"],take:["CrouchAnimation","TAKE THE L"],hype:["RunningAnimation","HYPE"],wave:["WaveAnimation","WAVE"],hit:["HitAnimation","HIT IT"],crawl:["CrouchAnimation","CROUCH"]};
+      const choices={idle:["IdleAnimation","DEFAULT"],run:["RunningAnimation","RUNNING"],orange:["WalkingAnimation","ORANGE JUSTICE"],floss:["WaveAnimation","FLOSS"],take:["CrouchAnimation","TAKE THE L"],hype:["RunningAnimation","HYPE"],wave:["WaveAnimation","WAVE"],hit:["HitAnimation","HIT IT"],breakdance:["WalkingAnimation","BREAKDANCING"]};
       const [animationName,label]=choices[key]||choices.idle;
       let animation=make(animationName);
       if(!animation&&key!=="idle")animation=make("IdleAnimation");
@@ -793,6 +794,41 @@ function setupProfileSkinViewer(uuid){
       if(status.isConnected)status.textContent="EMOTE // "+label+" · "+animSpeed.toFixed(1)+"×"+(animation?"":" · FALLBACK IDLE");
     };
     document.querySelectorAll("[data-skin-pose]").forEach(b=>b.onclick=()=>setPose(b.dataset.skinPose));
+    let placingModel=false;
+    const placeButton=$("skinPlaceMode"),placeHelp=$("skinPlacementHelp");
+    const basePosition=viewer.playerObject?viewer.playerObject.position.clone():null;
+    const setPlacementMode=enabled=>{
+      placingModel=!!enabled;
+      if(placeButton){placeButton.setAttribute("aria-pressed",String(placingModel));placeButton.textContent=placingModel?"✥ Place model: ON":"✥ Place model: OFF"}
+      stage.classList.toggle("is-placing",placingModel);
+      viewer.controls.enableRotate=!placingModel;
+      viewer.controls.enablePan=false;
+      if(placeHelp)placeHelp.textContent=placingModel?"Placement ON · drag the model to move it. Camera rotation is paused.":"Placement OFF · drag to rotate the camera; turn placement on to move the model.";
+    };
+    let drag=null;
+    canvas.addEventListener("pointerdown",e=>{
+      if(!placingModel||!viewer.playerObject)return;
+      e.preventDefault();e.stopPropagation();
+      drag={id:e.pointerId,x:e.clientX,y:e.clientY};
+      try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+    },true);
+    canvas.addEventListener("pointermove",e=>{
+      if(!drag||drag.id!==e.pointerId||!viewer.playerObject)return;
+      e.preventDefault();e.stopPropagation();
+      const scale=22/Math.max(240,stage.clientWidth||420);
+      viewer.playerObject.position.x+=(e.clientX-drag.x)*scale;
+      viewer.playerObject.position.y-=(e.clientY-drag.y)*scale;
+      drag.x=e.clientX;drag.y=e.clientY;
+    },true);
+    const endPlacementDrag=e=>{if(drag&&drag.id===e.pointerId){drag=null;e.stopPropagation()}};
+    canvas.addEventListener("pointerup",endPlacementDrag,true);
+    canvas.addEventListener("pointercancel",endPlacementDrag,true);
+    if(placeButton)placeButton.onclick=()=>setPlacementMode(!placingModel);
+    if($("skinResetPlacement"))$("skinResetPlacement").onclick=()=>{
+      if(viewer.playerObject&&basePosition)viewer.playerObject.position.copy(basePosition);
+      if(placeHelp)placeHelp.textContent="Model position reset to center.";
+    };
+
     if($("skinAnimSpeed"))$("skinAnimSpeed").oninput=e=>{animSpeed=Number(e.target.value)||1;const label=$("skinAnimSpeedValue");if(label)label.textContent=animSpeed.toFixed(1)+"×";if(viewer.animation)viewer.animation.speed=animSpeed;setPose(poseName)};
     if($("skinResetCamera"))$("skinResetCamera").onclick=()=>{viewer.camera.position.set(20,12,32);viewer.controls.target.set(0,0,0);viewer.controls.update();resize()};
     if($("skinTurnFront"))$("skinTurnFront").onclick=()=>{viewer.camera.position.set(0,8,34);viewer.controls.target.set(0,0,0);viewer.controls.update()};
@@ -863,10 +899,10 @@ function renderProfile(){
         <button type="button" data-skin-pose="hype">💃 Hype</button>
         <button type="button" data-skin-pose="wave">✦ Wave</button>
         <button type="button" data-skin-pose="hit">👊 Hit It</button>
-        <button type="button" data-skin-pose="crawl">⌄ Crouch</button>
+        <button type="button" data-skin-pose="breakdance">✦ Breakdancing</button>
        </div>
        <label class="skin-animation-speed">ANIMATION SPEED <span id="skinAnimSpeedValue">1.0×</span><input id="skinAnimSpeed" type="range" min="0.4" max="2.8" step="0.1" value="1"></label>
-       <div class="skin-camera-controls"><button type="button" id="skinResetCamera">↻ Reset camera</button><button type="button" id="skinTurnFront">Front</button><button type="button" id="skinTurnBack">Back</button><button type="button" id="skinDownload">↓ Export PNG</button></div>
+       <div class="skin-camera-controls"><button type="button" id="skinResetCamera">↻ Reset camera</button><button type="button" id="skinTurnFront">Front</button><button type="button" id="skinTurnBack">Back</button><button type="button" id="skinDownload">↓ Export PNG</button><button type="button" id="skinPlaceMode" aria-pressed="false">✥ Place model: OFF</button><button type="button" id="skinResetPlacement">Reset model position</button></div><div class="skin-viewer-help" id="skinPlacementHelp">Placement: off. Turn it on, then drag the model to position it in the scene. Turn it off to rotate the camera again.</div>
        <div class="skin-background-upload"><label for="skinBackgroundUpload">Custom background image</label><input type="file" id="skinBackgroundUpload" accept="image/*"><button type="button" id="skinClearBackground">Remove background</button></div>
        <div><div style="font-size:12px;color:var(--muted);margin-bottom:5px">Scene backgrounds</div><div class="skin-background-options"><button type="button" data-skin-bg="default" class="active">Plain</button><button type="button" data-skin-bg="bastion">Bastion</button><button type="button" data-skin-bg="overworld">Overworld</button><button type="button" data-skin-bg="nether">Nether</button></div></div>
        <div class="skin-viewer-help">Drag to orbit the camera. Scroll or pinch to zoom. Download PNG exports the 3D view with its current background.</div>
