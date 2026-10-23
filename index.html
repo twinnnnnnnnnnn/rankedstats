@@ -719,7 +719,7 @@ async function loadTopClip(login,range="7d",section=document.querySelector("[dat
 function setupProfileSkinViewer(uuid){
   const canvas=$("profileSkinCanvas"),status=$("skinViewerStatus");
   if(!canvas||!status)return;
-  if(window.profileSkinViewer){try{window.profileSkinViewer.dispose()}catch(_){}window.profileSkinViewer=null}
+  if(window.profileSkinViewer){try{window.profileSkinViewer._profileResizeObserver?.disconnect();window.profileSkinViewer.dispose()}catch(_){}window.profileSkinViewer=null}
   const skinUrl="https://mc-heads.net/skin/"+encodeURIComponent(uuid);
   const fail=()=>{if(status.isConnected)status.textContent="Couldn’t load this player’s skin."};
   if(!window.skinview3d){status.textContent="3D viewer library didn’t load. Refresh to retry.";return}
@@ -734,16 +734,16 @@ function setupProfileSkinViewer(uuid){
     viewer.loadSkin(skinUrl).then(()=>{if(status.isConnected)status.textContent="Skin loaded · drag to rotate"}).catch(fail);
     const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(220,canvas.parentElement.clientWidth);viewer.setSize(w,320)};
     if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(canvas.parentElement);viewer._profileResizeObserver=ro}
-    $("skinResetCamera")?.addEventListener("click",()=>{viewer.camera.position.set(28,18,42);viewer.controls.target.set(0,0,0);viewer.controls.update()});
-    $("skinTurnFront")?.addEventListener("click",()=>{viewer.camera.position.set(0,12,48);viewer.controls.target.set(0,0,0);viewer.controls.update()});
-    $("skinTurnBack")?.addEventListener("click",()=>{viewer.camera.position.set(0,12,-48);viewer.controls.target.set(0,0,0);viewer.controls.update()});
-    $("skinDownload")?.addEventListener("click",()=>{
+    if($("skinResetCamera"))$("skinResetCamera").onclick=()=>{viewer.camera.position.set(28,18,42);viewer.controls.target.set(0,0,0);viewer.controls.update()};
+    if($("skinTurnFront"))$("skinTurnFront").onclick=()=>{viewer.camera.position.set(0,12,48);viewer.controls.target.set(0,0,0);viewer.controls.update()};
+    if($("skinTurnBack"))$("skinTurnBack").onclick=()=>{viewer.camera.position.set(0,12,-48);viewer.controls.target.set(0,0,0);viewer.controls.update()};
+    if($("skinDownload"))$("skinDownload").onclick=()=>{
       try{
         viewer.render();
         const link=document.createElement("a");link.download=(P?.u?.nickname||"minecraft-skin")+"-3d.png";
-        link.href=viewer.canvas.toDataURL("image/png");link.click();
+        link.href=viewer.renderer.domElement.toDataURL("image/png");link.click();
       }catch(_){status.textContent="Couldn’t export the image. Try again after the skin loads."}
-    });
+    };
     resize();
   }catch(_){fail()}
 }
