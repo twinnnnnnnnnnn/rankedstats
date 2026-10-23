@@ -378,7 +378,17 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 
  .profile-model{width:112px;min-width:112px;height:156px;position:relative;align-self:center;overflow:hidden;background:transparent}
  .profile-model canvas{display:block;width:100%!important;height:100%!important;touch-action:pan-y;outline:none}
- @media(max-width:620px){.profile-model{width:76px;min-width:76px;height:120px}}</style>
+ @media(max-width:620px){.profile-model{width:76px;min-width:76px;height:120px}}
+/* Bottom site credits */
+.site-credits{margin:34px auto 0;padding:18px 0 8px;border-top:1px solid #252525;display:flex;justify-content:center;gap:30px;flex-wrap:wrap;color:#a3a3a3;font-size:12px}
+.site-credit{display:flex;align-items:center;gap:9px;min-width:0}
+.site-credit img{width:30px;height:30px;object-fit:cover;flex-shrink:0}
+.site-credit .credit-name{color:#eee;font-weight:600;text-decoration:none}
+.site-credit .credit-name:hover{color:#fff;text-decoration:underline}
+.site-credit .credit-by{color:#777}
+.site-credit .credit-emote{width:22px;height:22px;object-fit:contain}
+@media(max-width:520px){.site-credits{gap:16px;justify-content:flex-start}.site-credit{width:100%}}
+</style>
 </style>
 <script src="https://cdn.jsdelivr.net/npm/skinview3d@3.2.0/bundles/skinview3d.bundle.js" defer></script>
 </head>
@@ -402,6 +412,20 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 <div id="out" style="display:block;visibility:visible;opacity:1;min-height:180px"><section class="card" id="initialLoadStatus" style="padding:24px;margin:24px auto;max-width:740px"><h2>Loading leaderboard…</h2><p>If this message stays on screen, the website JavaScript has not started. Open Developer Tools (F12), select Console, and copy the first red error.</p></section></div>
 
 </div>
+
+<div class="site-credits" id="site-credits" aria-label="Website credits">
+  <div class="site-credit">
+    <img src="https://femboy.beauty/LIwmvP" alt="Himawari profile picture" loading="lazy" referrerpolicy="no-referrer">
+    <span class="credit-by">Website by</span>
+    <img class="credit-emote" src="https://cdn.7tv.app/emote/01F6NCKMP000052X5637DW2XDY/2x.webp" alt="" loading="lazy">
+    <a class="credit-name" href="https://7tv.app/emotes/01F6NCKMP000052X5637DW2XDY" target="_blank" rel="noopener noreferrer">Himawari</a>
+  </div>
+  <div class="site-credit">
+    <img src="https://femboy.beauty/YAnoBA" alt="Promise profile picture" loading="lazy" referrerpolicy="no-referrer">
+    <a class="credit-name" href="https://femboy.beauty/YAnoBA" target="_blank" rel="noopener noreferrer">Promise</a>
+  </div>
+</div>
+
 <div id="modal" role="dialog" aria-modal="true" aria-label="Match details"></div>
 
 <script>
