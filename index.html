@@ -243,6 +243,9 @@ body.dark-everything::before{background:#000!important;background-image:none!imp
 .vod-transport [hidden]{display:none!important}
 
 /* Render player skins as 3D Minecraft heads throughout the site. */
+/* Australian profile gimmick: rotate the full page while viewing an Australian player. */
+body.au-upside-down .wrap{transform:rotate(180deg);transform-origin:center center}
+body.au-upside-down #modal{transform:rotate(180deg);transform-origin:center center}
 img[src*="laby.net/api/v3/render/bust/"]{object-fit:contain;image-rendering:auto}
 .vod-race-name{left:-135px;top:17px;max-width:120px;width:120px;text-align:right;overflow:visible;white-space:nowrap;font-size:12px}
 .vod-race{padding-left:145px;padding-right:48px}
@@ -382,7 +385,7 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
     <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Settings" title="Settings" aria-expanded="false">⚙</button>
     <section class="settings-panel" aria-label="Website settings">
       <h2 class="settings-title">Settings</h2>
-      <div class="setting-field"><label for="languageChoice">Language / 言語</label><select id="languageChoice" aria-label="Language"><option value="en">English</option><option value="ja">日本語</option></select></div><div class="setting-field"><label for="fontChoice">Font</label><select id="fontChoice" aria-label="Website font"><option value="default">Default</option><option value="minecraft">Minecraft font</option><option value="sga">Standard Galactic Alphabet</option></select></div>
+      <div class="setting-field"><label for="languageChoice">Language / 言語</label><select id="languageChoice" aria-label="Language"><option value="en">English</option><option value="ja">日本語</option></select></div><div class="setting-field"><label for="fontChoice">Font</label><select id="fontChoice" aria-label="Website font"><option value="default">Default</option><option value="minecraft">Minecraft font</option><option value="sga">Standard Galactic Alphabet</option><option value="upside">Upside-down text (Australian)</option></select></div>
       
     </section>
   </div>
@@ -723,8 +726,8 @@ function setupProfileSkinViewer(uuid){
     const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(76,stage.clientWidth||112),h=Math.max(120,stage.clientHeight||156);viewer.setSize(w,h);viewer.camera.aspect=w/h;viewer.camera.updateProjectionMatrix()};
     if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(stage);viewer._profileResizeObserver=ro}
     // Keep the profile model completely static; no cursor or pointer reactions.
-    if(viewer.playerObject){viewer.playerObject.rotation.y=0;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0}
-    viewer.loadSkin("https://mc-heads.net/skin/"+encodeURIComponent(uuid)).catch(()=>{});resize();
+    if(viewer.playerObject){viewer.playerObject.rotation.y=0.22;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0}
+    viewer.loadSkin("https://mc-heads.net/skin/"+encodeURIComponent(uuid)).then(()=>{if(viewer.playerObject)viewer.playerObject.rotation.y=0.22}).catch(()=>{});resize();
   }catch(_){}
 }
 async function checkRecentNameChange(uuid,currentName){
@@ -1553,7 +1556,6 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 // Persistent website settings: font and background.
 (()=>{
  const select=document.getElementById('fontChoice');
- const background=null;
  const wrap=document.getElementById('settingsWrap');
  const toggle=document.getElementById('settingsToggle');
  if(!select||!wrap||!toggle)return;
@@ -1564,19 +1566,22 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
  const originalText=new WeakMap();
  const map={a:'ᔑ',b:'ʖ',c:'ᓵ',d:'↸',e:'ᒷ',f:'⎓',g:'⊣',h:'〒',i:'╎',j:'リ',k:'ꖌ',l:'ꖎ',m:'ᒲ',n:'リ',o:'𝙹',p:'!¡',q:'ᑑ',r:'∷',s:'ᓭ',t:'ℸ',u:'⚍',v:'⍊',w:'∴',x:'̇/',y:'||',z:'⨅'};
  const sga=t=>t.replace(/[a-z]/gi,ch=>{const v=map[ch.toLowerCase()]||ch;return ch===ch.toUpperCase()?v.toUpperCase():v});
+ const upsideMap={a:'ɐ',b:'q',c:'ɔ',d:'p',e:'ǝ',f:'ɟ',g:'ƃ',h:'ɥ',i:'ᴉ',j:'ɾ',k:'ʞ',l:'ן',m:'ɯ',n:'u',o:'o',p:'d',q:'b',r:'ɹ',s:'s',t:'ʇ',u:'n',v:'ʌ',w:'ʍ',x:'x',y:'ʎ',z:'z',A:'∀',B:'𐐒',C:'Ɔ',D:'◖',E:'Ǝ',F:'Ⅎ',G:'פ',H:'H',I:'I',J:'ſ',K:'⋊',L:'˥',M:'W',N:'N',O:'O',P:'Ԁ',Q:'Ό',R:'ᴚ',S:'S',T:'⊥',U:'Ո',V:'Λ',W:'M',X:'X',Y:'⅄',Z:'Z','0':'0','1':'Ɩ','2':'ᄅ','3':'Ɛ','4':'ㄣ','5':'ट','6':'9','7':'ㄥ','8':'8','9':'6','.':'˙',',':'،','?':'¿','!':'¡','(' : ')',')':'(','[':']',']':'[','{':'}','}':'{','_':'‾','&':'⅋'};
+ const upside=t=>Array.from(t).reverse().map(ch=>upsideMap[ch]??ch).join('');
  function process(root,mode){
-  if(root.nodeType===Node.TEXT_NODE){if(!originalText.has(root))originalText.set(root,root.nodeValue);const original=originalText.get(root);const next=mode==='sga'?sga(original):original;if(root.nodeValue!==next)root.nodeValue=next;return;}
+  if(root.nodeType===Node.TEXT_NODE){if(!originalText.has(root))originalText.set(root,root.nodeValue);const original=originalText.get(root);const next=mode==='sga'?sga(original):mode==='upside'?upside(original):original;if(root.nodeValue!==next)root.nodeValue=next;return;}
   if(root.nodeType!==Node.ELEMENT_NODE)return;
   if(/^(SCRIPT|STYLE|TEXTAREA|INPUT|OPTION|SELECT)$/i.test(root.tagName)||root.closest('#settingsWrap'))return;
   for(const n of root.childNodes)process(n,mode);
  }
  let changing=false;
- const observer=new MutationObserver(records=>{if(changing||select.value!=='sga')return;changing=true;const mode=select.value;for(const r of records){for(const n of r.addedNodes)process(n,mode);if(r.type==='characterData')process(r.target,mode)}changing=false});
+ const observer=new MutationObserver(records=>{if(changing||!(select.value==='sga'||select.value==='upside'))return;changing=true;const mode=select.value;for(const r of records){for(const n of r.addedNodes)process(n,mode);if(r.type==='characterData')process(r.target,mode)}changing=false});
  function applyFont(mode){document.body.classList.toggle('font-minecraft',mode==='minecraft');changing=true;process(document.body,mode);changing=false;}
+ window.setAustralianMode=function(active){document.body.classList.toggle('au-upside-down',!!active);if(active){select.value='upside';observer.disconnect();applyFont('upside');observer.observe(document.body,{subtree:true,childList:true,characterData:true});}else{const saved=localStorage.getItem(fontKey)||'default';select.value=saved;observer.disconnect();applyFont(saved);if(saved==='sga'||saved==='upside')observer.observe(document.body,{subtree:true,childList:true,characterData:true});}};
  select.value=localStorage.getItem(fontKey)||'default';
  applyFont(select.value);
- if(select.value==='sga')observer.observe(document.body,{subtree:true,childList:true,characterData:true});
- select.addEventListener('change',()=>{observer.disconnect();localStorage.setItem(fontKey,select.value);applyFont(select.value);if(select.value==='sga')observer.observe(document.body,{subtree:true,childList:true,characterData:true})});
+ if(select.value==='sga'||select.value==='upside')observer.observe(document.body,{subtree:true,childList:true,characterData:true});
+ select.addEventListener('change',()=>{observer.disconnect();localStorage.setItem(fontKey,select.value);applyFont(select.value);if(select.value==='sga'||select.value==='upside')observer.observe(document.body,{subtree:true,childList:true,characterData:true})});
 })();
 try{
  const result=route();
