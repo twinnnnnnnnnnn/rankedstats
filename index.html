@@ -1271,6 +1271,32 @@ async function showLeaderboard(view){
     if(se&&window.IntersectionObserver){lio=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))moreRows()},{rootMargin:"400px"});lio.observe(se)}
   }catch(e){if(req===T.requestId&&$("ptab")){$("ptab").innerHTML='<div class="msg">Couldn’t load the selected leaderboard.<br>'+esc(e.message)+'</div>';$("lbsent").textContent="";}}
 }
+function renderPT(){
+  const el=$("ptab");if(!el)return;
+  const v=T.view==="all"?"all":"season",names=shownNames(),rows=names.map(n=>RC[n.toLowerCase()]).filter(Boolean).filter(r=>!T.country||r.country===T.country);
+  const k=T.sort.k,d=T.sort.d;
+  const val=r=>{if(r.state!=="d")return null;if(k==="name")return r.name;if(k==="elo")return r.elo;const s=r[v];return s&&s[k]!=null?s[k]:null};
+  const boardRanks=new Map();
+  (T.lb?.users||[]).forEach((u,i)=>{
+    const group=mergedPlayerGroup(u.nickname),key=(group?group.primary:u.nickname).toLowerCase(),entry={i,elo:u.seasonResult?.eloRate??u.eloRate,primary:!group||u.nickname.toLowerCase()===group.primary.toLowerCase()};
+    const old=boardRanks.get(key);if(!old||entry.primary||!old.primary)boardRanks.set(key,entry);
+  });
+  const sorted=rows.slice().sort((a,b)=>{if(k==="elo"&&v==="season"){const x=boardRanks.get(a.name.toLowerCase()),y=boardRanks.get(b.name.toLowerCase());return d*((x?.elo??-Infinity)-(y?.elo??-Infinity))||(x?.i??0)-(y?.i??0)}const x=val(a),y=val(b);if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;if(typeof x==="string")return d*x.localeCompare(y);return d*(x-y)});
+  const lead=key=>{const a=rows.map(r=>r[v]&&r[v][key]).filter(x=>x!=null&&x>0);return a.length?Math.min(...a):null};
+  const bpb=lead("pb"),bavg=lead("avg");
+  const cols=[["name","Player",""],["elo","Elo","num"],["wr","Win rate","num"],["games","Matches","num"],["wins","Wins","num"],["pb","PB","num"],["avg","Average","num"]];
+  el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr><th>#</th>${cols.map(c=>`<th class="${c[2]}" data-k="${c[0]}">${c[1]}${k===c[0]?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${sorted.map((r,i)=>{
+    const s=r[v]||{},bad=r.state!=="d",wait=`<span class="mut">${r.state==="e"?"×":"…"}</span>`;
+    const c=(x,f,cls)=>`<td class="num ${cls||""}">${bad?wait:x!=null?f(x):"—"}</td>`;
+    return `<tr><td class="mut">${i+1}</td><td><span class="who">${`<span class="flag-slot">${flagSlot(r.country)}</span>`}<img class="head" alt="" width="40" height="40" loading="lazy" src="https://laby.net/api/v3/render/bust/${enc(r.uuid||r.name)}.webp?width=40&height=40"><a href="#${enc(r.name)}">${esc(r.name)}</a></span></td>`+
+      `<td class="num"><span class="who">${bad?wait:icon(r.elo,22)+(r.elo!=null?r.elo:"—")}</span></td>`+
+      c(s.wr,x=>x.toFixed(1)+"%")+c(s.games,x=>x)+c(s.wins,x=>x)+
+      c(s.pb,fmtP,s.pb!=null&&s.pb===bpb?"best":"")+c(s.avg,fmtP,s.avg!=null&&s.avg===bavg?"best":"")+`</tr>`}).join("")}</tbody></table>`;
+  const done=rows.filter(r=>r.state==="d"||r.state==="e").length;
+  const ps=$("pstat");if(ps)ps.textContent=done+" / "+names.length+" players loaded";
+  const se=$("lbsent");if(se)se.textContent=T.lb&&T.shown>=T.lb.users.length?"End of leaderboard · "+T.lb.users.length+" players":"Loading more…";
+}
+
 function moreRows(){
   const board=T.historical||T.lb;
   if(!board||!Array.isArray(board.users)||T.shown>=(T.historical?historicalRows().length:board.users.length))return;
