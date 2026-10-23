@@ -46,7 +46,7 @@ h1{margin:0;font-size:28px;letter-spacing:-.02em}
 .elo{text-align:right}
 .elo .n{font-size:46px;font-weight:800;letter-spacing:-.03em;line-height:1;background:linear-gradient(90deg,var(--accent2),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
 .elo .r{color:var(--muted);font-size:13px;margin-top:6px;display:flex;gap:6px;align-items:center;justify-content:flex-end}
-.elo .n{background-size:200% 100%;animation:eloflow 4s linear infinite}
+.elo .n{background-size:200% 100%;animation:eloflow 4s linear infinite}.elo .peak-flame{display:inline-block;margin-left:5px;font-size:.62em;vertical-align:.12em;filter:drop-shadow(0 0 5px #ff6a00);-webkit-text-fill-color:initial;color:#ff7a18}
 @keyframes eloflow{to{background-position:200% 0}}
 .hero h1 .profile-username{display:inline-block;background:linear-gradient(90deg,var(--accent2),var(--accent));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:eloflow 4s linear infinite}
 .hero h1 .profile-username.t-netherite{background-image:linear-gradient(90deg,#9b4dff,#ff3df0,#c084fc,#7b2cff,#9b4dff)}
@@ -107,6 +107,14 @@ td a{color:inherit;text-decoration:none;border-bottom:1px dotted var(--muted)}
 .res.d{background:color-mix(in srgb,#60a5fa 16%,transparent);color:#60a5fa;box-shadow:inset 0 0 10px #60a5fa55,inset 0 0 2px #60a5fa99}
 .up{color:var(--win)}.down{color:var(--loss)}
 .msg{text-align:center;padding:60px 20px;color:var(--muted)}
+/* End portal profile transition */
+#endPortalTransition{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;pointer-events:none;background:radial-gradient(ellipse at center,#160c2bd9 0%,#000e 60%,#000 100%);animation:portalFade .9s ease-out forwards}
+#endPortalTransition .portal-frame{width:min(44vw,330px);aspect-ratio:.66;border:5px solid #56308b;box-shadow:0 0 0 5px #171124,0 0 22px #a855f7,0 0 70px #7c3aed,inset 0 0 22px #c084fc;background:repeating-linear-gradient(135deg,#8b5cf6aa 0 7px,#24103cdd 7px 15px,#b46bff99 15px 19px);animation:portalPulse .22s ease-in-out infinite alternate;transform:perspective(500px) rotateY(-12deg) scale(.1);border-radius:3px}
+#endPortalTransition .portal-inner{position:absolute;inset:10px;background:radial-gradient(ellipse,#c084fcaa 0%,#7c3aedaa 25%,#1b1030 70%);animation:portalSwirl .7s linear infinite;border:1px solid #d8b4fe}
+@keyframes portalFade{0%{opacity:0}12%{opacity:1}65%{opacity:1}100%{opacity:0}}
+@keyframes portalPulse{from{filter:hue-rotate(-15deg) brightness(.8);transform:perspective(500px) rotateY(-12deg) scale(.86)}to{filter:hue-rotate(20deg) brightness(1.4);transform:perspective(500px) rotateY(12deg) scale(1)}}
+@keyframes portalSwirl{to{filter:hue-rotate(360deg);background-position:80px 40px}}
+@media(prefers-reduced-motion:reduce){#endPortalTransition,#endPortalTransition *{animation-duration:.01ms!important}}
 .invalid-profile{text-align:center;padding:30px 18px 42px;color:var(--text);display:flex;flex-direction:column;align-items:center;gap:14px}
 .invalid-profile h2{margin:0;font-size:clamp(22px,4vw,34px);font-weight:850;letter-spacing:-.035em}
 .invalid-profile .invalid-main-image{display:block;width:min(100%,520px);max-height:48vh;object-fit:contain;border-radius:16px}
@@ -140,6 +148,7 @@ table.pt2 tbody tr:nth-child(3) td:first-child{color:#e7a36e;font-weight:850;tex
 table.pt2.fast-table tbody tr:nth-child(-n+3){background:none}table.pt2.fast-table tbody tr:nth-child(-n+3)>td{background:var(--surface)!important}table.pt2.fast-table tbody tr:nth-child(-n+3) td:first-child{color:var(--muted);font-weight:normal;text-shadow:none}
 .name-emoji.pink-monkey{display:inline-block;filter:sepia(1) saturate(5) hue-rotate(285deg) brightness(1.1)}
 .lb-twitch-toggle{display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;font-size:12px}.lb-twitch-toggle input{accent-color:var(--accent);cursor:pointer}\n.fast-table{width:100%;table-layout:fixed}.fast-table th:nth-child(1){width:55px}.fast-table th:nth-child(2){width:40%}.fast-table th:nth-child(3){width:23%}.fast-table .fast-time-col{text-align:center}.fast-head{width:40px;height:40px;object-fit:cover;vertical-align:middle;border-radius:4px;margin-right:6px}.fast-table tbody tr:not(.fast-expanded-row)>td{padding-top:3px;padding-bottom:3px}table.pt2:not(.fast-table) tbody td{padding-top:3px;padding-bottom:3px}.fast-table .country-flag{vertical-align:middle;margin-right:5px}.flag-placeholder{visibility:hidden}.flag-slot{display:inline-flex;align-items:center;flex:none}.fast-expanded-row td{padding:8px 12px 16px!important}.fast-inline-profile{max-width:460px;margin-left:12px;padding:16px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}.fast-inline-profile ol{padding-left:24px}.fast-inline-profile li{padding:5px 0}.fast-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-items:start}.fast-layout.has-selection{grid-template-columns:minmax(0,1fr) minmax(250px,340px)}.fast-layout aside{display:none;position:sticky;top:12px}.fast-layout.has-selection aside{display:block}.fast-time{border:0;background:none;color:var(--accent2);font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}.fast-player{border:0;background:none;color:var(--text);cursor:pointer;font:inherit;text-decoration:underline;text-underline-offset:3px}.fast-layout ol{padding-left:24px}.fast-layout li{padding:5px 0}@media(max-width:720px){.fast-layout,.fast-layout.has-selection{grid-template-columns:1fr}.fast-layout aside{position:static}}\n.vod-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.vod-heading h3{margin:0}.vod-heading .vod-zoom-btn{margin:0;padding:7px 12px;cursor:pointer}#modal.vod-expanded .vod-heading{position:fixed;top:12px;left:16px;z-index:11}#modal.vod-expanded .vod-heading h3{display:none}
+.weekly-rival-card{margin:14px 0}.weekly-rival-content{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.weekly-rival-name{font-size:22px;font-weight:800}.weekly-rival-avatar{width:42px;height:42px;object-fit:contain;background:var(--surface2)}.weekly-rival-metric{display:grid;gap:2px;padding:8px 12px;border-left:1px solid var(--line)}.weekly-rival-metric small{font-size:11px;text-transform:uppercase;color:var(--muted)}.weekly-rival-metric strong{font-size:17px}.weekly-rival-card h2{margin-bottom:10px}
 .session-panel{margin:14px 0}.session-panel h3{margin:0;font-size:16px;font-weight:700}.session-panel #sessionStats{margin-top:14px}.last-ten-wrap{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}.last-ten-title{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}.last-ten{display:flex;flex-wrap:wrap;gap:6px}.last-ten-result{display:inline-flex;align-items:center;gap:5px;padding:5px 8px;border:1px solid var(--line);font-size:12px;font-weight:700}.last-ten-result.win{color:#36c879;border-color:#36c87988;background:#36c87912;box-shadow:inset 0 0 12px #36c87935,inset 0 0 2px #36c87966}.last-ten-result.loss{color:#f16b75;border-color:#f16b7588;background:#f16b7512;box-shadow:inset 0 0 12px #f16b7535,inset 0 0 2px #f16b7566}.last-ten-result.draw{color:#60a5fa;border-color:#60a5fa88;background:#60a5fa12;box-shadow:inset 0 0 12px #60a5fa35,inset 0 0 2px #60a5fa66}.last-ten-result.unknown{color:var(--muted)}.session-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}.session-grid>div{padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:8px}.session-grid strong{display:block;font-size:21px;margin-top:4px}.session-elo-positive{color:#36c879}.session-elo-negative{color:#f16b75}.session-winrate-track{height:7px;margin-top:9px;border-radius:999px;overflow:hidden;background:#d85c68}.session-winrate-track span{display:block;height:100%;background:#36c879;border-radius:999px 0 0 999px}
 .profile-stats-docks{display:flex;flex-direction:column;gap:8px;margin:14px 0;align-items:stretch}.profile-stats-docks .session-panel{margin:0;min-width:0}.overall-panel>summary{display:flex;align-items:center;gap:10px;cursor:pointer;list-style:none;font-size:16px;font-weight:700}.overall-panel>summary::-webkit-details-marker{display:none}.overall-panel>summary:before{content:"›";display:inline-block;color:var(--muted);font-size:20px;line-height:1;transition:transform .15s}.overall-panel[open]>summary:before{transform:rotate(90deg)}.overall-panel .session-grid{margin-top:14px}.overall-panel .session-grid>div{min-width:0;overflow-wrap:anywhere}.overall-panel #sessionStats{margin-top:14px}.res.d{color:#60a5fa}.ff-tag{display:none}
 /* match modal */
@@ -532,7 +541,18 @@ function setTab(v){[...document.querySelectorAll("#tabs button")].forEach(b=>b.c
 function stopProfile(){P=null;if(io){io.disconnect();io=null}}
 const go=h=>{if(location.hash===h)route();else location.hash=h};
 
+function playEndPortal(){
+  if(document.getElementById("endPortalTransition"))return;
+  const layer=document.createElement("div");layer.id="endPortalTransition";layer.setAttribute("aria-hidden","true");
+  const frame=document.createElement("div");frame.className="portal-frame";
+  const inner=document.createElement("div");inner.className="portal-inner";frame.appendChild(inner);layer.appendChild(frame);document.body.appendChild(layer);
+  setTimeout(()=>layer.remove(),950);
+}
+let previousRouteHash=location.hash;
 function route(){
+  const oldHash=previousRouteHash,newHash=location.hash;previousRouteHash=newHash;
+  const isProfileHash=h=>!!h&&h!=="#"&&!h.startsWith("#!") ;
+  if(isProfileHash(oldHash)&&isProfileHash(newHash)&&oldHash!==newHash)playEndPortal();
   if(window.setAustralianMode)window.setAustralianMode(false);
   closeModal();if(lio){lio.disconnect();lio=null}
   const raw=location.hash.slice(1);
@@ -618,6 +638,50 @@ function privTiles(list,uid){
   const wins=list.filter(x=>x.result&&x.result.uuid===uid&&!x.decayed&&!x.forfeited),ts=wins.map(x=>Number(x.result.time)).filter(t=>Number.isFinite(t)&&t>0);
   const best=ts.length?Math.min(...ts):null,avg=ts.length?ts.reduce((a,b)=>a+b,0)/ts.length:null;
   return[["Matches loaded",list.length,P.st[P.mode].done?"all loaded":"scroll for more"],["Wins",wins.length,pct(wins.length,list.length)+" win rate"],["Best time",fmt(best),"fastest win loaded"],["Avg. finish",fmt(avg),ts.length+" wins timed"],["With VOD",list.filter(x=>x.vod&&x.vod.length).length,"streamed matches"]];
+}
+function matchTimestamp(value){
+ const n=Number(value);if(!Number.isFinite(n)||n<=0)return 0;
+ return n<1e12?n*1000:n;
+}
+function renderWeeklyRival(tok=P){
+ const card=$("weeklyRivalCard"),host=$("weeklyRivalContent"),status=$("weeklyRivalStatus");
+ if(!card||!host||!tok?.u||!tok.st?.ranked)return;
+ if(tok.profileSeason&&Number(tok.profileSeason)!==T.currentSeason){
+  host.innerHTML='<span class="mut">Weekly rival is shown for the current season only.</span>';if(status)status.textContent="Current season";return;
+ }
+ const cutoff=Date.now()-7*24*60*60*1000,uid=String(tok.u.uuid);
+ const recent=tok.st.ranked.list.filter(m=>matchTimestamp(m.date)>=cutoff&&!m.decayed&&!m.isDecay);
+ const counts=new Map();
+ for(const m of recent){
+  const opp=(m.players||[]).find(p=>String(p.uuid)!==uid);
+  if(!opp?.uuid||!opp.nickname)continue;
+  const key=String(opp.uuid),entry=counts.get(key)||{opp,matches:0,elo:0};
+  entry.matches++;
+  const change=(m.changes||[]).find(x=>String(x.uuid)===uid);
+  if(change&&change.change!=null&&Number.isFinite(Number(change.change)))entry.elo+=Number(change.change);
+  counts.set(key,entry);
+ }
+ const rival=[...counts.values()].sort((a,b)=>b.matches-a.matches||a.opp.nickname.localeCompare(b.opp.nickname))[0];
+ if(!rival){
+  host.innerHTML=tok.st.ranked.done?'<span class="mut">No ranked opponents found in the last 7 days.</span>':'<span class="mut">Loading this week’s matches…</span>';
+ }else{
+  const delta=rival.elo,deltaText=(delta>0?"+":"")+Math.round(delta).toLocaleString();
+  host.innerHTML='<img class="weekly-rival-avatar" loading="lazy" alt="" src="https://laby.net/api/v3/render/bust/'+enc(rival.opp.uuid)+'.webp?width=84&height=84"><a class="weekly-rival-name" href="#'+enc(rival.opp.nickname)+'">'+esc(rival.opp.nickname)+'</a><div class="weekly-rival-metric"><small>Matches played</small><strong>'+rival.matches.toLocaleString()+'</strong></div><div class="weekly-rival-metric"><small>Elo gain / loss</small><strong class="'+(delta>0?"up":delta<0?"down":"mut")+'">'+deltaText+'</strong></div>';
+ }
+ if(status)status.textContent=tok.st.ranked.done?"Last 7 days":"Last 7 days · loading history";
+ // Pull enough history to cover the entire seven-day window, but stop as soon as the oldest
+ // loaded match predates the cutoff. Only one background loader is allowed per profile.
+ const oldest=tok.st.ranked.list.reduce((min,m)=>Math.min(min,matchTimestamp(m.date)||Infinity),Infinity);
+ if(!tok.st.ranked.done&&!tok.st.ranked.err&&oldest>cutoff&&!tok.weeklyRivalLoading){
+  tok.weeklyRivalLoading=true;
+  (async()=>{try{
+   while(P===tok&&!tok.st.ranked.done&&!tok.st.ranked.err){
+    const before=tok.st.ranked.list.reduce((min,m)=>Math.min(min,matchTimestamp(m.date)||Infinity),Infinity);
+    if(before<=cutoff)break;
+    await loadMore("ranked",100);
+   }
+  }finally{tok.weeklyRivalLoading=false;if(P===tok)renderWeeklyRival(tok)}})();
+ }
 }
 function renderTiles(){
   const t=$("tiles");if(!t||!P||!P.u)return;
@@ -813,10 +877,11 @@ function renderProfile(){
   $("out").innerHTML=
   `<section class="hero"><div class="profile-model" id="profilePlayerModel" aria-label="3D Minecraft player model following the cursor"><canvas id="profilePlayerCanvas" aria-label="3D Minecraft player model"></canvas></div>
    <div><h1>${(historicalSeason?seasonStanding.eloRank:u.eloRank)!=null?`<span class="profile-rank ${[1,2,3].includes(Number(historicalSeason?seasonStanding.eloRank:u.eloRank))?`podium-${historicalSeason?seasonStanding.eloRank:u.eloRank}`:""}">#${historicalSeason?seasonStanding.eloRank:u.eloRank}</span> `:""}${flag(u.country)?flag(u.country)+" ":""}<span class="profile-username t-${tier}">${emojiName(u.nickname||"—",u)}</span></h1><div id="recentNameWarning"></div>${socials}</div>
-   <div class="elo"><div class="mut" style="font-size:12px;margin-bottom:5px">${historicalSeason?"End-of-season Elo":"Current Elo"}</div><div class="n t-${tier}">${elo!=null?elo.toLocaleString():"—"}</div><div class="r">${elo!=null?icon(elo,26):""}<span>${elo!=null?r.n:"Not available"} · Peak Elo ${peak!=null?peak.toLocaleString():"—"}</span></div></div></section>
+   <div class="elo"><div class="mut" style="font-size:12px;margin-bottom:5px">${historicalSeason?"End-of-season Elo":"Current Elo"}</div><div class="n t-${tier}">${elo!=null?elo.toLocaleString():"—"}${!historicalSeason&&elo!=null&&peak!=null&&Number(elo)===Number(peak)?'<span class="peak-flame" title="Current Elo equals peak Elo">🔥</span>':""}</div><div class="r">${elo!=null?icon(elo,26):""}<span>${elo!=null?r.n:"Not available"} · Peak Elo ${peak!=null?peak.toLocaleString():"—"}</span></div></div></section>
    
     <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
    <div class="tiles" id="tiles"></div>
+   <section class="card weekly-rival-card" id="weeklyRivalCard"><h2>This week's rival <span id="weeklyRivalStatus">Checking recent matches…</span></h2><div id="weeklyRivalContent" class="weekly-rival-content"><span class="mut">Finding your most-played opponent from the last 7 days…</span></div></section>
    <div class="profile-stats-docks">
     <details class="card session-panel overall-panel" id="sessionPanel"><summary id="sessionTitle">Current Session</summary><div id="sessionStats"></div></details>
     <details class="card session-panel overall-panel" id="overallPanel"><summary>Overall Stats</summary><div class="session-grid">
@@ -951,7 +1016,7 @@ function loadMore(mode,count){
     if(mode==="ranked")refreshSessionStats();
     if(tok.mode===mode&&$("tb"))renderMatchRows();
     if(tok.mode===mode){
-      renderTiles();sentUI();kick();
+      renderTiles();if(mode==="ranked")renderWeeklyRival(tok);sentUI();kick();
       if(mode==="ranked"&&(tok.full||st.list.length-add.length<50))refreshGraph();
     }
   }).catch(e=>{st.p=null;st.err=e.message||"error";if(P===tok)sentUI()});
