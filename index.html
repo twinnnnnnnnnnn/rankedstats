@@ -480,6 +480,27 @@ function countryOptions(){
 /* ---------- data layer ---------- */
 const MT={casual:1,ranked:2,private:3};
 const UC={},MC={};
+const MERGED_PLAYER_GROUPS=[{primary:"HDMICables",aliases:["mufatmcsr"]}];
+function mergedPlayerGroup(name){
+ const n=String(name||"").toLowerCase();
+ return MERGED_PLAYER_GROUPS.find(g=>g.primary.toLowerCase()===n||g.aliases.some(a=>a.toLowerCase()===n))||null;
+}
+function mergeNumericTree(a,b){
+ if(typeof a==="number"&&typeof b==="number")return a+b;
+ if(a&&b&&typeof a==="object"&&typeof b==="object"&&!Array.isArray(a)&&!Array.isArray(b)){
+  const out={...a};for(const k of Object.keys(b))out[k]=k in a?mergeNumericTree(a[k],b[k]):b[k];return out;
+ }
+ return a==null?b:a;
+}
+function normalizeMergedMatch(match,sourceUsers,primary){
+ const ids=new Set(sourceUsers.map(u=>String(u.uuid)));
+ const mapId=id=>ids.has(String(id))?primary.uuid:id;
+ const m={...match};
+ if(Array.isArray(m.players))m.players=m.players.map(p=>ids.has(String(p.uuid))?{...p,uuid:primary.uuid,nickname:primary.nickname}:p);
+ if(m.result)m.result={...m.result,uuid:mapId(m.result.uuid)};
+ for(const key of ["changes","vod","completions","timelines"])if(Array.isArray(m[key]))m[key]=m[key].map(x=>({...x,uuid:mapId(x.uuid)}));
+ return m;
+}
 function getUser(n){const k=String(n).toLowerCase();if(!UC[k]){UC[k]=get(API+"/users/"+enc(n));UC[k].catch(()=>{delete UC[k]})}return UC[k]}
 function fetchMatches(who,type,before,count,sort,season){return get(API+"/users/"+enc(who)+"/matches?count="+count+"&type="+type+(before?"&before="+before:"")+(sort?"&sort="+sort:"")+(season?"&season="+season:""))}
 const Q=[];let running=0;
@@ -552,14 +573,26 @@ function showProfile(name){
   document.body.classList.remove("lyxier-profile-bg");
   updateLyxierDecor(false);
   stopLyxierBounce();
-  setTab("profile");$("q").value=name;lastName=name;
+  const group=mergedPlayerGroup(name),displayName=group?group.primary:name;
+  setTab("profile");$("q").value=displayName;lastName=displayName;
   if(io){io.disconnect();io=null}
-  $("out").innerHTML='<div class="msg skel">Loading '+esc(name)+'…</div>';
-  const tok={name};P=tok;
-  getUser(name).then(u=>{
+  $("out").innerHTML='<div class="msg skel">Loading '+esc(displayName)+'…</div>';
+  const tok={name:displayName,requestedName:name,mergeGroup:group};P=tok;
+  const requested=group?[group.primary,...group.aliases]:[name];
+  Promise.all(requested.map(n=>getUser(n).then(u=>({requested:n,u})).catch(e=>({requested:n,error:e})))).then(results=>{
     if(P!==tok)return;
-    const mk=()=>({list:[],done:false,p:null,err:null});
-    Object.assign(tok,{u,baseUser:u,mode:"ranked",full:false,matchSort:"recent",matchTwitchNames:false,profileSeason:"current",st:{ranked:mk(),private:mk(),casual:mk()}});
+    const found=results.filter(x=>x.u);
+    if(!found.length)throw (results[0]?.error||new Error("Player not found"));
+    const base=found.find(x=>group&&x.requested.toLowerCase()===group.primary.toLowerCase())?.u||found[0].u;
+    const sourceUsers=found.map(x=>x.u),u={...base};
+    if(group&&sourceUsers.length>1){
+      u.nickname=group.primary;u.statistics={...(base.statistics||{})};
+      for(const other of sourceUsers){if(other===base)continue;
+        for(const scope of ["season","total"])u.statistics[scope]=mergeNumericTree(u.statistics[scope]||{},other.statistics?.[scope]||{});
+      }
+    }
+    const mk=()=>({list:[],done:false,p:null,err:null,cursors:{},sourceDone:{}});
+    Object.assign(tok,{u,baseUser:base,sourceUsers,merged:!!group&&sourceUsers.length>1,mode:"ranked",full:false,matchSort:"recent",matchTwitchNames:false,profileSeason:"current",st:{ranked:mk(),private:mk(),casual:mk()}});
     sel=null;selId=null;renderProfile();
   }).catch(e=>{
     if(P!==tok)return;
@@ -792,15 +825,25 @@ function loadMore(mode,count){
   st.err=null;
   const n=count||PAGE,last=st.list.length?st.list[st.list.length-1].id:null;
   sentUI();
-  st.p=fetchMatches(tok.u.uuid,MT[mode],last,n,null,mode==="ranked"?Number(tok.profileSeason)||null:null).then(r=>{
+  const sources=tok.sourceUsers?.length?tok.sourceUsers:[tok.u];
+  st.p=Promise.all(sources.filter(src=>!st.sourceDone?.[String(src.uuid)]).map(src=>{
+    const key=String(src.uuid),before=st.cursors?.[key]||null;
+    return fetchMatches(src.uuid,MT[mode],before,n,null,mode==="ranked"?Number(tok.profileSeason)||null:null).then(rows=>{
+      const r=Array.isArray(rows)?rows:[];
+      if(!r.length||r.length<n){st.sourceDone=st.sourceDone||{};st.sourceDone[key]=true;}
+      st.cursors=st.cursors||{};if(r.length)st.cursors[key]=r[r.length-1].id;
+      return r.map(x=>tok.merged?normalizeMergedMatch(x,sources,tok.u):x);
+    });
+  })).then(batches=>{
     st.p=null;
-    const have=new Set(st.list.map(x=>x.id)),add=r.filter(x=>!have.has(x.id));
-    if(!add.length)st.done=true;
-    st.list.push(...add);
+    const have=new Set(st.list.map(x=>x.id)),add=batches.flat().filter(x=>!have.has(x.id));
+    st.list.push(...add);st.list.sort((a,b)=>Number(b.date||0)-Number(a.date||0));
+    st.sourceDone=st.sourceDone||{};
+    st.done=sources.every(src=>st.sourceDone[String(src.uuid)]);
     if(P!==tok)return;
     refreshPlayerTribute();
     if(mode==="ranked")refreshSessionStats();
-    if(tok.mode===mode&&$("tb")){if(tok.matchSort==="fastest"||tok.matchSort==="oldest")renderMatchRows();else $("tb").insertAdjacentHTML("beforeend",visibleMatches(mode,add).map(rowHTML).join(""))}
+    if(tok.mode===mode&&$("tb"))renderMatchRows();
     if(tok.mode===mode){
       renderTiles();sentUI();kick();
       if(mode==="ranked"&&(tok.full||st.list.length-add.length<50))refreshGraph();
