@@ -72,8 +72,7 @@ h1{margin:0;font-size:28px;letter-spacing:-.02em}
 .social-link svg{width:19px;height:19px;flex:none}
 .social-link .social-name{overflow-wrap:anywhere}
 .social-link.discord{font:inherit;font-weight:600}
-.twitch-live-dot{display:none;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.15);flex:none;vertical-align:middle}.twitch-live-dot.is-live{display:inline-block}.twitch-live-label{display:none;color:#ef4444;font-size:15px;font-weight:800;letter-spacing:.06em}.twitch-live-label.is-live{display:inline}.clip-embed-fallback a{color:var(--text)}
-@media(max-width:520px){.social-link{flex:1 1 auto}}
+.twitch-live-dot{display:none;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.15);flex:none;vertical-align:middle}.twitch-live-dot.is-live{display:inline-block}.twitch-live-label{display:none;color:#ef4444;font-size:15px;font-weight:800;letter-spacing:.06em}.twitch-live-label.is-live{display:inline}@media(max-width:520px){.social-link{flex:1 1 auto}}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:14px 0}
 .tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;transition:transform .15s,border-color .15s}
 .tile:hover{transform:translateY(-2px);border-color:var(--accent2)}
@@ -772,7 +771,6 @@ function renderProfile(){
   refreshSessionStats();renderTiles();layout();sentUI();refreshGraph();setupIO();
   if(!st.list.length&&!st.done&&!st.p&&!st.err)loadMore(P.mode);
   if(P.mode==="ranked")loadRankedTimeStats(P);
-  const clipSection=document.querySelector("[data-twitch-clips]");if(clipSection)loadTopClip(clipSection.dataset.login,"7d",clipSection);
 }
 // Private rooms: display Any% category only (other match types unchanged).
 function visibleMatches(mode,matches){
