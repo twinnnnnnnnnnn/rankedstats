@@ -788,14 +788,16 @@ function setupProfileSkinViewer(uuid){
    viewer.zoom=0.85;viewer.camera.position.set(0,16,42);viewer.controls.target.set(0,16,0);viewer.camera.lookAt(0,16,0);viewer.controls.update();
    const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(76,stage.clientWidth||112),h=Math.max(120,stage.clientHeight||156);viewer.setSize(w,h);viewer.camera.aspect=w/h;viewer.camera.updateProjectionMatrix()};
    if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(stage);viewer._profileResizeObserver=ro}
-   const sources=["https://mc-heads.net/skin/"+encodeURIComponent(id),"https://minotar.net/skin/"+encodeURIComponent(id)];
+   const skinId=id.replace(/-/g,"");
+   const playerName=String(P?.u?.nickname||"").trim();
+   const sources=["https://crafatar.com/skins/"+encodeURIComponent(skinId)+"?overlay", "https://mc-heads.net/skin/"+encodeURIComponent(skinId), ...(playerName?["https://mc-heads.net/skin/"+encodeURIComponent(playerName)]:[])];
    const load=async()=>{
     let lastError;
     for(const src of sources){
-     try{await viewer.loadSkin(src);if(window.profileSkinViewer!==viewer)return;if(viewer.playerObject){viewer.playerObject.rotation.y=0.22;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0;}stage.dataset.skinError="false";resize();return;}
+     try{await viewer.loadSkin(src);if(window.profileSkinViewer!==viewer)return;if(viewer.playerObject){viewer.playerObject.rotation.y=0.22;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0;}stage.dataset.skinError="false";canvas.style.visibility="visible";resize();return;}
      catch(e){lastError=e;}
     }
-    stage.dataset.skinError="true";console.warn("Profile skin failed to load",lastError);
+    stage.dataset.skinError="true";canvas.style.visibility="hidden";console.warn("Profile skin failed to load",lastError);
    };
    resize();load();
   }catch(e){stage.dataset.skinError="true";console.warn("Profile skin renderer failed",e);}
