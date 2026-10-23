@@ -353,7 +353,7 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 <div class="wrap">
 <nav>
   <a class="logo" id="logo" href="#!lb/season" aria-label="Season leaderboard"><img alt="Site logo" src="https://femboy.beauty/jzRZs6"></a>
-  <div class="tabs" id="tabs"><button data-t="fast">Fastest Time</button><button data-t="lb">Leaderboard</button><button data-t="profile">Profile</button></div>
+  <div class="tabs" id="tabs"><button data-t="fast">Fastest Time</button><button data-t="lb">Leaderboard</button><button data-t="useless">Useless Stats</button><button data-t="profile">Profile</button></div>
   <form id="f"><input id="q" type="text" placeholder="Player name or UUID" aria-label="Player"><button class="go">Search</button></form>
   <div class="settings-wrap" id="settingsWrap">
     <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Settings" title="Settings" aria-expanded="false">⚙</button>
@@ -477,11 +477,12 @@ function route(){
   if(raw.indexOf("!casino")===0)return go("#!lb/season");
   if(raw.indexOf("!predictions")===0)return go("#!lb/season");
   if(raw.indexOf("!fast")===0)return showFastest();
+  if(raw.indexOf("!useless")===0){const p=raw.split("/");return showUselessStats(p[1]||"season",p[2]||"ff")}
   if(!raw||raw.indexOf("!lb")===0||raw.indexOf("!players")===0){const p=raw.split("/");return showLeaderboard(p[1]||"season")}
   showProfile(dec(raw));
 }
 $("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;
-  if(b.dataset.t==="profile")openRandomRankedProfile();else if(b.dataset.t==="fast")go("#!fast");else go("#!lb/season")};
+  if(b.dataset.t==="profile")openRandomRankedProfile();else if(b.dataset.t==="fast")go("#!fast");else if(b.dataset.t==="useless")go("#!useless/season/ff");else go("#!lb/season")};
 // Choose only a player whose actual current leaderboard rank is 1–150.
 async function openRandomRankedProfile(){
   const btn=document.querySelector('#tabs button[data-t="profile"]');
@@ -1063,7 +1064,7 @@ const RC={};
 let lio=null;
 function calc(u,sc){
   const p=stat(u,sc,"playedMatches"),w=stat(u,sc,"wins"),f=stat(u,sc,"forfeits"),c=stat(u,sc,"completions"),t=stat(u,sc,"completionTime");
-  const games=p!=null?Math.max(0,p-(f||0)):null;
+  const games=p!=null?Math.max(0,p):null;
   return{games,wins:w,wr:games>0&&w!=null?w/games*100:null,pb:stat(u,sc,"bestTime"),avg:c&&t!=null?t/c:null};
 }
 function loadRow(name){
@@ -1166,6 +1167,84 @@ function loadHistoricalStats(rows){
       finally{T.histLoading.delete(key);if(req===T.requestId&&T.historical&&Number(T.view)===season)renderHistorical(false)}
     });
   }
+}
+
+/* ---------- Useless Stats: ranked match/timeline leaderboards ---------- */
+const US={view:"season",metric:"ff",token:0,rows:[],cache:new Map(),busy:false};
+const US_METRICS={ff:"Most FFs",deaths:"Most Deaths",resets:"Most World Resets",owDeaths:"Most Overworld Deaths",endDeaths:"Most End Deaths",dragonFF:"Most Forfeits After Opponent’s Dragon Dies"};
+function usSeasonOptions(view){return Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(view)===String(n)?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")+`<option value="all" ${view==="all"?"selected":""}>All Time</option>`}
+function timelineCount(m,uuid,kind){
+ const ts=Array.isArray(m.timelines)?m.timelines:[];
+ return ts.filter(t=>t.uuid===uuid&&(()=>{const x=String(t.type||"").toLowerCase();if(kind==="deaths")return /death/.test(x)&&!/dragon/.test(x);if(kind==="resets")return /reset/.test(x);if(kind==="owDeaths")return /death/.test(x)&&!/dragon/.test(x)&&/(overworld|world|\bow\b)/.test(x);if(kind==="endDeaths")return /death/.test(x)&&!/dragon/.test(x)&&/(end|the_end)/.test(x);return false})()).length;
+}
+function metricFromUser(u,metric,view){
+ const scope=view==="all"?"total":"season";
+ const getStat=(keys)=>{for(const k of keys){const v=stat(u,scope,k);if(v!=null&&Number.isFinite(Number(v)))return Number(v)}return null};
+ if(metric==="ff")return getStat(["forfeits","forfeitMatches"]);
+ return null;
+}
+async function collectUselessUser(entry,view,token){
+ const key=(view+":"+entry.uuid);
+ if(US.cache.has(key)&&!US.cache.get(key).loading)return US.cache.get(key);
+ const row={...entry,ff:null,deaths:0,resets:0,owDeaths:0,endDeaths:0,dragonFF:0,loading:true};US.cache.set(key,row);
+ try{
+  const u=await get(API+"/users/"+enc(entry.uuid)+(view==="all"?"":"?season="+enc(view)));
+  row.ff=metricFromUser(u,"ff",view);
+  const ffFromStats=row.ff!=null; if(!ffFromStats)row.ff=0;
+  let before=null;
+  // Timeline event stats are not aggregated by the public user-statistics schema,
+  // so derive them from the API's actual ranked match timelines.
+  for(let page=0;page<100;page++){
+   if(token!==US.token)return row;
+   const batch=await fetchMatches(entry.uuid,MT.ranked,before,100,null,view==="all"?null:Number(view));
+   if(!Array.isArray(batch)||!batch.length)break;
+   for(const m of batch){
+    if(m.decayed)continue;
+    if(!ffFromStats&&m.forfeited)row.ff++;
+    const ts=Array.isArray(m.timelines)?m.timelines:[];
+    const mine=ts.filter(t=>t.uuid===entry.uuid);
+    row.deaths+=timelineCount(m,entry.uuid,"deaths");row.resets+=timelineCount(m,entry.uuid,"resets");row.owDeaths+=timelineCount(m,entry.uuid,"owDeaths");row.endDeaths+=timelineCount(m,entry.uuid,"endDeaths");
+    if(m.forfeited&&m.result?.uuid){
+     const loser=(m.players||[]).find(pl=>pl.uuid!==m.result.uuid);
+     if(loser&&loser.uuid===entry.uuid&&ts.some(t=>t.uuid!==entry.uuid&&/dragon_death|dragon\.death|free_the_end/i.test(String(t.type||""))))row.dragonFF++;
+    }
+   }
+   if(batch.length<100)break;
+   before=batch[batch.length-1]?.id;
+   if(!before)break;
+  }
+ }catch(e){row.error=true;row.errorText=String(e.message||e)}
+ row.loading=false;
+ if(token===US.token)renderUselessStats(false);
+ return row;
+}
+async function showUselessStats(view,metric){
+ setTab("useless");stopProfile();const token=++US.token;
+ US.view=view==="all"?"all":(view==="season"?String(T.currentSeason):String(view));US.metric=US_METRICS[metric]?metric:"ff";US.busy=true;
+ $("out").innerHTML=`<div class="card"><div class="ptools"><label for="usSeason">Season</label><select id="usSeason">${usSeasonOptions(US.view)}</select><label for="usMetric">Stat</label><select id="usMetric">${Object.entries(US_METRICS).map(([k,v])=>`<option value="${k}" ${US.metric===k?"selected":""}>${esc(v)}</option>`).join("")}</select><span class="sp"></span><span id="usStatus" class="mut">Loading player data…</span></div><p class="mut" style="margin:0 0 12px">Timeline-based stats are counted from ranked match data. The board uses players returned by the public leaderboard; unavailable timeline data is not guessed.</p><div class="scroll" style="max-height:none"><div id="usTable"><div class="msg skel">Loading Useless Stats…</div></div></div><div class="sent" id="usSent"></div></div>`;
+ try{
+  if(!T.globalLb){T.globalLb=await get(API+"/leaderboard");const n=Number(T.globalLb.season&&T.globalLb.season.number);if(Number.isInteger(n)&&n>0)T.currentSeason=n;}
+  if(token!==US.token)return;
+  let board=T.globalLb;
+  if(US.view!=="all"&&Number(US.view)!==T.currentSeason){board=await get(API+"/leaderboard?season="+enc(US.view));if(token!==US.token)return;if(Number(board.season?.number)!==Number(US.view))throw Error("The API did not return that season’s leaderboard.")}
+  const users=(board.users||[]).slice(0,150);
+  US.rows=users.map(u=>({name:u.nickname,uuid:u.uuid,country:countryCode(u),rank:u.eloRank??u.seasonResult?.eloRank,elo:u.eloRate??u.seasonResult?.eloRate}));
+  renderUselessStats();
+  // Reuse cached per-player season data; keep concurrency low to avoid API bursts.
+  let ix=0;const workers=Array.from({length:3},async()=>{while(ix<US.rows.length&&token===US.token){const entry=US.rows[ix++];await collectUselessUser(entry,US.view,token)}});await Promise.all(workers);
+  if(token===US.token){US.busy=false;renderUselessStats();}
+ }catch(e){if(token===US.token){US.busy=false;const host=$("usTable");if(host)host.innerHTML='<div class="msg">Could not load Useless Stats: '+esc(e.message||e)+'</div>';const st=$("usStatus");if(st)st.textContent=""}}
+}
+function renderUselessStats(rebuild=true){
+ const host=$("usTable");if(!host)return;
+ const metric=US.metric,field=metric;
+ const sorted=US.rows.map(r=>US.cache.get(US.view+":"+r.uuid)||{...r,loading:true}).filter(r=>!r.error||r[field]!=null).sort((a,b)=>{
+  const av=a[field],bv=b[field];if(av==null&&bv==null)return String(a.name).localeCompare(String(b.name));if(av==null)return 1;if(bv==null)return -1;return bv-av||String(a.name).localeCompare(String(b.name));
+ });
+ const fmtVal=r=>r.loading&&r[field]==null?"…":r[field]==null?"—":Number(r[field]).toLocaleString();
+ host.innerHTML='<table class="pt2" style="min-width:520px"><thead><tr><th>#</th><th>Player</th><th class="num">'+esc(US_METRICS[metric])+'</th></tr></thead><tbody>'+sorted.map((r,i)=>'<tr><td class="mut">'+(i+1)+'</td><td><span class="who">'+flagSlot(r.country)+'<img class="head" alt="" loading="lazy" src="https://laby.net/api/v3/render/bust/'+enc(r.uuid)+'.webp?width=40&height=40"><a href="#'+enc(r.name)+'">'+esc(r.name)+'</a></span></td><td class="num">'+fmtVal(r)+'</td></tr>').join("")+'</tbody></table>';
+ const status=$("usStatus");if(status)status.textContent=US.busy?sorted.filter(r=>r.loading).length+" players still loading":"";
+ const sent=$("usSent");if(sent)sent.textContent="Top "+US.rows.length+" players from the public leaderboard";
 }
 
 // Live badges for leaderboard rows. Status checks use the same server endpoint as profiles.
@@ -1326,6 +1405,8 @@ async function showFastest(){
 const out=$("out");
 out.addEventListener("change",async e=>{
   if(e.target.id==="fastSeason"){FAST.season=e.target.value;showFastest();return;}
+  if(e.target.id==="usSeason"){go("#!useless/"+e.target.value+"/"+US.metric);return;}
+  if(e.target.id==="usMetric"){go("#!useless/"+US.view+"/"+e.target.value);return;}
   if(e.target.id==="fastTwitchNames"){FAST.twitchNames=e.target.checked;renderFastest();return;}
 
   if(e.target.id==="lbseason")go("#!lb/"+e.target.value);
@@ -1450,7 +1531,8 @@ if(!document.getElementById('out')?.innerHTML.trim())showStartupError('Initial p
  'Loading leaderboard…':'ランキングを読み込み中…','Loading more…':'読み込み中…','Loading…':'読み込み中…',
  'Search player':'プレイヤー検索','Recent matches':'最近のマッチ','Best':'ベスト','Points':'ポイント',
  'Show more':'もっと見る','Close':'閉じる','Completed':'完了','Date':'日付','Season stats':'シーズン統計',
- 'No matches found':'マッチが見つかりません','No results':'結果がありません','Profile not found':'プロフィールが見つかりません'
+ 'No matches found':'マッチが見つかりません','No results':'結果がありません','Profile not found':'プロフィールが見つかりません',
+ 'Useless Stats':'役に立たない統計','Most FFs':'最多FF','Most Deaths':'最多死亡回数','Most World Resets':'最多ワールドリセット','Most Overworld Deaths':'最多オーバーワールド死亡','Most End Deaths':'最多エンド死亡','Most Forfeits After Opponent’s Dragon Dies':'相手のドラゴン死亡後の最多FF','Season':'シーズン','All Time':'全期間'
  };
  const original=new WeakMap(); let lang='en', busy=false;
  const skip='SCRIPT,STYLE,INPUT,TEXTAREA,CODE,PRE,OPTION';
