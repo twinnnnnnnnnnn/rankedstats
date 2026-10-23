@@ -790,7 +790,14 @@ function setupProfileSkinViewer(uuid){
       else if(key==="wave")animation=make("WaveAnimation");
       else animation=make("IdleAnimation");
       viewer.animation=animation;
-      if(viewer.animation){viewer.animation.speed=animSpeed;if((key==="sit"||key==="shit")&&"paused" in viewer.animation)viewer.animation.paused=true}
+      if(viewer.animation){
+        viewer.animation.speed=animSpeed;
+        if(key==="sit"||key==="shit"){
+          // Let the crouch animation settle into a low pose, then hold it like a screenshot pose.
+          const activeAnimation=viewer.animation;
+          setTimeout(()=>{if(window.profileSkinViewer===viewer&&poseName===key&&viewer.animation===activeAnimation)activeAnimation.paused=true},520);
+        }
+      }
       document.querySelectorAll("[data-skin-pose]").forEach(b=>b.classList.toggle("active",b.dataset.skinPose===key));
       if(status.isConnected)status.textContent="POSE // "+({idle:"IDLE",run:"RUNNING",boat:"BOATING",crawl:"CRAWLING",sit:"SITTING",shit:"SHITTING 💀",swim:"SWIMMING",fly:"FLYING",wave:"WAVING"}[key]||key.toUpperCase())+" · "+animSpeed.toFixed(1)+"×";
     };
