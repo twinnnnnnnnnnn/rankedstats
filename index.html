@@ -570,7 +570,7 @@ function info(x,uid){
 
 /* ---------- router ---------- */
 const PAGE=30;
-let P=null,pts=[],sel=null,selId=null,io=null,lastName="Feinberg",graphPrediction=false;
+let P=null,pts=[],sel=null,selId=null,io=null,lastName="Feinberg";
 function setTab(v){[...document.querySelectorAll("#tabs button")].forEach(b=>b.classList.toggle("on",b.dataset.t===v))}
 function stopProfile(){P=null;if(io){io.disconnect();io=null}}
 const go=h=>{if(location.hash===h)route();else location.hash=h};
@@ -942,7 +942,7 @@ function renderProfile(){
     <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
    <div class="tiles" id="tiles"></div><details class="card session-panel" id="sessionPanel"><summary>Current Session</summary><div id="sessionStats"></div></details>
    <div class="main">
-    <div class="card" id="cardChart"><h2>Elo history <span id="gsub"></span><span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><button id="predictToggle" class="mini" type="button" aria-pressed="false">Show Elo prediction</button><span class="seg" id="gm" style="min-width:210px"><button data-g="recent" class="${P.full?"":"on"}">Recent 50</button><button data-g="full" class="${P.full?"on":""}">Full season</button></span></span></h2><div id="gArea"></div></div>
+    <div class="card" id="cardChart"><h2>Elo history <span id="gsub"></span><span class="seg" id="gm" style="min-width:210px"><button data-g="recent" class="${P.full?"":"on"}">Recent 50</button><button data-g="full" class="${P.full?"on":""}">Full season</button></span></h2><div id="gArea"></div></div>
     <div class="card" id="cardTable"><h2>${P.mode==="ranked"?"Ranked matches":P.mode==="casual"?"Casual matches":"Private room matches"} <span id="cnt2"></span></h2><div class="bar" style="margin:0 0 12px;gap:8px;flex-wrap:wrap"><label for="matchMode">Match type</label><select id="matchMode" aria-label="Match type"><option value="ranked" ${P.mode==="ranked"?"selected":""}>Ranked</option><option value="casual" ${P.mode==="casual"?"selected":""}>Casual</option><option value="private" ${P.mode==="private"?"selected":""}>Private rooms</option></select><label for="matchSort">Sort matches</label><select id="matchSort" aria-label="Sort matches"><option value="recent" ${P.matchSort==="recent"?"selected":""}>Most recent</option><option value="oldest" ${P.matchSort==="oldest"?"selected":""}>Oldest first</option><option value="fastest" ${P.matchSort==="fastest"?"selected":""}>Fastest finish (wins only)</option></select><label class="lb-twitch-toggle" title="Show linked Twitch usernames instead of Minecraft names"><input type="checkbox" id="matchTwitchNames" ${P.matchTwitchNames?"checked":""}> Twitch names</label></div><div class="scroll" id="sc"><table><thead><tr><th>Result</th><th>Opponent</th><th>Time</th>${rkd?"<th>Elo</th>":""}<th>Seed</th><th>VOD</th><th>When</th></tr></thead><tbody id="tb"></tbody></table><div class="sent" id="sent"></div></div></div>
    </div>`;
   
@@ -1111,8 +1111,6 @@ function refreshGraph(){
   if(selId!=null){const k=pts.findIndex(p=>String(p.id)===String(selId));if(k>0)sel=k}
   const ga=$("gArea");
   $("gsub").textContent=Math.max(pts.length-1,0)+" ranked matches"+(P.full?(st.done?" · season start → now":" · partial"):"")+" · hover or click";
-  const pb=$("predictToggle");
-  if(pb){pb.classList.toggle("on",graphPrediction);pb.setAttribute("aria-pressed",String(graphPrediction));pb.textContent=graphPrediction?"Hide Elo prediction":"Show Elo prediction";}
   if(pts.length<3){ga.innerHTML='<div class="msg">'+((st.done||st.err)?"Not enough ranked matches yet.":"Loading…")+'</div>';return}
   ga.innerHTML='<div class="chartbox" id="cb"></div><div id="detail">Click a point on the graph to inspect that match.</div>';
   chart();if(sel!=null)showDetail(sel);
@@ -1129,20 +1127,10 @@ function graphRankColor(elo){
   if(name.startsWith("Coal"))return "#737b8c";
   return "#8b91a1";
 }
-function predictionTrend(values){
-  const n=Math.min(20,values.length),v=values.slice(-n);
-  if(n<3)return null;
-  const center=(n-1)/2,mean=v.reduce((a,b)=>a+b,0)/n;
-  let num=0,den=0;
-  for(let i=0;i<n;i++){num+=(i-center)*(v[i]-mean);den+=(i-center)*(i-center)}
-  const slope=den?Math.max(-18,Math.min(18,num/den)):0;
-  return Array.from({length:10},(_,j)=>({x:values.length+j,y:values[values.length-1]+slope*(j+1)}));
-}
 function chart(){
   const d=pts.map(p=>p.elo),lo=Math.min(...d),hi=Math.max(...d),span=Math.max(hi-lo,30);
-  const forecast=graphPrediction?predictionTrend(d):[],count=d.length+forecast.length;
-  const allY=forecast.map(p=>p.y),mn=Math.min(lo,...allY)-Math.max(15,span*.07),mx=Math.max(hi,...allY)+Math.max(15,span*.07);
-  X=i=>PD+i*(W-PD*1.5)/(count-1);Y=v=>H-PD-(v-mn)/(mx-mn)*(H-PD*1.5);
+  const mn=lo-Math.max(15,span*.07),mx=hi+Math.max(15,span*.07);
+  X=i=>PD+i*(W-PD*1.5)/(d.length-1);Y=v=>H-PD-(v-mn)/(mx-mn)*(H-PD*1.5);
   const line=d.map((v,i)=>X(i)+","+Y(v)).join(" ");let grid="";
   for(let k=0;k<4;k++){const v=mn+(mx-mn)*k/3;grid+=`<line x1="${PD}" x2="${W-PD/2}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1" opacity=".42"/><text x="0" y="${Y(v)+4}" fill="var(--muted)" font-size="11" font-family="Lora,serif">${Math.round(v)}</text>`}
   // Sparse time labels give the graph a cleaner, ranked-stats feel without crowding mobile.
@@ -1150,12 +1138,8 @@ function chart(){
   const dateLabels=dateIndices.map(i=>{const p=pts[i],date=p&&p.m&&p.m.date?new Date(Number(p.m.date)*(Number(p.m.date)<1e12?1000:1)):null;const label=date&&!Number.isNaN(date.getTime())?date.toLocaleDateString(undefined,{month:"short",day:"numeric"}):"";return `<text x="${X(i)}" y="${H-7}" text-anchor="${i===0?"start":i===d.length-1?"end":"middle"}" fill="var(--muted)" font-size="10" font-family="Lora,serif">${label}</text>`}).join("");
   const segments=pts.slice(1).map((p,j)=>{const i=j+1;return `<line x1="${X(i-1)}" y1="${Y(pts[i-1].elo)}" x2="${X(i)}" y2="${Y(p.elo)}" stroke="${graphRankColor((pts[i-1].elo+p.elo)/2)}" stroke-width="1.8" stroke-linejoin="miter" stroke-linecap="butt"/>`}).join("");
   const dots=pts.length>250?"":pts.map((p,i)=>p.base?"":`<circle cx="${X(i)}" cy="${Y(p.elo)}" r="1.35" fill="${graphRankColor(p.elo)}"/>`).join("");
-  const currentColor=graphRankColor(d[d.length-1]);let predictionSvg="";
-  if(forecast.length){
-    const forecastLine=[{x:d.length-1,y:d[d.length-1]},...forecast].map(p=>X(p.x)+","+Y(p.y)).join(" "),end=forecast[forecast.length-1];
-    predictionSvg=`<polyline points="${forecastLine}" fill="none" stroke="${currentColor}" stroke-width="2.5" stroke-dasharray="6 5" stroke-linecap="butt"/><circle cx="${X(end.x)}" cy="${Y(end.y)}" r="3.5" fill="${currentColor}"/><text x="${X(end.x)-5}" y="${Math.max(14,Y(end.y)-10)}" text-anchor="end" fill="${currentColor}" font-size="12" font-family="Lora,serif">~${Math.round(end.y)} Elo</text><text x="${X(d.length-1)+8}" y="${H-PD+17}" fill="var(--muted)" font-size="10">TREND ESTIMATE · NEXT 10 MATCHES</text>`;
-  }
-  $("cb").innerHTML=`<svg id="sv" viewBox="0 0 ${W} ${H}" role="img" aria-label="Elo history graph"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${currentColor}" stop-opacity=".12"/><stop offset="1" stop-color="${currentColor}" stop-opacity="0"/></linearGradient></defs>${grid}<polygon points="${X(0)},${H-PD} ${line} ${X(d.length-1)},${H-PD}" fill="url(#g)"/>${segments}${dots}${dateLabels}${predictionSvg}<line id="hl" y1="${PD/2}" y2="${H-PD}" stroke="var(--muted)" stroke-dasharray="2 4" opacity="0"/><circle id="hd" r="5" fill="var(--bg)" stroke="var(--text)" stroke-width="1.5" opacity="0"/><circle id="sd" r="7" fill="none" stroke="${currentColor}" stroke-width="2" opacity="0"/></svg><div id="tip"></div>`;
+  const currentColor=graphRankColor(d[d.length-1]);
+  $("cb").innerHTML=`<svg id="sv" viewBox="0 0 ${W} ${H}" role="img" aria-label="Elo history graph"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${currentColor}" stop-opacity=".12"/><stop offset="1" stop-color="${currentColor}" stop-opacity="0"/></linearGradient></defs>${grid}<polygon points="${X(0)},${H-PD} ${line} ${X(d.length-1)},${H-PD}" fill="url(#g)"/>${segments}${dots}${dateLabels}<line id="hl" y1="${PD/2}" y2="${H-PD}" stroke="var(--muted)" stroke-dasharray="2 4" opacity="0"/><circle id="hd" r="5" fill="var(--bg)" stroke="var(--text)" stroke-width="1.5" opacity="0"/><circle id="sd" r="7" fill="none" stroke="${currentColor}" stroke-width="2" opacity="0"/></svg><div id="tip"></div>`;
   const sv=$("sv");
   const near=e=>{const r=sv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W;let b=0,bd=1e9;pts.forEach((p,i)=>{const dd=Math.abs(X(i)-x);if(dd<bd){bd=dd;b=i}});return b};
   sv.onpointermove=e=>hover(near(e));sv.onpointerleave=()=>hover(null);sv.onclick=e=>select(near(e),true);
@@ -1829,7 +1813,6 @@ out.addEventListener("change",async e=>{
 out.addEventListener("change",e=>{if(e.target.id==="matchTwitchNames"&&P){P.matchTwitchNames=e.target.checked;renderMatchRows();}if(e.target.id==="matchSort")setMatchSort(e.target.value);if(e.target.id==="matchMode"&&P&&P.st&&MT[e.target.value]!=null&&P.mode!==e.target.value){P.mode=e.target.value;P.matchSort="recent";renderProfile()}});
 out.addEventListener("click",e=>{
   const clipBtn=e.target.closest("[data-clip-range]");if(clipBtn){const range=clipBtn.dataset.clipRange;const section=clipBtn.closest(".twitch-clips");if(section){section.querySelectorAll("[data-clip-range]").forEach(b=>b.classList.toggle("active",b===clipBtn));loadTopClip(section.dataset.login,range,section);}return;}
-  if(e.target.closest("#predictToggle")){graphPrediction=!graphPrediction;refreshGraph();return;}
   const fm=e.target.closest("[data-fast-match]");if(fm){openMatch(fm.dataset.fastMatch);return;}
   if(e.target.closest("#fastMore")){FAST.limit+=150;showFastest();return;}
   const t=e.target;
