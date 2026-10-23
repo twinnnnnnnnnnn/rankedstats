@@ -346,14 +346,19 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
  .structure-type{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}.structure-icon{width:29px;height:29px;object-fit:contain;image-rendering:auto;vertical-align:middle}.structure-short{font-size:12px;letter-spacing:.02em} .fast-table td{vertical-align:middle}
 <style>.seed-pair{display:flex;align-items:center;gap:9px;white-space:nowrap}.seed-pair .structure-icon{vertical-align:middle} .ff-tag{color:#f05252;font-size:10px;font-weight:700;margin-left:5px;white-space:nowrap;vertical-align:middle}
 /* Randomized, explicitly fictional player tributes */
-.player-tribute{display:grid;grid-template-columns:76px minmax(0,1fr);gap:14px;margin:14px 0 18px;padding:15px;border:1px solid var(--line);background:linear-gradient(115deg,rgba(255,255,255,.035),transparent 65%);}
-.player-tribute .tribute-art{width:76px;height:76px;object-fit:contain;background:rgba(255,255,255,.025);border:1px solid var(--line);}
-.tribute-kicker{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:5px;}
-.tribute-title{font-family:Lora,Georgia,serif;font-size:20px;line-height:1.25;margin:0 0 8px;font-weight:600;}
-.tribute-copy{font-size:13px;line-height:1.75;color:var(--text);max-width:900px;margin:0;}
-.tribute-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:9px;font-size:10px;color:var(--muted);}
-.tribute-meta a{color:var(--text);text-decoration:underline;text-underline-offset:3px;}
-@media(max-width:520px){.player-tribute{grid-template-columns:54px minmax(0,1fr);gap:10px;padding:11px}.player-tribute .tribute-art{width:54px;height:54px}.tribute-title{font-size:17px}}
+.player-tribute{position:relative;display:grid;grid-template-columns:minmax(150px,220px) minmax(0,1fr);gap:26px;align-items:center;overflow:hidden;margin:18px 0 22px;padding:clamp(20px,4vw,38px);min-height:250px;border:1px solid var(--line);background:radial-gradient(ellipse at 15% 45%,rgba(205,190,150,.12),transparent 45%),linear-gradient(135deg,#111 0%,#080808 58%,#15120e 100%);box-shadow:inset 0 0 0 5px rgba(255,255,255,.018),inset 0 0 50px rgba(0,0,0,.55);}
+.player-tribute:before{content:"✦";position:absolute;right:22px;top:12px;color:rgba(220,205,164,.3);font-size:28px;pointer-events:none}
+.player-tribute:after{content:"IN LOVING MEMORY · ENTIRELY FICTIONAL";position:absolute;right:18px;bottom:12px;color:rgba(220,205,164,.45);font-size:8px;letter-spacing:.18em;pointer-events:none}
+.tribute-art-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;position:relative;z-index:1}
+.player-tribute .tribute-art{display:block;width:min(100%,190px);height:190px;object-fit:contain;image-rendering:auto;filter:drop-shadow(0 10px 22px rgba(0,0,0,.65));}
+.tribute-art-label{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#c9b98b;text-align:center}
+.tribute-content{position:relative;z-index:1;min-width:0}
+.tribute-kicker{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#c9b98b;font-weight:700;margin-bottom:10px;}
+.tribute-title{font-family:Lora,Georgia,serif;font-size:clamp(24px,3.4vw,38px);line-height:1.15;margin:0 0 15px;font-weight:600;letter-spacing:-.025em;color:#eee6d4;}
+.tribute-copy{font-family:Lora,Georgia,serif;font-size:14px;line-height:1.9;color:#d0cbc0;max-width:900px;margin:0;}
+.tribute-meta{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:18px;font-size:10px;color:#c9b98b;}
+.tribute-meta span{padding:6px 8px;border:1px solid rgba(201,185,139,.24);background:rgba(0,0,0,.2);}
+@media(max-width:620px){.player-tribute{grid-template-columns:1fr;gap:14px;text-align:center;padding:22px 16px 34px}.player-tribute .tribute-art{width:132px;height:132px}.tribute-title{font-size:25px}.tribute-meta{justify-content:center}.player-tribute:after{left:8px;right:8px;text-align:center;font-size:7px}}
 
 </style>
 </style>
@@ -1559,9 +1564,8 @@ function playerTributeHTML(){
  if(latest){if(latest.forfeited)recent="their latest recorded ranked match ended in a forfeit";else if(latest.result?.uuid===u.uuid)recent="their latest recorded ranked match ended in victory";else if(latest.result?.uuid)recent="their latest recorded ranked match ended in defeat";else recent="their latest recorded ranked match ended in a draw";}
  const cause=pick(causes),era=pick(eras,7),name=String(u.nickname||"This competitor");
  const paragraph=`According to entirely fictional archives, ${name} departed this mortal leaderboard in ${era}, after ${cause}. Their record lists ${Number.isFinite(elo)?elo.toLocaleString()+" Elo":"an unclassified Elo rating"}, ${Number.isFinite(wins)?wins.toLocaleString():"unknown"} wins, and ${Number.isFinite(completions)?completions.toLocaleString():"uncounted"} completions. Recent evidence suggests ${recent}. Historians remain divided, villagers remain traumatised, and the banana peel has declined every interview. Their legend survives in ranked match history.`;
- const image="https://laby.net/api/v3/render/bust/"+encodeURIComponent(uid)+".webp?width=152&height=152";
- const google="https://www.google.com/search?tbm=isch&q="+encodeURIComponent(name+" Minecraft MCSR Ranked");
- return `<section class="player-tribute" aria-label="Fictional player tribute"><img class="tribute-art" src="${image}" alt="${esc(name)} Minecraft avatar" loading="lazy" onerror="this.style.visibility='hidden'"><div><div class="tribute-kicker">A completely fictional historical record · parody</div><h2 class="tribute-title">In memoriam: ${esc(name)}</h2><p class="tribute-copy">${esc(paragraph)}</p><div class="tribute-meta"><span>CAUSE: ${esc(cause.toUpperCase())}</span><span>ERA: ${esc(era.toUpperCase())}</span><a href="${google}" target="_blank" rel="noopener noreferrer">Search player images ↗</a></div></div></section>`;
+ const image="https://laby.net/api/v3/render/bust/"+encodeURIComponent(uid)+".webp?width=320&height=320";
+ return `<section class="player-tribute" aria-label="Fictional player memorial poster"><div class="tribute-art-wrap"><img class="tribute-art" src="${image}" alt="${esc(name)} Minecraft avatar" loading="lazy" onerror="this.style.visibility='hidden'"><div class="tribute-art-label">Gone, but not forgotten</div></div><div class="tribute-content"><div class="tribute-kicker">A completely fictional historical record · parody</div><h2 class="tribute-title">In Memoriam<br>${esc(name)}</h2><p class="tribute-copy">${esc(paragraph)}</p><div class="tribute-meta"><span>CAUSE · ${esc(cause.toUpperCase())}</span><span>ERA · ${esc(era.toUpperCase())}</span><span>${Number.isFinite(elo)?elo.toLocaleString()+" ELO":"ELO UNKNOWN"}</span></div></div></section>`;
 }
 function refreshPlayerTribute(){const el=document.getElementById("playerTributeMount");if(el)el.innerHTML=playerTributeHTML();}
 async function showTributes(name){
