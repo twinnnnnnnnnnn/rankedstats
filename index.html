@@ -691,7 +691,8 @@ function renderProfile(){
   renderMatchRows();
   refreshSessionStats();renderTiles();layout();sentUI();refreshGraph();setupIO();
   if(!st.list.length&&!st.done&&!st.p&&!st.err)loadMore(P.mode);
-  if(P.mode==="ranked")loadRankedTimeStats(P);\n  const clipSection=document.querySelector("[data-twitch-clips]");if(clipSection)loadTopClip(clipSection.dataset.login,"7d",clipSection);
+  if(P.mode==="ranked")loadRankedTimeStats(P);
+  const clipSection=document.querySelector("[data-twitch-clips]");if(clipSection)loadTopClip(clipSection.dataset.login,"7d",clipSection);
 }
 // Private rooms: display Any% category only (other match types unchanged).
 function visibleMatches(mode,matches){
