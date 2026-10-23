@@ -717,14 +717,8 @@ function setupProfileSkinViewer(uuid){
     viewer.zoom=0.88;viewer.camera.position.set(18,8,34);viewer.controls.target.set(0,0,0);
     const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(76,stage.clientWidth||112),h=Math.max(120,stage.clientHeight||156);viewer.setSize(w,h);viewer.camera.aspect=w/h;viewer.camera.updateProjectionMatrix()};
     if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(stage);viewer._profileResizeObserver=ro}
-    const lookAtPointer=e=>{
-      if(!viewer.playerObject)return;
-      const r=stage.getBoundingClientRect(),x=Math.max(0,Math.min(1,(e.clientX-r.left)/Math.max(1,r.width))),y=Math.max(0,Math.min(1,(e.clientY-r.top)/Math.max(1,r.height)));
-      viewer.playerObject.rotation.y=(x-.5)*1.65;
-      const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=(y-.5)*-.28;
-    };
-    stage.addEventListener("pointermove",lookAtPointer);
-    stage.addEventListener("pointerleave",()=>{if(viewer.playerObject){viewer.playerObject.rotation.y=0;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0}});
+    // Keep the profile model completely static; no cursor or pointer reactions.
+    if(viewer.playerObject){viewer.playerObject.rotation.y=0;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0}
     viewer.loadSkin("https://mc-heads.net/skin/"+encodeURIComponent(uuid)).catch(()=>{});resize();
   }catch(_){}
 }
