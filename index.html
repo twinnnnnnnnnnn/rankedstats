@@ -785,7 +785,7 @@ function setupProfileSkinViewer(uuid){
    window.profileSkinViewer=viewer;
    viewer.renderer.setClearColor(0x000000,0);
    viewer.controls.enableRotate=false;viewer.controls.enableZoom=false;viewer.controls.enablePan=false;
-   viewer.zoom=1.08;viewer.camera.position.set(0,8,42);viewer.controls.target.set(0,0,0);
+   viewer.zoom=0.85;viewer.camera.position.set(0,16,42);viewer.controls.target.set(0,16,0);viewer.camera.lookAt(0,16,0);viewer.controls.update();
    const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(76,stage.clientWidth||112),h=Math.max(120,stage.clientHeight||156);viewer.setSize(w,h);viewer.camera.aspect=w/h;viewer.camera.updateProjectionMatrix()};
    if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(stage);viewer._profileResizeObserver=ro}
    const sources=["https://mc-heads.net/skin/"+encodeURIComponent(id),"https://minotar.net/skin/"+encodeURIComponent(id)];
