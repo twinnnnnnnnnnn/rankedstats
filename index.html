@@ -507,7 +507,7 @@ function normalizeMergedMatch(match,sourceUsers,primary){
  return m;
 }
 function getUser(n){const k=String(n).toLowerCase();if(!UC[k]){UC[k]=get(API+"/users/"+enc(n));UC[k].catch(()=>{delete UC[k]})}return UC[k]}
-async function fetchMatches(who,type,before,count,sort,season){const query="?count="+Math.min(100,Math.max(1,Number(count)||30))+"&type="+type+(before?"&before="+before:"")+(sort?"&sort="+sort:"")+(season!=null?"&season="+season:"");const ids=typeof who==="object"?[who.nickname,who.uuid].filter((v,i,a)=>v&&a.indexOf(v)===i):[who];let lastError=null;for(const id of ids){try{const rows=await get(API+"/users/"+enc(id)+"/matches"+query);if(Array.isArray(rows)&&rows.length)return rows;if(Array.isArray(rows))continue;if(rows!=null)throw new Error("Unexpected MCSR API match response");}catch(error){lastError=error}}if(lastError)throw lastError;return []}
+async function fetchMatches(who,type,before,count,sort,season){const query="?count="+Math.min(100,Math.max(1,Number(count)||30))+"&type="+type+"&sort="+enc(sort||"newest")+(before?"&before="+enc(before):"")+(season!=null?"&season="+enc(season):"");const ids=typeof who==="object"?[who.nickname,who.uuid].filter((v,i,a)=>v&&a.indexOf(v)===i):[who];let lastError=null;for(const id of ids){try{const rows=await get(API+"/users/"+enc(id)+"/matches"+query);if(Array.isArray(rows)&&rows.length)return rows;if(Array.isArray(rows))continue;if(rows!=null)throw new Error("Unexpected MCSR API match response");}catch(error){lastError=error}}if(lastError)throw lastError;return []}
 const Q=[];let running=0;
 function enqueue(fn){Q.push(fn);pump()}
 function pump(){while(running<3&&Q.length){running++;Q.shift()().then(()=>{},()=>{}).then(()=>{running--;pump()})}}
@@ -834,7 +834,8 @@ function sentUI(){
   const s=$("sent");if(!s||!P||!P.st)return;
   const st=P.st[P.mode];
   const visibleCount=visibleMatches(P.mode,st.list).length;
-  s.textContent=st.err?"Couldn’t load more — click to retry":st.done?(visibleCount?"End of list · "+visibleCount+" matches":"No "+(P.mode==="ranked"?"ranked":P.mode==="casual"?"casual":"private room")+" matches found"):P.matchSort==="fastest"?"Loading all matches to find fastest wins…":P.matchSort==="oldest"?"Loading matches to sort oldest first…":"Loading more…";
+  s.textContent=st.err?"Couldn’t load more — "+st.err+" (click to retry)":st.done?(visibleCount?"End of list · "+visibleCount+" matches":"No "+(P.mode==="ranked"?"ranked":P.mode==="casual"?"casual":"private room")+" matches found"):P.matchSort==="fastest"?"Loading all matches to find fastest wins…":P.matchSort==="oldest"?"Loading matches to sort oldest first…":"Loading more…";
+  s.title=st.err?"API error: "+st.err:"";
   s.dataset.retry=st.err?"1":"";
   const c=$("cnt2");if(c)c.textContent=visibleCount+" loaded"+(st.done?"":" · scroll for more");
 }
@@ -863,8 +864,12 @@ function loadMore(mode,count){
     try{
       const rows=await fetchMatches(src,MT[mode],before,n,null,mode==="ranked"?Number(tok.profileSeason)||null:null);
       const r=Array.isArray(rows)?rows:[];
-      if(!r.length||r.length<n){st.sourceDone=st.sourceDone||{};st.sourceDone[key]=true;}
-      st.cursors=st.cursors||{};if(r.length)st.cursors[key]=r[r.length-1].id;
+      st.sourceDone=st.sourceDone||{};st.cursors=st.cursors||{};
+      const previous=before==null?null:String(before),next=r.length&&r[r.length-1].id!=null?String(r[r.length-1].id):null;
+      // A short page is not proof that history ended; keep paging until the API returns empty.
+      // Stop only on an empty page or a cursor that cannot advance, preventing infinite loops.
+      if(!r.length||!next||next===previous)st.sourceDone[key]=true;
+      else st.cursors[key]=next;
       return {rows:r.map(x=>tok.merged?normalizeMergedMatch(x,sources,tok.u):x),error:null};
     }catch(error){return {rows:[],error};}
   })).then(results=>{
