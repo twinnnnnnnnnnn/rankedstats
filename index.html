@@ -844,7 +844,7 @@ function loadMore(mode,count){
     st.done=sources.every(src=>st.sourceDone[String(src.uuid)]);
     st.err=errors.length?errors[0].message||"Some match history could not be loaded":null;
     if(P!==tok)return;
-    refreshPlayerTribute();
+    
     if(mode==="ranked")refreshSessionStats();
     if(tok.mode===mode&&$("tb"))renderMatchRows();
     if(tok.mode===mode){
