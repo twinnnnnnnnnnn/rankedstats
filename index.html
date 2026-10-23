@@ -369,7 +369,7 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 <div class="wrap">
 <nav>
   <a class="logo" id="logo" href="#!lb/season" aria-label="Season leaderboard"><img alt="Site logo" src="https://femboy.beauty/jzRZs6"></a>
-  <div class="tabs" id="tabs"><button data-t="fast">Fastest Time</button><button data-t="lb">Leaderboard</button><button data-t="useless">Useless Stats</button><button data-t="tributes">Tributes</button><button data-t="profile">Profile</button></div>
+  <div class="tabs" id="tabs"><button data-t="fast">Fastest Time</button><button data-t="lb">Leaderboard</button><button data-t="useless">Useless Stats</button><button data-t="profile">Profile</button></div>
   <form id="f"><input id="q" type="text" placeholder="Player name or UUID" aria-label="Player"><button class="go">Search</button></form>
   <div class="settings-wrap" id="settingsWrap">
     <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Settings" title="Settings" aria-expanded="false">⚙</button>
@@ -514,7 +514,7 @@ function route(){
   showProfile(dec(raw));
 }
 $("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;
-  if(b.dataset.t==="profile")openRandomRankedProfile();else if(b.dataset.t==="fast")go("#!fast");else if(b.dataset.t==="useless")go("#!useless/season/ff");else if(b.dataset.t==="tributes")go("#!tributes/"+encodeURIComponent(P?.u?.nickname||lastName||"Feinberg"));else go("#!lb/season")};
+  if(b.dataset.t==="profile")openRandomRankedProfile();else if(b.dataset.t==="fast")go("#!fast");else if(b.dataset.t==="useless")go("#!useless/season/ff");else if(b.dataset.t==="tributes")go("#!profile/"+encodeURIComponent(P?.u?.nickname||lastName||"Feinberg"));else go("#!lb/season")};
 // Choose only a player whose actual current leaderboard rank is 1–150.
 async function openRandomRankedProfile(){
   const btn=document.querySelector('#tabs button[data-t="profile"]');
@@ -1552,35 +1552,7 @@ try{
  if(result&&typeof result.catch==='function')result.catch(e=>showStartupError(e?.stack||e?.message||e));
 }catch(e){showStartupError(e?.stack||e?.message||e)}
 if(!document.getElementById('out')?.innerHTML.trim())showStartupError('Initial page rendering did not produce content.');
-function tributeHash(value){let h=2166136261;for(const ch of String(value||"")){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0;}
-function playerTributeHTML(){
- if(!P||!P.u)return "";
- const u=P.u,uid=String(u.uuid||u.nickname||"unknown"),hourBucket=Math.floor(Date.now()/3600000),hash=tributeHash(uid+":"+hourBucket),pick=(a,salt=0)=>a[(hash+salt)%a.length];
- const causes=["slipping on a suspiciously well-oiled banana peel","being sentenced by a village court for misplacing one crafting table","challenging a goose to a best-of-three duel","a tragic collision with a door they confidently thought was open","trying to speedbridge over a puddle","being bonked by a falling anvil labelled ‘skill issue’","getting lost inside a single, mildly confusing staircase","eating a suspiciously enchanted baked potato","being outplayed by a sentient traffic cone","a duel against 37 librarians who refused to lower their prices","attempting to water-bucket clutch onto a decorative painting","being swallowed by a historically inaccurate map","a creeper disguised as a tax collector","forgetting that gravity was enabled","getting ratioed by a medieval jester"];
- const eras=["the late 1300s","the year 1423","the Bronze Age, somehow","the winter of 1847","a Tuesday in 1066","the year 300 BCE","the suspiciously specific date of 12 April 1731","the Ming dynasty","the distant future of 2401","a forgotten kingdom before calendars existed","the year 1999, despite all evidence","the reign of a king nobody remembers"];
- const total=u.statistics?.total||{},elo=Number(u.eloRate),wins=Number(total.wins),completions=Number(total.completions);
- const matches=P.st?.ranked?.list||[],latest=matches.filter(m=>!m.decayed).slice().sort((a,b)=>Number(b.date||0)-Number(a.date||0))[0];
- let recent="their latest recorded ranked match remains shrouded in mystery";
- if(latest){if(latest.forfeited)recent="their latest recorded ranked match ended in a forfeit";else if(latest.result?.uuid===u.uuid)recent="their latest recorded ranked match ended in victory";else if(latest.result?.uuid)recent="their latest recorded ranked match ended in defeat";else recent="their latest recorded ranked match ended in a draw";}
- const cause=pick(causes),era=pick(eras,7),name=String(u.nickname||"This competitor"),age=18+(hash%83),deathYear=1100+(hash%927),birthYear=deathYear-age,lifeYears=birthYear+"–"+deathYear;
- const paragraph=`${name} lived to the age of ${age}, from ${birthYear} to ${deathYear} and departed this mortal leaderboard in ${era}, after ${cause}. Their record lists ${Number.isFinite(elo)?elo.toLocaleString()+" Elo":"an unclassified Elo rating"}, ${Number.isFinite(wins)?wins.toLocaleString():"unknown"} wins, and ${Number.isFinite(completions)?completions.toLocaleString():"uncounted"} completions. Recent evidence suggests ${recent}. Historians remain divided, villagers remain traumatised, and the banana peel has declined every interview. Their legend survives in ranked match history.`;
- const image="https://laby.net/api/v3/render/bust/"+encodeURIComponent(uid)+".webp?width=320&height=320";
- return `<section class="player-tribute" aria-label="Player memorial poster"><div class="tribute-art-wrap"><img class="tribute-art" src="${image}" alt="${esc(name)} Minecraft avatar" loading="lazy" onerror="this.style.visibility='hidden'"><div class="tribute-art-label">Gone, but not forgotten</div></div><div class="tribute-content"><div class="tribute-kicker">A life remembered</div><h2 class="tribute-title">In Memoriam<br>${esc(name)}</h2><p class="tribute-copy">${esc(paragraph)}</p><div class="tribute-meta"><span>AGE · ${age}</span><span>${lifeYears}</span><span>CAUSE · ${esc(cause.toUpperCase())}</span><span>ERA · ${esc(era.toUpperCase())}</span><span>${Number.isFinite(elo)?elo.toLocaleString()+" ELO":"ELO UNKNOWN"}</span></div></div></section>`;
-}
-function refreshPlayerTribute(){const el=document.getElementById("playerTributeMount");if(el)el.innerHTML=playerTributeHTML();}
-async function showTributes(name){
- $("out").classList.remove("christmas-profile","lyxier-profile");
- document.body.classList.remove("christmas-profile-bg","lyxier-profile-bg");
- updateLyxierDecor(false);stopLyxierBounce();stopProfile();setTab("tributes");
- const target=String(name||lastName||"Feinberg").trim()||"Feinberg";
- const token={name:target};P=token;lastName=target;$("q").value=target;
- $("out").innerHTML='<section class="card"><div class="ptools"><h2 style="margin:0">Player Tributes</h2></div><div id="tributeResult" class="msg">Loading tribute…</div></section>';
- try{
-  const u=await getUser(target);if(P!==token)return;
-  Object.assign(token,{u,baseUser:u,mode:"ranked",full:false,matchSort:"recent",matchTwitchNames:false,profileSeason:"current",st:{ranked:{list:[],done:false,p:null,err:null},private:{list:[],done:false,p:null,err:null},casual:{list:[],done:false,p:null,err:null}}});
-  const host=$("tributeResult");if(host)host.outerHTML='<div id="tributeResult">'+playerTributeHTML()+'</div>';
- }catch(e){if(P!==token)return;const host=$("tributeResult");if(host)host.innerHTML='<div class="msg">Could not load '+esc(target)+': '+esc(e?.message||e)+'</div>';}
-}
+
 </script>
 <script>
 /* UI localization: translate rendered interface text, not usernames or API data. */
