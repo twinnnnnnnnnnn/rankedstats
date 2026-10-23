@@ -826,20 +826,23 @@ function loadMore(mode,count){
   const n=count||PAGE,last=st.list.length?st.list[st.list.length-1].id:null;
   sentUI();
   const sources=tok.sourceUsers?.length?tok.sourceUsers:[tok.u];
-  st.p=Promise.all(sources.filter(src=>!st.sourceDone?.[String(src.uuid)]).map(src=>{
+  st.p=Promise.all(sources.filter(src=>!st.sourceDone?.[String(src.uuid)]).map(async src=>{
     const key=String(src.uuid),before=st.cursors?.[key]||null;
-    return fetchMatches(src.uuid,MT[mode],before,n,null,mode==="ranked"?Number(tok.profileSeason)||null:null).then(rows=>{
+    try{
+      const rows=await fetchMatches(src.uuid,MT[mode],before,n,null,mode==="ranked"?Number(tok.profileSeason)||null:null);
       const r=Array.isArray(rows)?rows:[];
       if(!r.length||r.length<n){st.sourceDone=st.sourceDone||{};st.sourceDone[key]=true;}
       st.cursors=st.cursors||{};if(r.length)st.cursors[key]=r[r.length-1].id;
-      return r.map(x=>tok.merged?normalizeMergedMatch(x,sources,tok.u):x);
-    });
-  })).then(batches=>{
+      return {rows:r.map(x=>tok.merged?normalizeMergedMatch(x,sources,tok.u):x),error:null};
+    }catch(error){return {rows:[],error};}
+  })).then(results=>{
     st.p=null;
-    const have=new Set(st.list.map(x=>x.id)),add=batches.flat().filter(x=>!have.has(x.id));
+    const errors=results.map(x=>x.error).filter(Boolean);
+    const have=new Set(st.list.map(x=>x.id)),add=results.flatMap(x=>x.rows).filter(x=>!have.has(x.id));
     st.list.push(...add);st.list.sort((a,b)=>Number(b.date||0)-Number(a.date||0));
     st.sourceDone=st.sourceDone||{};
     st.done=sources.every(src=>st.sourceDone[String(src.uuid)]);
+    st.err=errors.length?errors[0].message||"Some match history could not be loaded":null;
     if(P!==tok)return;
     refreshPlayerTribute();
     if(mode==="ranked")refreshSessionStats();
@@ -1403,8 +1406,10 @@ function preferredPlayerName(ign,u){
 function cleanPlayerDisplayName(value){
  return String(value||"—")
   .replace(/:[a-z0-9_+-]+:/gi,"")
+  .replace(/\b(?:alt|mcsr)\b/gi," ")
   .replace(/_/g,"")
   .replace(/[0-9]/g,c=>({"0":"o","1":"i","2":"z","3":"e","4":"a","5":"s","6":"g","7":"t","8":"b","9":"g"}[c]||c))
+  .replace(/[.\-]+/g," ")
   .replace(/\s+/g," ")
   .trim()||"—";
 }
