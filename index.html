@@ -719,7 +719,7 @@ function setupProfileSkinViewer(uuid){
     const viewer=new skinview3d.SkinViewer({canvas,width,height,skin:"https://mc-heads.net/skin/"+encodeURIComponent(uuid),background:null});
     window.profileSkinViewer=viewer;viewer.setSize(width,height);viewer.renderer.setClearColor(0x000000,0);
     viewer.controls.enableRotate=false;viewer.controls.enableZoom=false;viewer.controls.enablePan=false;
-    viewer.zoom=0.88;viewer.camera.position.set(18,8,34);viewer.controls.target.set(0,0,0);
+    viewer.zoom=0.88;viewer.camera.position.set(0,8,38);viewer.controls.target.set(0,0,0);
     const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(76,stage.clientWidth||112),h=Math.max(120,stage.clientHeight||156);viewer.setSize(w,h);viewer.camera.aspect=w/h;viewer.camera.updateProjectionMatrix()};
     if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(stage);viewer._profileResizeObserver=ro}
     // Keep the profile model completely static; no cursor or pointer reactions.
@@ -798,9 +798,9 @@ function renderProfile(){
     <details class="card session-panel overall-panel" id="sessionPanel"><summary id="sessionTitle">Current Session</summary><div id="sessionStats"></div></details>
     <details class="card session-panel overall-panel" id="overallPanel"><summary>Overall Stats</summary><div class="session-grid">
      <div><small class="mut">Matches</small><strong>${nz(at("playedMatches"))}</strong></div>
-     <div><small class="mut">Wins</small><strong>${nz(at("wins"))}</strong></div>
+     <div><small class="mut">Wins / Completions</small><strong>${nz(at("wins"))} / ${nz(atc)}</strong></div>
      <div><small class="mut">Win rate</small><strong>${at("playedMatches")>0&&at("wins")!=null?(at("wins")/at("playedMatches")*100).toFixed(1)+"%":"—"}</strong>${at("playedMatches")>0&&at("wins")!=null?'<div class="session-winrate-track"><span style="width:'+Math.max(0,Math.min(100,at("wins")/at("playedMatches")*100)).toFixed(2)+'%"></span></div>':""}</div>
-     <div><small class="mut">Completions</small><strong>${nz(atc)}</strong></div>
+     <div><small class="mut">All-time peak Elo</small><strong>${nz(u.peakEloRate??u.highestEloRate??u.statistics?.total?.highestEloRate?.ranked??u.statistics?.total?.peakEloRate?.ranked??u.statistics?.total?.highestElo?.ranked??u.statistics?.total?.peakElo?.ranked??u.statistics?.total?.eloRatePeak?.ranked)}</strong></div>
      <div><small class="mut">Personal best</small><strong>${fmtP(at("bestTime"))}</strong></div>
      <div><small class="mut">Average finish</small><strong>${atc&&att!=null?fmtP(att/atc):"—"}</strong></div>
     </div></details>
