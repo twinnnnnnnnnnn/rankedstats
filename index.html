@@ -1359,18 +1359,10 @@ function fastWinningRuns(matches,uuid){
 function fastRows(){
  const entries=[];
  for(const u of FAST.users){
-   
-   {
-     const pb=FAST.season==="all"?stat(u,"total","bestTime"):null;
-     if(Number(pb)>0){
-       const runs=fastRuns(u);
-       const match=runs.find(r=>Math.abs(r.time-Number(pb))<1000);
-       entries.push({u,time:Number(pb),seed:match?.seed||"—",bastion:match?.bastion||"—",id:match?.id});
-     }
-     else if(fastRuns(u).length)entries.push({u,...fastRuns(u)[0]});
-   }
+   const runs=fastRuns(u);
+   if(runs.length)entries.push({u,...runs[0]});
  }
- return entries.sort((a,b)=>a.time-b.time);
+ return entries.sort((a,b)=>a.time-b.time).slice(0,FAST.limit);
 }
 function renderFastest(){
  const host=$("fastList");if(!host)return;
@@ -1379,21 +1371,6 @@ function renderFastest(){
  const status=$("fastStatus");if(status)status.textContent=FAST.loading?"Loading…":"";
 }
 function renderFastSide(){renderFastest();}
-async function loadFastRuns(u,token){
- const key=FAST.season+":"+u.uuid;if(FAST.runs.has(key))return;
- try{
-   let matches=[],before=null;
-   for(let i=0;i<50;i++){
-     const batch=await fetchMatches(u.uuid,MT.ranked,before,100,null,FAST.season==="all"?null:Number(FAST.season));
-     if(!Array.isArray(batch)||!batch.length)break;
-     matches.push(...batch);before=batch[batch.length-1].id;
-     if(batch.length<100)break;
-   }
-   if(token!==FAST.token)return;
-   FAST.runs.set(key,fastWinningRuns(matches,u.uuid));
-   renderFastest();
- }catch(e){if(token===FAST.token){FAST.runs.set(key,[]);renderFastest()}}
-}
 async function showFastest(){
  $("out").classList.remove("christmas-profile","lyxier-profile");
  document.body.classList.remove("christmas-profile-bg","lyxier-profile-bg");
@@ -1402,22 +1379,27 @@ async function showFastest(){
  $("out").innerHTML='<div class="card"><div class="ptools"><h2 style="margin:0">Fastest Time</h2><label for="fastSeason">Season</label><select id="fastSeason"><option value="all" '+(FAST.season==="all"?"selected":"")+'>All time</option>'+Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return '<option value="'+n+'" '+(String(FAST.season)===String(n)?"selected":"")+'>Season '+n+'</option>'}).join("")+'</select><label class="lb-twitch-toggle" title="Show linked Twitch usernames instead of Minecraft names"><input type="checkbox" id="fastTwitchNames" '+(FAST.twitchNames?'checked':'')+'> Twitch names</label><span class="sp"></span><button type="button" id="fastMore">Load more players</button></div><div id="fastList"></div><p class="mut" id="fastStatus"></p></div>';
  renderFastest();
  try{
-   const board=await get(API+"/leaderboard");
+   const season=FAST.season==="all"?"":"&season="+encodeURIComponent(FAST.season);
+   const records=await get(API+"/record-leaderboard?distinct=true"+season);
    if(token!==FAST.token)return;
-   const candidates=(board.users||[]).slice(0,FAST.limit);
    FAST.users=[];
-   const batches=[];
-   for(let i=0;i<candidates.length;i+=5)batches.push(candidates.slice(i,i+5));
-   for(const batch of batches){
-     const resolved=await Promise.all(batch.map(u=>getUser(u.uuid||u.nickname).catch(()=>null)));
-     if(token!==FAST.token)return;
-     for(const u of resolved)if(u?.uuid&&!FAST.users.some(x=>x.uuid===u.uuid))FAST.users.push(u);
-     renderFastest();
-     for(const u of resolved)if(u?.uuid&&!FAST.runs.has(FAST.season+":"+u.uuid))enqueue(()=>loadFastRuns(u,token));
+   for(const row of (Array.isArray(records)?records:[])){
+     const u=row.user;
+     if(!u?.uuid||!Number(row.time)||FAST.users.some(x=>x.uuid===u.uuid))continue;
+     FAST.users.push(u);
+     FAST.runs.set(FAST.season+":"+u.uuid,[{time:Number(row.time),id:row.id,seed:row.seed?.overworld?String(row.seed.overworld).replace(/_/g," "):"—",bastion:row.seed?.nether?String(row.seed.nether).replace(/_/g," "):"—"}]);
    }
    FAST.loading=false;renderFastest();
-   
- }catch(e){if(token===FAST.token){FAST.loading=false;$("fastStatus").textContent="Could not load leaderboard: "+String(e.message||e)}}
+   const status=$("fastStatus");
+   if(status)status.textContent=FAST.users.length?"Loaded "+Math.min(FAST.users.length,FAST.limit)+" of "+FAST.users.length+" distinct runners":"No record times were returned for this selection.";
+ }catch(e){
+   if(token===FAST.token){
+     FAST.loading=false;
+     const status=$("fastStatus");
+     if(status)status.textContent="Could not load record leaderboard: "+String(e.message||e);
+     renderFastest();
+   }
+ }
 }
 
 /* ---------- global events ---------- */
