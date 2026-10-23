@@ -1555,7 +1555,7 @@ if(!document.getElementById('out')?.innerHTML.trim())showStartupError('Initial p
 function tributeHash(value){let h=2166136261;for(const ch of String(value||"")){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0;}
 function playerTributeHTML(){
  if(!P||!P.u)return "";
- const u=P.u,uid=String(u.uuid||u.nickname||"unknown"),hash=tributeHash(uid),pick=(a,salt=0)=>a[(hash+salt)%a.length];
+ const u=P.u,uid=String(u.uuid||u.nickname||"unknown"),hourBucket=Math.floor(Date.now()/3600000),hash=tributeHash(uid+":"+hourBucket),pick=(a,salt=0)=>a[(hash+salt)%a.length];
  const causes=["slipping on a suspiciously well-oiled banana peel","being sentenced by a village court for misplacing one crafting table","challenging a goose to a best-of-three duel","a tragic collision with a door they confidently thought was open","trying to speedbridge over a puddle","being bonked by a falling anvil labelled ‘skill issue’","getting lost inside a single, mildly confusing staircase","eating a suspiciously enchanted baked potato","being outplayed by a sentient traffic cone","a duel against 37 librarians who refused to lower their prices","attempting to water-bucket clutch onto a decorative painting","being swallowed by a historically inaccurate map","a creeper disguised as a tax collector","forgetting that gravity was enabled","getting ratioed by a medieval jester"];
  const eras=["the late 1300s","the year 1423","the Bronze Age, somehow","the winter of 1847","a Tuesday in 1066","the year 300 BCE","the suspiciously specific date of 12 April 1731","the Ming dynasty","the distant future of 2401","a forgotten kingdom before calendars existed","the year 1999, despite all evidence","the reign of a king nobody remembers"];
  const total=u.statistics?.total||{},elo=Number(u.eloRate),wins=Number(total.wins),completions=Number(total.completions);
@@ -1574,8 +1574,7 @@ async function showTributes(name){
  updateLyxierDecor(false);stopLyxierBounce();stopProfile();setTab("tributes");
  const target=String(name||lastName||"Feinberg").trim()||"Feinberg";
  const token={name:target};P=token;lastName=target;$("q").value=target;
- $("out").innerHTML='<section class="card"><div class="ptools"><h2 style="margin:0">Player Tributes</h2><span class="mut">Completely fictional parody records</span></div><form id="tributeSearch" class="ptools" style="margin:12px 0"><input id="tributePlayerName" placeholder="Player name or UUID" aria-label="Player name or UUID" value="'+esc(target)+'"><button class="mini" type="submit">Generate tribute</button></form><div id="tributeResult" class="msg">Loading player…</div></section>';
- const form=$("tributeSearch");form?.addEventListener("submit",e=>{e.preventDefault();const v=$("tributePlayerName")?.value?.trim();if(v)go("#!tributes/"+encodeURIComponent(v));});
+ $("out").innerHTML='<section class="card"><div class="ptools"><h2 style="margin:0">Player Tributes</h2></div><div id="tributeResult" class="msg">Loading tribute…</div></section>';
  try{
   const u=await getUser(target);if(P!==token)return;
   Object.assign(token,{u,baseUser:u,mode:"ranked",full:false,matchSort:"recent",matchTwitchNames:false,profileSeason:"current",st:{ranked:{list:[],done:false,p:null,err:null},private:{list:[],done:false,p:null,err:null},casual:{list:[],done:false,p:null,err:null}}});
