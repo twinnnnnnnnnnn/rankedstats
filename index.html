@@ -505,7 +505,7 @@ function normalizeMergedMatch(match,sourceUsers,primary){
  return m;
 }
 function getUser(n){const k=String(n).toLowerCase();if(!UC[k]){UC[k]=get(API+"/users/"+enc(n));UC[k].catch(()=>{delete UC[k]})}return UC[k]}
-async function fetchMatches(who,type,before,count,sort,season){const query="?count="+count+"&type="+type+(before?"&before="+before:"")+(sort?"&sort="+sort:"")+(season?"&season="+season:"");try{return await get(API+"/users/"+enc(typeof who==="object"?(who.uuid||who.nickname):who)+"/matches"+query)}catch(first){if(typeof who!=="object"||!who.nickname||String(who.nickname)===String(who.uuid))throw first;return get(API+"/users/"+enc(who.nickname)+"/matches"+query)}}
+async function fetchMatches(who,type,before,count,sort,season){const query="?count="+count+"&type="+type+(before?"&before="+before:"")+(sort?"&sort="+sort:"")+"&season="+(season==null?0:season);const ids=typeof who==="object"?[who.nickname,who.uuid].filter((v,i,a)=>v&&a.indexOf(v)===i):[who];let lastError=null;for(const id of ids){try{const rows=await get(API+"/users/"+enc(id)+"/matches"+query);if(Array.isArray(rows)&&rows.length)return rows;if(Array.isArray(rows))continue;return rows}catch(error){lastError=error}}if(lastError)throw lastError;return []}
 const Q=[];let running=0;
 function enqueue(fn){Q.push(fn);pump()}
 function pump(){while(running<3&&Q.length){running++;Q.shift()().then(()=>{},()=>{}).then(()=>{running--;pump()})}}
