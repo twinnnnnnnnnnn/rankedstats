@@ -780,18 +780,45 @@ function setupProfileSkinViewer(uuid){
     viewer.loadSkin(skinUrl).then(()=>{if(status.isConnected)status.textContent="READY // DRAG TO ROTATE"}).catch(fail);
     const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(260,stage.clientWidth||420),h=Math.max(420,stage.clientHeight||480);viewer.setSize(w,h);viewer.camera.aspect=w/h;viewer.camera.updateProjectionMatrix()};
     if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(canvas.parentElement);viewer._profileResizeObserver=ro}
+    let breakdanceFrame=0,breakdanceParts=[];
+    const stopBreakdance=()=>{
+      if(breakdanceFrame)cancelAnimationFrame(breakdanceFrame);
+      breakdanceFrame=0;
+      for(const part of breakdanceParts){part.object.rotation.copy(part.rotation);part.object.position.copy(part.position)}
+      breakdanceParts=[];
+    };
+    const startBreakdance=()=>{
+      stopBreakdance();viewer.animation=null;
+      const root=viewer.playerObject,skin=root&&(root.skin||root);if(!root||!skin)return false;
+      for(const name of ["body","head","leftArm","rightArm","leftLeg","rightLeg"]){const object=skin[name];if(object)breakdanceParts.push({object,rotation:object.rotation.clone(),position:object.position.clone(),name})}
+      if(!breakdanceParts.length)return false;
+      const origin=performance.now();
+      const animate=now=>{
+        if(!canvas.isConnected||window.profileSkinViewer!==viewer||poseName!=="breakdance"){stopBreakdance();return}
+        const t=(now-origin)*.001*animSpeed,w=Math.sin(t*5.5),w2=Math.sin(t*5.5+Math.PI);
+        const get=name=>breakdanceParts.find(p=>p.name===name)?.object;
+        const body=get("body"),head=get("head"),la=get("leftArm"),ra=get("rightArm"),ll=get("leftLeg"),rl=get("rightLeg");
+        if(body){body.rotation.x=Math.sin(t*2.7)*.42;body.rotation.y=Math.sin(t*1.6)*.28;body.rotation.z=Math.sin(t*3.2)*.35;body.position.y=Math.abs(Math.sin(t*5.5))*.7}
+        if(head){head.rotation.x=Math.sin(t*2.7+.5)*.2;head.rotation.y=Math.sin(t*1.6)*.25}
+        if(la){la.rotation.x=Math.sin(t*5.5)*1.55;la.rotation.z=-.6+Math.sin(t*3.1)*.85}
+        if(ra){ra.rotation.x=Math.sin(t*5.5+Math.PI)*1.55;ra.rotation.z=.6+Math.sin(t*3.1+Math.PI)*.85}
+        if(ll){ll.rotation.x=w*1.15;ll.rotation.z=-.22+Math.max(0,w)*.55}
+        if(rl){rl.rotation.x=w2*1.15;rl.rotation.z=.22-Math.max(0,w2)*.55}
+        breakdanceFrame=requestAnimationFrame(animate);
+      };
+      breakdanceFrame=requestAnimationFrame(animate);return true;
+    };
     const setPose=(key)=>{
-      poseName=key;
-      const make=(name)=>typeof skinview3d[name]==="function"?new skinview3d[name]():null;
-      // These are Fortnite-emote-inspired motion presets using skinview3d animations, not ripped Fortnite assets.
-      const choices={idle:["IdleAnimation","DEFAULT"],run:["RunningAnimation","RUNNING"],orange:["WalkingAnimation","ORANGE JUSTICE"],floss:["WaveAnimation","FLOSS"],take:["CrouchAnimation","TAKE THE L"],hype:["RunningAnimation","HYPE"],wave:["WaveAnimation","WAVE"],hit:["HitAnimation","HIT IT"],breakdance:["WalkingAnimation","BREAKDANCING"]};
-      const [animationName,label]=choices[key]||choices.idle;
-      let animation=make(animationName);
-      if(!animation&&key!=="idle")animation=make("IdleAnimation");
-      viewer.animation=animation;
-      if(viewer.animation)viewer.animation.speed=animSpeed;
+      poseName=key;stopBreakdance();
+      const make=name=>typeof skinview3d[name]==="function"?new skinview3d[name]():null;
+      const choices={idle:["IdleAnimation","DEFAULT"],run:["RunningAnimation","RUNNING"],orange:["WalkingAnimation","ORANGE JUSTICE"],floss:["WaveAnimation","FLOSS"],take:["CrouchAnimation","TAKE THE L"],hype:["RunningAnimation","HYPE"],wave:["WaveAnimation","WAVE"],hit:["HitAnimation","HIT IT"]};
+      const [animationName,label]=key==="breakdance"?["","BREAKDANCING"]:(choices[key]||choices.idle);
+      let animation=key==="breakdance"?null:make(animationName);
+      if(key!=="breakdance"&&!animation&&key!=="idle")animation=make("IdleAnimation");
+      viewer.animation=animation;if(viewer.animation)viewer.animation.speed=animSpeed;
+      if(key==="breakdance")startBreakdance();
       document.querySelectorAll("[data-skin-pose]").forEach(b=>b.classList.toggle("active",b.dataset.skinPose===key));
-      if(status.isConnected)status.textContent="EMOTE // "+label+" · "+animSpeed.toFixed(1)+"×"+(animation?"":" · FALLBACK IDLE");
+      if(status.isConnected)status.textContent="EMOTE // "+label+" · "+animSpeed.toFixed(1)+"×"+(key==="breakdance"?(breakdanceFrame?"":" · ANIMATION UNAVAILABLE"):(animation?"":" · FALLBACK IDLE"));
     };
     document.querySelectorAll("[data-skin-pose]").forEach(b=>b.onclick=()=>setPose(b.dataset.skinPose));
     let placingModel=false;
