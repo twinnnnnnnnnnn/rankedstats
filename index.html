@@ -651,7 +651,7 @@ function showProfile(name){
     const mk=()=>({list:[],done:false,p:null,err:null,cursors:{},sourceDone:{}});
     Object.assign(tok,{u,combinedUser:u,baseUser:base,sourceUsers,merged:!!group&&sourceUsers.length>1,mode:"ranked",full:false,matchSort:"recent",matchTwitchNames:false,profileSeason:"current",st:{ranked:mk(),private:mk(),casual:mk()}});
     sel=null;selId=null;renderProfile();
-    rankedLiveStart(tok);
+    rankedLiveStart(tok,()=>P===tok);
   }).catch(e=>{
     if(P!==tok)return;
     const message=String(e&&e.message||e||"Unknown error");
@@ -1815,15 +1815,15 @@ function openViewer(match){
  document.body.appendChild(overlay);
  document.getElementById('ranked-live-close').onclick=()=>{watching=false;overlay.remove()};
 }
-window.rankedLiveStart=function(token){
+window.rankedLiveStart=function(token,isCurrent){
  clearInterval(activeTimer);currentMatch=null;watching=false;document.getElementById('ranked-live-viewer')?.remove();
  async function poll(){
- if(window.P!==token||!token.u){clearInterval(activeTimer);return}
+ if(!isCurrent()||!token.u){clearInterval(activeTimer);return}
  try{
  const response=await fetch('https://api.mcsrranked.com/live',{cache:'no-store'});
  if(!response.ok)throw Error('Live API unavailable');
  const payload=await response.json();
- if(window.P!==token)return;
+ if(!isCurrent())return;
  const match=(payload.data?.liveMatches||[]).find(m=>locate(m,token.u));
  currentMatch=match||null;
  if(match){mountBanner(match,token.u);if(watching)openViewer(match)}
