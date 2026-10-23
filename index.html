@@ -640,43 +640,42 @@ function privTiles(list,uid){
   return[["Matches loaded",list.length,P.st[P.mode].done?"all loaded":"scroll for more"],["Wins",wins.length,pct(wins.length,list.length)+" win rate"],["Best time",fmt(best),"fastest win loaded"],["Avg. finish",fmt(avg),ts.length+" wins timed"],["With VOD",list.filter(x=>x.vod&&x.vod.length).length,"streamed matches"]];
 }
 function matchTimestamp(value){
- const n=Number(value);if(!Number.isFinite(n)||n<=0)return 0;
+ if(value==null)return 0;
+ const s=String(value).trim(),n=(typeof value==="number"||/^\\d+(?:\\.\\d+)?$/.test(s))?Number(value):Date.parse(s);
+ if(!Number.isFinite(n)||n<=0)return 0;
  return n<1e12?n*1000:n;
 }
 function renderWeeklyRival(tok=P){
- const card=$("weeklyRivalCard"),host=$("weeklyRivalContent"),status=$("weeklyRivalStatus");
- if(!card||!host||!tok?.u||!tok.st?.ranked)return;
- if(tok.profileSeason&&Number(tok.profileSeason)!==T.currentSeason){
-  host.innerHTML='<span class="mut">Weekly rival is shown for the current season only.</span>';if(status)status.textContent="Current season";return;
- }
+ const host=$("weeklyRivalContent");
+ if(!host||!tok?.u||!tok.st?.ranked)return;
+ if(tok.profileSeason&&Number(tok.profileSeason)!==T.currentSeason){host.innerHTML='<span class="mut">—</span>';return;}
  const cutoff=Date.now()-7*24*60*60*1000,uid=String(tok.u.uuid);
- const recent=tok.st.ranked.list.filter(m=>matchTimestamp(m.date)>=cutoff&&!m.decayed&&!m.isDecay);
+ const recent=tok.st.ranked.list.filter(m=>matchTimestamp(m.date??m.createdAt??m.startedAt)>=cutoff&&!m.decayed&&!m.isDecay);
  const counts=new Map();
  for(const m of recent){
-  const opp=(m.players||[]).find(p=>String(p.uuid)!==uid);
-  if(!opp?.uuid||!opp.nickname)continue;
-  const key=String(opp.uuid),entry=counts.get(key)||{opp,matches:0,elo:0};
+  const opp=(Array.isArray(m.players)?m.players:[]).find(p=>String(p.uuid)!==uid);
+  if(!opp?.uuid)continue;
+  const nickname=opp.nickname||opp.name||opp.username;
+  if(!nickname)continue;
+  const key=String(opp.uuid),entry=counts.get(key)||{opp:{...opp,nickname},matches:0,elo:0};
   entry.matches++;
   const change=(m.changes||[]).find(x=>String(x.uuid)===uid);
-  if(change&&change.change!=null&&Number.isFinite(Number(change.change)))entry.elo+=Number(change.change);
+  const delta=change?.change??(me(m,uid)?.change);
+  if(delta!=null&&Number.isFinite(Number(delta)))entry.elo+=Number(delta);
   counts.set(key,entry);
  }
  const rival=[...counts.values()].sort((a,b)=>b.matches-a.matches||a.opp.nickname.localeCompare(b.opp.nickname))[0];
- if(!rival){
-  host.innerHTML=tok.st.ranked.done?'<span class="mut">No ranked opponents found in the last 7 days.</span>':'<span class="mut">Loading this week’s matches…</span>';
- }else{
+ if(!rival){host.innerHTML=tok.st.ranked.done?'<span class="mut">No matches</span>':'<span class="mut">Loading…</span>';}
+ else{
   const delta=rival.elo,deltaText=(delta>0?"+":"")+Math.round(delta).toLocaleString();
-  host.innerHTML='<img class="weekly-rival-avatar" loading="lazy" alt="" src="https://laby.net/api/v3/render/bust/'+enc(rival.opp.uuid)+'.webp?width=84&height=84"><a class="weekly-rival-name" href="#'+enc(rival.opp.nickname)+'">'+esc(rival.opp.nickname)+'</a><div class="weekly-rival-metric"><small>Matches played</small><strong>'+rival.matches.toLocaleString()+'</strong></div><div class="weekly-rival-metric"><small>Elo gain / loss</small><strong class="'+(delta>0?"up":delta<0?"down":"mut")+'">'+deltaText+'</strong></div>';
+  host.innerHTML='<img class="weekly-rival-avatar" loading="lazy" alt="" src="https://laby.net/api/v3/render/bust/'+enc(rival.opp.uuid)+'.webp?width=84&height=84"><a class="weekly-rival-name" href="#'+enc(rival.opp.nickname)+'">'+esc(rival.opp.nickname)+'</a><div class="weekly-rival-metric"><small>Matches</small><strong>'+rival.matches.toLocaleString()+'</strong></div><div class="weekly-rival-metric"><small>Elo ±</small><strong class="'+(delta>0?"up":delta<0?"down":"mut")+'">'+deltaText+'</strong></div>';
  }
- if(status)status.textContent=tok.st.ranked.done?"Last 7 days":"Last 7 days · loading history";
- // Pull enough history to cover the entire seven-day window, but stop as soon as the oldest
- // loaded match predates the cutoff. Only one background loader is allowed per profile.
- const oldest=tok.st.ranked.list.reduce((min,m)=>Math.min(min,matchTimestamp(m.date)||Infinity),Infinity);
+ const oldest=tok.st.ranked.list.reduce((min,m)=>Math.min(min,matchTimestamp(m.date??m.createdAt??m.startedAt)||Infinity),Infinity);
  if(!tok.st.ranked.done&&!tok.st.ranked.err&&oldest>cutoff&&!tok.weeklyRivalLoading){
   tok.weeklyRivalLoading=true;
   (async()=>{try{
    while(P===tok&&!tok.st.ranked.done&&!tok.st.ranked.err){
-    const before=tok.st.ranked.list.reduce((min,m)=>Math.min(min,matchTimestamp(m.date)||Infinity),Infinity);
+    const before=tok.st.ranked.list.reduce((min,m)=>Math.min(min,matchTimestamp(m.date??m.createdAt??m.startedAt)||Infinity),Infinity);
     if(before<=cutoff)break;
     await loadMore("ranked",100);
    }
@@ -881,7 +880,7 @@ function renderProfile(){
    
     <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
    <div class="tiles" id="tiles"></div>
-   <section class="card weekly-rival-card" id="weeklyRivalCard"><h2>This week's rival <span id="weeklyRivalStatus">Checking recent matches…</span></h2><div id="weeklyRivalContent" class="weekly-rival-content"><span class="mut">Finding your most-played opponent from the last 7 days…</span></div></section>
+   <section class="card weekly-rival-card" id="weeklyRivalCard"><h2>This week's rival</h2><div id="weeklyRivalContent" class="weekly-rival-content"><span class="mut">Loading…</span></div></section>
    <div class="profile-stats-docks">
     <details class="card session-panel overall-panel" id="sessionPanel"><summary id="sessionTitle">Current Session</summary><div id="sessionStats"></div></details>
     <details class="card session-panel overall-panel" id="overallPanel"><summary>Overall Stats</summary><div class="session-grid">
