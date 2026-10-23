@@ -364,8 +364,8 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 
 .skin-viewer-card{margin-top:14px;background:#090909;border:1px solid var(--line);padding:0}
 .skin-viewer-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,300px);gap:14px;align-items:stretch}
-.skin-viewer-stage{position:relative;min-height:300px;background:radial-gradient(ellipse at 50% 35%,#202020 0%,#0a0a0a 65%);overflow:hidden}
-.skin-viewer-stage canvas{display:block;width:100%;height:100%;min-height:300px;touch-action:none}
+.skin-viewer-stage{position:relative;height:clamp(420px,58vw,620px);min-height:420px;background:radial-gradient(ellipse at 50% 35%,#202020 0%,#0a0a0a 65%);overflow:hidden}
+.skin-viewer-stage canvas{display:block;width:100%!important;height:100%!important;min-height:0;touch-action:none}
 .skin-viewer-controls{display:flex;flex-direction:column;gap:8px}
 .skin-viewer-controls button{border:1px solid #303030;background:#171717;color:var(--text);padding:10px;text-align:left}
 .skin-viewer-controls button:hover{background:#242424}
@@ -408,7 +408,7 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 .skin-background-upload{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted)}
 .skin-background-upload input{max-width:100%;font-size:12px}
 
-@media(max-width:650px){.skin-viewer-layout{grid-template-columns:1fr}.skin-viewer-stage,.skin-viewer-stage canvas{min-height:270px}.skin-viewer-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.skin-viewer-help,.skin-viewer-status{grid-column:1/-1}}
+@media(max-width:650px){.skin-viewer-layout{grid-template-columns:1fr}.skin-viewer-stage{height:480px;min-height:480px}.skin-viewer-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.skin-viewer-help,.skin-viewer-status{grid-column:1/-1}}
 
 </style>
 </style>
@@ -770,42 +770,32 @@ function setupProfileSkinViewer(uuid){
   const fail=()=>{if(status.isConnected)status.textContent="ERROR // COULDN’T LOAD PLAYER SKIN"};
   if(!window.skinview3d){status.textContent="ERROR // 3D VIEWER LIBRARY DIDN’T LOAD";return}
   try{
-    const viewer=new skinview3d.SkinViewer({canvas,width:canvas.clientWidth||420,height:320,skin:"https://mc-heads.net/skin/"+encodeURIComponent(uuid),background:null});
-    window.profileSkinViewer=viewer;viewer.width=canvas.clientWidth||420;viewer.height=320;
+    const viewer=new skinview3d.SkinViewer({canvas,width:Math.max(260,stage.clientWidth||420),height:Math.max(420,stage.clientHeight||480),skin:"https://mc-heads.net/skin/"+encodeURIComponent(uuid),background:null});
+    window.profileSkinViewer=viewer;viewer.setSize(Math.max(260,stage.clientWidth||420),Math.max(420,stage.clientHeight||480));
     viewer.renderer.setClearColor(0x000000,0);viewer.controls.enableRotate=true;viewer.controls.enableZoom=true;viewer.controls.enablePan=false;
-    viewer.zoom=0.9;viewer.camera.position.set(28,18,42);
+    viewer.zoom=0.72;viewer.camera.position.set(20,12,32);viewer.controls.target.set(0,0,0);
     const skinUrl="https://mc-heads.net/skin/"+encodeURIComponent(uuid);
     viewer.loadSkin(skinUrl).then(()=>{if(status.isConnected)status.textContent="READY // DRAG TO ROTATE"}).catch(fail);
-    const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;viewer.setSize(Math.max(220,canvas.parentElement.clientWidth),320)};
+    const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(260,stage.clientWidth||420),h=Math.max(420,stage.clientHeight||480);viewer.setSize(w,h);viewer.camera.aspect=w/h;viewer.camera.updateProjectionMatrix()};
     if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(canvas.parentElement);viewer._profileResizeObserver=ro}
     const setPose=(key)=>{
       poseName=key;
-      let animation=null;
       const make=(name)=>typeof skinview3d[name]==="function"?new skinview3d[name]():null;
-      if(key==="run")animation=make("RunningAnimation");
-      else if(key==="boat"||key==="swim")animation=make("SwimAnimation");
-      else if(key==="crawl")animation=make("CrouchAnimation");
-      else if(key==="sit"||key==="shit"){animation=make("CrouchAnimation");if(animation)animation.paused=true}
-      else if(key==="fly")animation=make("FlyingAnimation");
-      else if(key==="wave")animation=make("WaveAnimation");
-      else animation=make("IdleAnimation");
+      // These are Fortnite-emote-inspired motion presets using skinview3d animations, not ripped Fortnite assets.
+      const choices={idle:["IdleAnimation","DEFAULT"],run:["RunningAnimation","RUNNING"],orange:["WalkingAnimation","ORANGE JUSTICE"],floss:["WaveAnimation","FLOSS"],take:["CrouchAnimation","TAKE THE L"],hype:["RunningAnimation","HYPE"],wave:["WaveAnimation","WAVE"],hit:["HitAnimation","HIT IT"],crawl:["CrouchAnimation","CROUCH"]};
+      const [animationName,label]=choices[key]||choices.idle;
+      let animation=make(animationName);
+      if(!animation&&key!=="idle")animation=make("IdleAnimation");
       viewer.animation=animation;
-      if(viewer.animation){
-        viewer.animation.speed=animSpeed;
-        if(key==="sit"||key==="shit"){
-          // Let the crouch animation settle into a low pose, then hold it like a screenshot pose.
-          const activeAnimation=viewer.animation;
-          setTimeout(()=>{if(window.profileSkinViewer===viewer&&poseName===key&&viewer.animation===activeAnimation)activeAnimation.paused=true},520);
-        }
-      }
+      if(viewer.animation)viewer.animation.speed=animSpeed;
       document.querySelectorAll("[data-skin-pose]").forEach(b=>b.classList.toggle("active",b.dataset.skinPose===key));
-      if(status.isConnected)status.textContent="POSE // "+({idle:"IDLE",run:"RUNNING",boat:"BOATING",crawl:"CRAWLING",sit:"SITTING",shit:"SHITTING 💀",swim:"SWIMMING",fly:"FLYING",wave:"WAVING"}[key]||key.toUpperCase())+" · "+animSpeed.toFixed(1)+"×";
+      if(status.isConnected)status.textContent="EMOTE // "+label+" · "+animSpeed.toFixed(1)+"×"+(animation?"":" · FALLBACK IDLE");
     };
     document.querySelectorAll("[data-skin-pose]").forEach(b=>b.onclick=()=>setPose(b.dataset.skinPose));
     if($("skinAnimSpeed"))$("skinAnimSpeed").oninput=e=>{animSpeed=Number(e.target.value)||1;const label=$("skinAnimSpeedValue");if(label)label.textContent=animSpeed.toFixed(1)+"×";if(viewer.animation)viewer.animation.speed=animSpeed;setPose(poseName)};
-    if($("skinResetCamera"))$("skinResetCamera").onclick=()=>{viewer.camera.position.set(28,18,42);viewer.controls.target.set(0,0,0);viewer.controls.update()};
-    if($("skinTurnFront"))$("skinTurnFront").onclick=()=>{viewer.camera.position.set(0,12,48);viewer.controls.target.set(0,0,0);viewer.controls.update()};
-    if($("skinTurnBack"))$("skinTurnBack").onclick=()=>{viewer.camera.position.set(0,12,-48);viewer.controls.target.set(0,0,0);viewer.controls.update()};
+    if($("skinResetCamera"))$("skinResetCamera").onclick=()=>{viewer.camera.position.set(20,12,32);viewer.controls.target.set(0,0,0);viewer.controls.update();resize()};
+    if($("skinTurnFront"))$("skinTurnFront").onclick=()=>{viewer.camera.position.set(0,8,34);viewer.controls.target.set(0,0,0);viewer.controls.update()};
+    if($("skinTurnBack"))$("skinTurnBack").onclick=()=>{viewer.camera.position.set(0,8,-34);viewer.controls.target.set(0,0,0);viewer.controls.update()};
     if($("skinBackgroundUpload"))$("skinBackgroundUpload").onchange=e=>{
       const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith("image/")){status.textContent="ERROR // CHOOSE AN IMAGE FILE";return}
       if(window.profileSkinCustomBgUrl)URL.revokeObjectURL(window.profileSkinCustomBgUrl);
@@ -861,17 +851,17 @@ function renderProfile(){
       <div class="skin-viewer-stage" id="profileSkinStage"><canvas id="profileSkinCanvas" aria-label="Interactive 3D player skin"></canvas></div>
       <div class="skin-viewer-controls">
        <div class="skin-runner-brand"><span class="skin-runner-live"></span> RUNNER LAB <span class="skin-runner-seed">SEED #${String(Math.floor(Math.random()*999999)).padStart(6,'0')}</span></div>
-       <div class="skin-pose-title">POSE SELECT <span>RANKED / ANY%</span></div>
+       <div class="skin-pose-title">FORTNITE-STYLE EMOTES <span>ANIMATION LAB</span></div>
        <div class="skin-pose-grid">
-        <button type="button" data-skin-pose="idle" class="active">▣ Idle</button>
+        <button type="button" data-skin-pose="idle" class="active">▣ Default</button>
         <button type="button" data-skin-pose="run">⚡ Running</button>
-        <button type="button" data-skin-pose="boat">▱ Boating</button>
-        <button type="button" data-skin-pose="crawl">⌄ Crawling</button>
-        <button type="button" data-skin-pose="sit">▰ Sitting</button>
-        <button type="button" data-skin-pose="shit">💀 Shitting</button>
-        <button type="button" data-skin-pose="swim">≈ Swimming</button>
-        <button type="button" data-skin-pose="fly">↗ Flying</button>
+        <button type="button" data-skin-pose="orange">🕺 Orange Justice</button>
+        <button type="button" data-skin-pose="floss">〰 Floss</button>
+        <button type="button" data-skin-pose="take">🙌 Take the L</button>
+        <button type="button" data-skin-pose="hype">💃 Hype</button>
         <button type="button" data-skin-pose="wave">✦ Wave</button>
+        <button type="button" data-skin-pose="hit">👊 Hit It</button>
+        <button type="button" data-skin-pose="crawl">⌄ Crouch</button>
        </div>
        <label class="skin-animation-speed">ANIMATION SPEED <span id="skinAnimSpeedValue">1.0×</span><input id="skinAnimSpeed" type="range" min="0.4" max="2.8" step="0.1" value="1"></label>
        <div class="skin-camera-controls"><button type="button" id="skinResetCamera">↻ Reset camera</button><button type="button" id="skinTurnFront">Front</button><button type="button" id="skinTurnBack">Back</button><button type="button" id="skinDownload">↓ Export PNG</button></div>
