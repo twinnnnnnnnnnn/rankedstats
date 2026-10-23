@@ -505,7 +505,7 @@ function normalizeMergedMatch(match,sourceUsers,primary){
  return m;
 }
 function getUser(n){const k=String(n).toLowerCase();if(!UC[k]){UC[k]=get(API+"/users/"+enc(n));UC[k].catch(()=>{delete UC[k]})}return UC[k]}
-function fetchMatches(who,type,before,count,sort,season){return get(API+"/users/"+enc(who)+"/matches?count="+count+"&type="+type+(before?"&before="+before:"")+(sort?"&sort="+sort:"")+(season?"&season="+season:""))}
+async function fetchMatches(who,type,before,count,sort,season){const query="?count="+count+"&type="+type+(before?"&before="+before:"")+(sort?"&sort="+sort:"")+(season?"&season="+season:"");try{return await get(API+"/users/"+enc(typeof who==="object"?(who.uuid||who.nickname):who)+"/matches"+query)}catch(first){if(typeof who!=="object"||!who.nickname||String(who.nickname)===String(who.uuid))throw first;return get(API+"/users/"+enc(who.nickname)+"/matches"+query)}}
 const Q=[];let running=0;
 function enqueue(fn){Q.push(fn);pump()}
 function pump(){while(running<3&&Q.length){running++;Q.shift()().then(()=>{},()=>{}).then(()=>{running--;pump()})}}
@@ -847,7 +847,7 @@ function loadMore(mode,count){
   st.p=Promise.all(sources.filter(src=>!st.sourceDone?.[String(src.uuid)]).map(async src=>{
     const key=String(src.uuid),before=st.cursors?.[key]||null;
     try{
-      const rows=await fetchMatches(src.uuid,MT[mode],before,n,null,mode==="ranked"?Number(tok.profileSeason)||null:null);
+      const rows=await fetchMatches(src,MT[mode],before,n,null,mode==="ranked"?Number(tok.profileSeason)||null:null);
       const r=Array.isArray(rows)?rows:[];
       if(!r.length||r.length<n){st.sourceDone=st.sourceDone||{};st.sourceDone[key]=true;}
       st.cursors=st.cursors||{};if(r.length)st.cursors[key]=r[r.length-1].id;
