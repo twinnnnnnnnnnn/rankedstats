@@ -372,6 +372,29 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 .skin-viewer-help{font-size:12px;color:var(--muted);line-height:1.5}
 .skin-viewer-status{font-size:12px;color:var(--muted);margin-top:7px}
 
+
+.skin-viewer-card{border-color:#30352b;box-shadow:0 0 0 1px #14170f,0 10px 28px #0008}
+.skin-viewer-card>summary{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid #242820;background:linear-gradient(90deg,#151a11,#0a0b09)}
+.skin-viewer-card>summary:before{content:"▶";color:#b6f36a;font-size:11px;margin-right:8px}
+.skin-viewer-stage{background-color:#090c08;background-image:linear-gradient(#20291c18 1px,transparent 1px),linear-gradient(90deg,#20291c18 1px,transparent 1px);background-size:24px 24px}
+.skin-viewer-controls{gap:9px}
+.skin-runner-brand{font:700 11px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.1em;color:#c2f879;display:flex;align-items:center;gap:7px;border-bottom:1px solid #292e22;padding:3px 0 9px}
+.skin-runner-live{width:7px;height:7px;background:#b6f36a;border-radius:50%;box-shadow:0 0 9px #b6f36a;display:inline-block}
+.skin-runner-seed{margin-left:auto;color:#777f6d;font-weight:400;letter-spacing:0}
+.skin-pose-title{display:flex;justify-content:space-between;font:700 10px ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:.09em;color:#8e9880;margin-top:2px}
+.skin-pose-title span{color:#b6f36a}
+.skin-pose-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.skin-pose-grid button,.skin-camera-controls button{border:1px solid #30372a!important;background:#11140f!important;color:#cdd3c5!important;font:12px ui-monospace,SFMono-Regular,Consolas,monospace!important;padding:9px 5px!important;text-align:center!important}
+.skin-pose-grid button:hover,.skin-camera-controls button:hover{border-color:#839b5a!important;background:#1b2115!important}
+.skin-pose-grid button.active{border-color:#b6f36a!important;background:#253219!important;color:#d7ff9b!important;box-shadow:inset 0 -2px #b6f36a}
+.skin-animation-speed{font:10px ui-monospace,SFMono-Regular,Consolas,monospace;color:#8e9880;letter-spacing:.07em;display:grid;grid-template-columns:1fr auto;gap:7px}
+.skin-animation-speed span{color:#c2f879}
+.skin-animation-speed input{grid-column:1/-1;width:100%;accent-color:#b6f36a}
+.skin-camera-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.skin-background-options button{font:10px ui-monospace,SFMono-Regular,Consolas,monospace!important;text-transform:uppercase}
+.skin-viewer-status{font:10px ui-monospace,SFMono-Regular,Consolas,monospace;padding:7px;background:#0e110b;border-left:2px solid #b6f36a}
+@media(max-width:650px){.skin-pose-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
 .skin-viewer-card{padding:0}
 .skin-viewer-card>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;font-weight:600}
 .skin-viewer-card>summary::-webkit-details-marker{display:none}
@@ -735,40 +758,49 @@ function setupProfileSkinViewer(uuid){
   if(!canvas||!stage||!status)return;
   if(window.profileSkinViewer){try{window.profileSkinViewer._profileResizeObserver?.disconnect();window.profileSkinViewer.dispose()}catch(_){}window.profileSkinViewer=null}
   if(window.profileSkinCustomBgUrl){try{URL.revokeObjectURL(window.profileSkinCustomBgUrl)}catch(_){}window.profileSkinCustomBgUrl=null}
-  const backgrounds={
-    default:"",
-    bastion:"https://upload.wikimedia.org/wikipedia/commons/3/3b/Minecraft_Bastion_Remnants.png",
-    overworld:"https://upload.wikimedia.org/wikipedia/commons/f/fc/Minecraft_dappled_forest.png",
-    nether:"https://upload.wikimedia.org/wikipedia/commons/c/cd/Screenshot_from_the_Minecraft_Nether.png"
-  };
-  let currentBg="default",customBg="";
-  const applyBg=(key)=>{
-    currentBg=key;
+  const backgrounds={default:"",bastion:"https://upload.wikimedia.org/wikipedia/commons/3/3b/Minecraft_Bastion_Remnants.png",overworld:"https://upload.wikimedia.org/wikipedia/commons/f/fc/Minecraft_dappled_forest.png",nether:"https://upload.wikimedia.org/wikipedia/commons/c/cd/Screenshot_from_the_Minecraft_Nether.png"};
+  let customBg="",poseName="idle",animSpeed=1;
+  const applyBg=key=>{
     const url=key==="custom"?customBg:(backgrounds[key]||"");
     stage.style.backgroundImage=url?'linear-gradient(#0002,#0002),url("'+url.replace(/["\\]/g,"")+'")':"";
     stage.style.backgroundColor=url?"#080808":"#0a0a0a";
     document.querySelectorAll("[data-skin-bg]").forEach(b=>b.classList.toggle("active",b.dataset.skinBg===key));
-    if(status.isConnected)status.textContent=key==="default"?"Plain background":key==="custom"?"Custom background applied":key.charAt(0).toUpperCase()+key.slice(1)+" background selected";
+    if(status.isConnected)status.textContent=key==="default"?"READY // PLAIN BACKGROUND":key==="custom"?"READY // CUSTOM BACKGROUND":"READY // "+key.toUpperCase()+" SCENE";
   };
-  const fail=()=>{if(status.isConnected)status.textContent="Couldn’t load this player’s skin."};
-  if(!window.skinview3d){status.textContent="3D viewer library didn’t load. Refresh to retry.";return}
+  const fail=()=>{if(status.isConnected)status.textContent="ERROR // COULDN’T LOAD PLAYER SKIN"};
+  if(!window.skinview3d){status.textContent="ERROR // 3D VIEWER LIBRARY DIDN’T LOAD";return}
   try{
     const viewer=new skinview3d.SkinViewer({canvas,width:canvas.clientWidth||420,height:320,skin:"https://mc-heads.net/skin/"+encodeURIComponent(uuid),background:null});
-    window.profileSkinViewer=viewer;
-    viewer.width=canvas.clientWidth||420;viewer.height=320;
-    viewer.renderer.setClearColor(0x000000,0);
-    viewer.controls.enableRotate=true;viewer.controls.enableZoom=true;viewer.controls.enablePan=false;
+    window.profileSkinViewer=viewer;viewer.width=canvas.clientWidth||420;viewer.height=320;
+    viewer.renderer.setClearColor(0x000000,0);viewer.controls.enableRotate=true;viewer.controls.enableZoom=true;viewer.controls.enablePan=false;
     viewer.zoom=0.9;viewer.camera.position.set(28,18,42);
     const skinUrl="https://mc-heads.net/skin/"+encodeURIComponent(uuid);
-    viewer.loadSkin(skinUrl).then(()=>{if(status.isConnected)status.textContent="Skin loaded · drag to rotate"}).catch(fail);
+    viewer.loadSkin(skinUrl).then(()=>{if(status.isConnected)status.textContent="READY // DRAG TO ROTATE"}).catch(fail);
     const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;viewer.setSize(Math.max(220,canvas.parentElement.clientWidth),320)};
     if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(canvas.parentElement);viewer._profileResizeObserver=ro}
+    const setPose=(key)=>{
+      poseName=key;
+      let animation=null;
+      const make=(name)=>typeof skinview3d[name]==="function"?new skinview3d[name]():null;
+      if(key==="run")animation=make("RunningAnimation");
+      else if(key==="boat"||key==="swim")animation=make("SwimAnimation");
+      else if(key==="crawl")animation=make("CrouchAnimation");
+      else if(key==="sit"||key==="shit"){animation=make("CrouchAnimation");if(animation)animation.paused=true}
+      else if(key==="fly")animation=make("FlyingAnimation");
+      else if(key==="wave")animation=make("WaveAnimation");
+      else animation=make("IdleAnimation");
+      viewer.animation=animation;
+      if(viewer.animation){viewer.animation.speed=animSpeed;if((key==="sit"||key==="shit")&&"paused" in viewer.animation)viewer.animation.paused=true}
+      document.querySelectorAll("[data-skin-pose]").forEach(b=>b.classList.toggle("active",b.dataset.skinPose===key));
+      if(status.isConnected)status.textContent="POSE // "+({idle:"IDLE",run:"RUNNING",boat:"BOATING",crawl:"CRAWLING",sit:"SITTING",shit:"SHITTING 💀",swim:"SWIMMING",fly:"FLYING",wave:"WAVING"}[key]||key.toUpperCase())+" · "+animSpeed.toFixed(1)+"×";
+    };
+    document.querySelectorAll("[data-skin-pose]").forEach(b=>b.onclick=()=>setPose(b.dataset.skinPose));
+    if($("skinAnimSpeed"))$("skinAnimSpeed").oninput=e=>{animSpeed=Number(e.target.value)||1;const label=$("skinAnimSpeedValue");if(label)label.textContent=animSpeed.toFixed(1)+"×";if(viewer.animation)viewer.animation.speed=animSpeed;setPose(poseName)};
     if($("skinResetCamera"))$("skinResetCamera").onclick=()=>{viewer.camera.position.set(28,18,42);viewer.controls.target.set(0,0,0);viewer.controls.update()};
     if($("skinTurnFront"))$("skinTurnFront").onclick=()=>{viewer.camera.position.set(0,12,48);viewer.controls.target.set(0,0,0);viewer.controls.update()};
     if($("skinTurnBack"))$("skinTurnBack").onclick=()=>{viewer.camera.position.set(0,12,-48);viewer.controls.target.set(0,0,0);viewer.controls.update()};
     if($("skinBackgroundUpload"))$("skinBackgroundUpload").onchange=e=>{
-      const file=e.target.files&&e.target.files[0];if(!file)return;
-      if(!file.type.startsWith("image/")){status.textContent="Choose an image file.";return}
+      const file=e.target.files&&e.target.files[0];if(!file)return;if(!file.type.startsWith("image/")){status.textContent="ERROR // CHOOSE AN IMAGE FILE";return}
       if(window.profileSkinCustomBgUrl)URL.revokeObjectURL(window.profileSkinCustomBgUrl);
       window.profileSkinCustomBgUrl=URL.createObjectURL(file);customBg=window.profileSkinCustomBgUrl;applyBg("custom");
     };
@@ -776,25 +808,16 @@ function setupProfileSkinViewer(uuid){
     document.querySelectorAll("[data-skin-bg]").forEach(b=>b.onclick=()=>applyBg(b.dataset.skinBg));
     if($("skinDownload"))$("skinDownload").onclick=()=>{
       try{
-        viewer.render();
-        const w=viewer.renderer.domElement.width,h=viewer.renderer.domElement.height;
-        const out=document.createElement("canvas");out.width=w;out.height=h;
-        const ctx=out.getContext("2d");
-        const finish=()=>{
-          try{ctx.drawImage(viewer.renderer.domElement,0,0,w,h);const link=document.createElement("a");link.download=(P?.u?.nickname||"minecraft-skin")+"-3d.png";link.href=out.toDataURL("image/png");link.click()}
-          catch(_){status.textContent="Couldn’t export image. Try another background image."}
-        };
+        viewer.render();const w=viewer.renderer.domElement.width,h=viewer.renderer.domElement.height;
+        const out=document.createElement("canvas");out.width=w;out.height=h;const ctx=out.getContext("2d");
+        const finish=()=>{try{ctx.drawImage(viewer.renderer.domElement,0,0,w,h);const link=document.createElement("a");link.download=(P?.u?.nickname||"minecraft-skin")+"-"+poseName+".png";link.href=out.toDataURL("image/png");link.click()}catch(_){status.textContent="EXPORT ERROR // TRY ANOTHER BACKGROUND"}};
         const bg=stage.style.backgroundImage;
-        if(bg&&bg!=="none"){
-          const img=new Image();img.crossOrigin="anonymous";
-          const match=bg.match(/url\(["']?(.*?)["']?\)/);
-          if(match){img.onload=()=>{ctx.drawImage(img,0,0,w,h);finish()};img.onerror=()=>finish();img.src=match[1]}
-          else finish();
-        }else{ctx.fillStyle="#0a0a0a";ctx.fillRect(0,0,w,h);finish()}
-      }catch(_){status.textContent="Couldn’t export the image. Try again after the skin loads."}
+        if(bg&&bg!=="none"){const match=bg.match(/url\(["']?(.*?)["']?\)/);if(match){const img=new Image();img.crossOrigin="anonymous";img.onload=()=>{ctx.drawImage(img,0,0,w,h);finish()};img.onerror=()=>finish();img.src=match[1]}else finish()}
+        else{ctx.fillStyle="#0a0a0a";ctx.fillRect(0,0,w,h);finish()}
+      }catch(_){status.textContent="EXPORT ERROR // TRY AGAIN"}
     };
     if(panel)panel.addEventListener("toggle",()=>{if(panel.open)requestAnimationFrame(resize)});
-    resize();applyBg("default");
+    resize();applyBg("default");setPose("idle");
   }catch(_){fail()}
 }
 function renderProfile(){
@@ -830,10 +853,21 @@ function renderProfile(){
      <div class="skin-viewer-layout">
       <div class="skin-viewer-stage" id="profileSkinStage"><canvas id="profileSkinCanvas" aria-label="Interactive 3D player skin"></canvas></div>
       <div class="skin-viewer-controls">
-       <button type="button" id="skinResetCamera">↻ Reset camera</button>
-       <button type="button" id="skinTurnFront">Front view</button>
-       <button type="button" id="skinTurnBack">Back view</button>
-       <button type="button" id="skinDownload">↓ Download PNG</button>
+       <div class="skin-runner-brand"><span class="skin-runner-live"></span> RUNNER LAB <span class="skin-runner-seed">SEED #${String(Math.floor(Math.random()*999999)).padStart(6,'0')}</span></div>
+       <div class="skin-pose-title">POSE SELECT <span>RANKED / ANY%</span></div>
+       <div class="skin-pose-grid">
+        <button type="button" data-skin-pose="idle" class="active">▣ Idle</button>
+        <button type="button" data-skin-pose="run">⚡ Running</button>
+        <button type="button" data-skin-pose="boat">▱ Boating</button>
+        <button type="button" data-skin-pose="crawl">⌄ Crawling</button>
+        <button type="button" data-skin-pose="sit">▰ Sitting</button>
+        <button type="button" data-skin-pose="shit">💀 Shitting</button>
+        <button type="button" data-skin-pose="swim">≈ Swimming</button>
+        <button type="button" data-skin-pose="fly">↗ Flying</button>
+        <button type="button" data-skin-pose="wave">✦ Wave</button>
+       </div>
+       <label class="skin-animation-speed">ANIMATION SPEED <span id="skinAnimSpeedValue">1.0×</span><input id="skinAnimSpeed" type="range" min="0.4" max="2.8" step="0.1" value="1"></label>
+       <div class="skin-camera-controls"><button type="button" id="skinResetCamera">↻ Reset camera</button><button type="button" id="skinTurnFront">Front</button><button type="button" id="skinTurnBack">Back</button><button type="button" id="skinDownload">↓ Export PNG</button></div>
        <div class="skin-background-upload"><label for="skinBackgroundUpload">Custom background image</label><input type="file" id="skinBackgroundUpload" accept="image/*"><button type="button" id="skinClearBackground">Remove background</button></div>
        <div><div style="font-size:12px;color:var(--muted);margin-bottom:5px">Scene backgrounds</div><div class="skin-background-options"><button type="button" data-skin-bg="default" class="active">Plain</button><button type="button" data-skin-bg="bastion">Bastion</button><button type="button" data-skin-bg="overworld">Overworld</button><button type="button" data-skin-bg="nether">Nether</button></div></div>
        <div class="skin-viewer-help">Drag to orbit the camera. Scroll or pinch to zoom. Download PNG exports the 3D view with its current background.</div>
