@@ -219,11 +219,11 @@ body.dark-everything::before{background:#000!important;background-image:none!imp
 
 .vod-match-timeline{width:min(1450px,100%)}
 .vod-race{padding:12px 48px 4px;position:relative}
-.vod-race-lane{position:relative;height:64px}
+.vod-race-lane{position:relative;height:76px}
 .vod-race-name{position:absolute;left:-42px;top:18px;font-size:10px;max-width:42px;overflow:hidden;text-overflow:ellipsis}
-.vod-race-runner{position:absolute;left:0;top:-7px;width:48px;height:64px;transform:translateX(-50%);z-index:3;transition:left .25s linear;pointer-events:none}
+.vod-race-runner{position:absolute;left:0;top:4px;width:48px;height:64px;transform:translateX(-50%);z-index:3;transition:left .25s linear;pointer-events:none}
 .vod-race-runner canvas{display:block;width:48px;height:64px;background:transparent!important}
-.vod-race-lower .vod-race-runner{top:20px}
+.vod-race-lower .vod-race-runner{top:4px}
 .vod-race-stages{position:relative;height:34px;border-top:2px solid #777;color:#d6d4e4;display:flex;justify-content:space-between;font-size:15px}
 .vod-race-stages>span:first-child,.vod-race-stages>span:last-child{margin-top:6px}
 .vod-race-stage{position:absolute;top:6px;transform:translateX(-50%);white-space:nowrap}
@@ -1126,7 +1126,7 @@ function initVodRaceModels(){
     const uuid=el.dataset.skin,canvas=el.querySelector("canvas");if(!uuid||!canvas)continue;
     try{
       const viewer=new skinview3d.SkinViewer({canvas,width:48,height:64,skin:"https://mc-heads.net/skin/"+encodeURIComponent(uuid),background:null});
-      viewer.renderer.setClearColor(0x000000,0);viewer.controls.enableRotate=false;viewer.controls.enableZoom=false;viewer.controls.enablePan=false;viewer.zoom=0.72;viewer.camera.position.set(0,0,34);viewer.controls.target.set(0,0,0);
+      viewer.renderer.setClearColor(0x000000,0);viewer.controls.enableRotate=false;viewer.controls.enableZoom=false;viewer.controls.enablePan=false;viewer.zoom=0.52;viewer.camera.position.set(0,0,38);viewer.controls.target.set(0,0,0);
       const faceRight=()=>{if(viewer.playerObject){viewer.playerObject.rotation.y=1.05;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0}};
       faceRight();viewer.loadSkin("https://mc-heads.net/skin/"+encodeURIComponent(uuid)).then(faceRight).catch(()=>{});
       if(skinview3d.RunningAnimation)viewer.animation=new skinview3d.RunningAnimation();else if(skinview3d.WalkingAnimation)viewer.animation=new skinview3d.WalkingAnimation();
