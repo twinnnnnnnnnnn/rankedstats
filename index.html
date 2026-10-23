@@ -562,24 +562,16 @@ $("logo").onclick=e=>{e.preventDefault();go("#!lb/season")};
 async function showBoobiesSearchResult(){
  let panel=document.getElementById("boobiesSearchResult");
  if(!panel){panel=document.createElement("div");panel.id="boobiesSearchResult";panel.style.cssText="margin:12px auto;max-width:420px;text-align:center;padding:12px;border:1px solid var(--line,#333);background:var(--surface,#111);color:var(--text,#eee)";document.getElementById("f").insertAdjacentElement("afterend",panel)}
- panel.innerHTML='<div style="margin-bottom:8px;font-weight:600">You searched for boobies 😭</div><div style="color:var(--muted,#aaa)">Loading an image from your Drive folder…</div>';
+ panel.innerHTML='<div style="margin-bottom:8px;font-weight:600">You searched for boobies 😭</div><div style="color:var(--muted,#aaa)">Finding a random GIF on Tenor…</div>';
  try{
-  let data=null;
-  try{
-   const res=await fetch("/api/drive-images");
-   if(res.ok){const json=await res.json();const images=Array.isArray(json.images)?json.images:[];if(images.length)data=images[Math.floor(Math.random()*images.length)]}
-  }catch(_){}
-  if(data&&data.url){
-   panel.innerHTML='<div style="margin-bottom:8px;font-weight:600">You searched for boobies 😭</div><img alt="Random image from the shared collection" src="'+esc(data.url)+'" style="display:block;max-width:100%;max-height:420px;object-fit:contain;margin:auto" loading="lazy"><div style="margin-top:7px;font-size:11px;color:var(--muted,#aaa)">Random image from your Drive collection</div>';
-   return;
-  }
-  // Fallback in case Drive's public folder page doesn't expose its image list.
-  for(const url of ["https://api.waifu.im/search/?included_tags=oppai&is_nsfw=false","https://api.waifu.im/search/?included_tags=waifu&is_nsfw=false"]){
-   try{const res=await fetch(url);if(!res.ok)continue;const json=await res.json();if(json.images&&json.images.length){data=json.images[0];break}}catch(_){}
-  }
-  if(!data||!data.url)throw new Error("No image returned");
-  panel.innerHTML='<div style="margin-bottom:8px;font-weight:600">You searched for boobies 😭</div><img alt="Safe anime illustration" src="'+esc(data.url)+'" style="display:block;max-width:100%;max-height:420px;object-fit:contain;margin:auto" loading="lazy"><div style="margin-top:7px;font-size:11px;color:var(--muted,#aaa)">Anime image · fallback</div>';
- }catch(_){panel.innerHTML='<div style="font-weight:600">You searched for boobies 😭</div><div style="margin-top:6px;color:var(--muted,#aaa)">Couldn’t load an image right now.</div>'}
+  const res=await fetch("/api/tenor-images");
+  if(!res.ok)throw new Error("Tenor search failed");
+  const json=await res.json();
+  const images=Array.isArray(json.images)?json.images.filter(x=>x&&x.url):[];
+  if(!images.length)throw new Error("No Tenor GIFs found");
+  const data=images[Math.floor(Math.random()*images.length)];
+  panel.innerHTML='<div style="margin-bottom:8px;font-weight:600">You searched for boobies 😭</div><a href="https://tenor.com/search/anime-boobs-gifs" target="_blank" rel="noopener noreferrer" style="display:block"><img alt="Anime GIF from Tenor search results" src="'+esc(data.url)+'" style="display:block;max-width:100%;max-height:420px;object-fit:contain;margin:auto" loading="lazy"></a><div style="margin-top:7px;font-size:11px;color:var(--muted,#aaa)">Random anime GIF from <a href="https://tenor.com/search/anime-boobs-gifs" target="_blank" rel="noopener noreferrer" style="color:inherit">Tenor</a></div>';
+ }catch(_){panel.innerHTML='<div style="font-weight:600">You searched for boobies 😭</div><div style="margin-top:6px;color:var(--muted,#aaa)">Couldn’t load a Tenor GIF right now. <a href="https://tenor.com/search/anime-boobs-gifs" target="_blank" rel="noopener noreferrer" style="color:inherit">Open Tenor search</a>.</div>'}
 }
 $("f").addEventListener("submit",e=>{e.preventDefault();const v=$("q").value.trim();if(!v)return;if(/boobies/i.test(v)){showBoobiesSearchResult();return}const panel=document.getElementById("boobiesSearchResult");if(panel)panel.remove();go("#"+enc(v))});
 window.addEventListener("hashchange",route);
