@@ -484,7 +484,7 @@ function countryOptions(){
 /* ---------- data layer ---------- */
 const MT={casual:1,ranked:2,private:3};
 const UC={},MC={};
-const MERGED_PLAYER_GROUPS=[{primary:"HDMICables",aliases:["mufatmcsr"]}];
+const MERGED_PLAYER_GROUPS=[{primary:"HDMICables",aliases:["mufatmcsr"]},{primary:"bfye",aliases:["frontm91"]}];
 function mergedPlayerGroup(name){
  const n=String(name||"").toLowerCase();
  return MERGED_PLAYER_GROUPS.find(g=>g.primary.toLowerCase()===n||g.aliases.some(a=>a.toLowerCase()===n))||null;
