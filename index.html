@@ -844,15 +844,24 @@ function graphRankColor(elo){
   return "#8b91a1";
 }
 function chart(){
-  const d=pts.map(p=>p.elo),mn=Math.min(...d)-15,mx=Math.max(...d)+15;
-  X=i=>PD+i*(W-PD*1.5)/(d.length-1);Y=v=>H-PD-(v-mn)/(mx-mn)*(H-PD*1.5);
-  const line=d.map((v,i)=>X(i)+","+Y(v)).join(" ");let grid="";
-  for(let k=0;k<4;k++){const v=mn+(mx-mn)*k/3;grid+=`<line x1="${PD}" x2="${W-PD/2}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="0" y="${Y(v)+4}" fill="var(--muted)" font-size="11">${Math.round(v)}</text>`}
-  const segments=pts.slice(1).map((p,j)=>{const i=j+1;return `<line x1="${X(i-1)}" y1="${Y(pts[i-1].elo)}" x2="${X(i)}" y2="${Y(p.elo)}" stroke="${graphRankColor((pts[i-1].elo+p.elo)/2)}" stroke-width="2.8" stroke-linejoin="miter" stroke-linecap="butt"/>`}).join("");
-  const dots=pts.length>250?"":pts.map((p,i)=>p.base?"":`<circle cx="${X(i)}" cy="${Y(p.elo)}" r="2" fill="${graphRankColor(p.elo)}"/>`).join("");
+  const d=pts.map(p=>p.elo),lo=Math.min(...d),hi=Math.max(...d),span=Math.max(hi-lo,30);
+  const mn=lo-span*.09,mx=hi+span*.09;
+  X=i=>PD+i*(W-PD*1.5)/(d.length-1);
+  Y=v=>H-PD-(v-mn)/(mx-mn)*(H-PD*1.5);
+  const line=d.map((v,i)=>X(i)+","+Y(v)).join(" ");
+  let grid="";
+  for(let k=0;k<4;k++){
+    const v=mn+(mx-mn)*k/3;
+    grid+=`<line x1="${PD}" x2="${W-PD/2}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1" opacity=".72"/><text x="0" y="${Y(v)+4}" fill="var(--muted)" font-size="11" font-family="Lora,serif">${Math.round(v)}</text>`;
+  }
+  const segments=pts.slice(1).map((p,j)=>{
+    const i=j+1;
+    return `<line x1="${X(i-1)}" y1="${Y(pts[i-1].elo)}" x2="${X(i)}" y2="${Y(p.elo)}" stroke="${graphRankColor((pts[i-1].elo+p.elo)/2)}" stroke-width="2" stroke-linejoin="miter" stroke-linecap="butt"/>`;
+  }).join("");
+  const dots=pts.length>250?"":pts.map((p,i)=>p.base?"":`<circle cx="${X(i)}" cy="${Y(p.elo)}" r="1.7" fill="${graphRankColor(p.elo)}"/>`).join("");
   const currentColor=graphRankColor(d[d.length-1]);
-  $("cb").innerHTML=`<svg id="sv" viewBox="0 0 ${W} ${H}"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${currentColor}" stop-opacity=".32"/><stop offset="1" stop-color="${currentColor}" stop-opacity="0"/></linearGradient></defs>${grid}<polygon points="${X(0)},${H-PD} ${line} ${X(d.length-1)},${H-PD}" fill="url(#g)"/>${segments}${dots}
-    <line id="hl" y1="${PD/2}" y2="${H-PD}" stroke="var(--muted)" stroke-dasharray="3 4" opacity="0"/><circle id="hd" r="7" fill="none" stroke="var(--text)" stroke-width="2" opacity="0"/><circle id="sd" r="9" fill="none" stroke="${currentColor}" stroke-width="3" opacity="0"/></svg><div id="tip"></div>`;
+  $("cb").innerHTML=`<svg id="sv" viewBox="0 0 ${W} ${H}" role="img" aria-label="Elo history graph"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${currentColor}" stop-opacity=".18"/><stop offset="1" stop-color="${currentColor}" stop-opacity="0"/></linearGradient></defs>${grid}<polygon points="${X(0)},${H-PD} ${line} ${X(d.length-1)},${H-PD}" fill="url(#g)"/>${segments}${dots}
+    <line id="hl" y1="${PD/2}" y2="${H-PD}" stroke="var(--muted)" stroke-dasharray="2 4" opacity="0"/><circle id="hd" r="5" fill="var(--bg)" stroke="var(--text)" stroke-width="1.5" opacity="0"/><circle id="sd" r="7" fill="none" stroke="${currentColor}" stroke-width="2" opacity="0"/></svg><div id="tip"></div>`;
   const sv=$("sv");
   const near=e=>{const r=sv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W;let b=0,bd=1e9;pts.forEach((p,i)=>{const dd=Math.abs(X(i)-x);if(dd<bd){bd=dd;b=i}});return b};
   sv.onpointermove=e=>hover(near(e));
