@@ -738,8 +738,8 @@ function setupProfileSkinViewer(uuid){
   const backgrounds={
     default:"",
     bastion:"https://upload.wikimedia.org/wikipedia/commons/3/3b/Minecraft_Bastion_Remnants.png",
-    overworld:"https://upload.wikimedia.org/wikipedia/commons/b/b1/Minecraft_overworld.png",
-    nether:"https://upload.wikimedia.org/wikipedia/commons/3/3f/Minecraft_The_Nether.png"
+    overworld:"https://upload.wikimedia.org/wikipedia/commons/f/fc/Minecraft_dappled_forest.png",
+    nether:"https://upload.wikimedia.org/wikipedia/commons/c/cd/Screenshot_from_the_Minecraft_Nether.png"
   };
   let currentBg="default",customBg="";
   const applyBg=(key)=>{
@@ -840,7 +840,7 @@ function renderProfile(){
        <div class="skin-viewer-status" id="skinViewerStatus">Loading skin…</div>
       </div>
      </div>
-     <div style="font-size:10px;color:var(--muted);margin-top:8px">Background art: <a href="https://wallpapers.com/wallpapers/minecraft-nether-bastion-remnants-p7l9m32e9igopczj.html" target="_blank" rel="noopener noreferrer">Bastion wallpaper reference</a> · <a href="https://commons.wikimedia.org/wiki/File:Minecraft_overworld.png" target="_blank" rel="noopener noreferrer">Overworld</a> · <a href="https://commons.wikimedia.org/wiki/File:Minecraft_The_Nether.png" target="_blank" rel="noopener noreferrer">Nether</a></div>
+     <div style="font-size:10px;color:var(--muted);margin-top:8px">Background art: <a href="https://wallpapers.com/wallpapers/minecraft-nether-bastion-remnants-p7l9m32e9igopczj.html" target="_blank" rel="noopener noreferrer">Bastion wallpaper reference</a> · <a href="https://commons.wikimedia.org/wiki/File:Minecraft_dappled_forest.png" target="_blank" rel="noopener noreferrer">Overworld</a> · <a href="https://commons.wikimedia.org/wiki/File:Screenshot_from_the_Minecraft_Nether.png" target="_blank" rel="noopener noreferrer">Nether</a></div>
     </div>
    </details>
     <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
