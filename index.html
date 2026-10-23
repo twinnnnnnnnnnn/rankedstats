@@ -385,7 +385,7 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
     <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Settings" title="Settings" aria-expanded="false">⚙</button>
     <section class="settings-panel" aria-label="Website settings">
       <h2 class="settings-title">Settings</h2>
-      <div class="setting-field"><label for="languageChoice">Language / 言語</label><select id="languageChoice" aria-label="Language"><option value="en">English</option><option value="ja">日本語</option></select></div><div class="setting-field"><label for="fontChoice">Font</label><select id="fontChoice" aria-label="Website font"><option value="default">Default</option><option value="minecraft">Minecraft font</option><option value="sga">Standard Galactic Alphabet</option></select></div>
+      <div class="setting-field"><label for="languageChoice">Language / 言語</label><select id="languageChoice" aria-label="Language"><option value="en">English</option><option value="ja">日本語</option></select></div><div class="setting-field"><label for="fontChoice">Font</label><select id="fontChoice" aria-label="Website font"><option value="default">Default</option><option value="minecraft">Minecraft font</option><option value="sga">Standard Galactic Alphabet</option></select></div><div class="setting-field"><label for="fontSizeChoice">Font size / 文字サイズ <span id="fontSizeLabel">100%</span></label><input id="fontSizeChoice" type="range" min="80" max="130" step="5" value="100" aria-label="Adjust font size" style="width:100%;padding:0;accent-color:var(--accent)"></div>
       
     </section>
   </div>
@@ -716,21 +716,39 @@ function sessionStatsHTML(){
 }
 function refreshSessionStats(){const el=$("sessionStats");if(!el)return;el.innerHTML=sessionStatsHTML();const heading=$("sessionTitle");if(heading&&P?.st){const matches=P.st.ranked.list.filter(m=>Number.isFinite(Number(m.date))&&Number(m.date)>0).sort((a,b)=>Number(b.date)-Number(a.date));const top150=(T.globalLb?.users||[]).slice(0,150).some(u=>String(u.uuid)===String(P.u?.uuid));const hours=Number(P.u?.eloRate)>=2500?3:top150?2:1;const current=matches.length&&Date.now()/1000-Number(matches[0].date)<=hours*3600;heading.textContent=current?"Current Session":"Last Session";}}
 function setupProfileSkinViewer(uuid){
-  const canvas=$("profilePlayerCanvas"),stage=$("profilePlayerModel");
-  if(!canvas||!stage||!window.skinview3d)return;
-  if(window.profileSkinViewer){try{window.profileSkinViewer._profileResizeObserver?.disconnect();window.profileSkinViewer.dispose()}catch(_){}window.profileSkinViewer=null}
+ const canvas=$("profilePlayerCanvas"),stage=$("profilePlayerModel");
+ if(!canvas||!stage)return;
+ if(window.profileSkinViewer){try{window.profileSkinViewer._profileResizeObserver?.disconnect();window.profileSkinViewer.dispose()}catch(_){}window.profileSkinViewer=null}
+ let attempts=0;
+ const render=()=>{
+  if(!canvas.isConnected||!stage.isConnected)return;
+  if(!window.skinview3d){
+   if(++attempts<30){window.setTimeout(render,150);return;}
+   stage.dataset.skinError="true";return;
+  }
   try{
-    const width=Math.max(76,stage.clientWidth||112),height=Math.max(120,stage.clientHeight||156);
-    const viewer=new skinview3d.SkinViewer({canvas,width,height,skin:"https://mc-heads.net/skin/"+encodeURIComponent(uuid),background:null});
-    window.profileSkinViewer=viewer;viewer.setSize(width,height);viewer.renderer.setClearColor(0x000000,0);
-    viewer.controls.enableRotate=false;viewer.controls.enableZoom=false;viewer.controls.enablePan=false;
-    viewer.zoom=0.88;viewer.camera.position.set(0,8,38);viewer.controls.target.set(0,0,0);
-    const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(76,stage.clientWidth||112),h=Math.max(120,stage.clientHeight||156);viewer.setSize(w,h);viewer.camera.aspect=w/h;viewer.camera.updateProjectionMatrix()};
-    if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(stage);viewer._profileResizeObserver=ro}
-    // Keep the profile model completely static; no cursor or pointer reactions.
-    if(viewer.playerObject){viewer.playerObject.rotation.y=0.22;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0}
-    viewer.loadSkin("https://mc-heads.net/skin/"+encodeURIComponent(uuid)).then(()=>{if(viewer.playerObject)viewer.playerObject.rotation.y=0.22}).catch(()=>{});resize();
-  }catch(_){}
+   const id=String(uuid||"").trim();if(!id)return;
+   const width=Math.max(76,stage.clientWidth||112),height=Math.max(120,stage.clientHeight||156);
+   const viewer=new skinview3d.SkinViewer({canvas,width,height,background:null});
+   window.profileSkinViewer=viewer;
+   viewer.renderer.setClearColor(0x000000,0);
+   viewer.controls.enableRotate=false;viewer.controls.enableZoom=false;viewer.controls.enablePan=false;
+   viewer.zoom=0.72;viewer.camera.position.set(0,8,42);viewer.controls.target.set(0,0,0);
+   const resize=()=>{if(!canvas.isConnected||window.profileSkinViewer!==viewer)return;const w=Math.max(76,stage.clientWidth||112),h=Math.max(120,stage.clientHeight||156);viewer.setSize(w,h);viewer.camera.aspect=w/h;viewer.camera.updateProjectionMatrix()};
+   if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(stage);viewer._profileResizeObserver=ro}
+   const sources=["https://mc-heads.net/skin/"+encodeURIComponent(id),"https://minotar.net/skin/"+encodeURIComponent(id)];
+   const load=async()=>{
+    let lastError;
+    for(const src of sources){
+     try{await viewer.loadSkin(src);if(window.profileSkinViewer!==viewer)return;if(viewer.playerObject){viewer.playerObject.rotation.y=0.22;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0;}stage.dataset.skinError="false";resize();return;}
+     catch(e){lastError=e;}
+    }
+    stage.dataset.skinError="true";console.warn("Profile skin failed to load",lastError);
+   };
+   resize();load();
+  }catch(e){stage.dataset.skinError="true";console.warn("Profile skin renderer failed",e);}
+ };
+ render();
 }
 async function checkRecentNameChange(uuid,currentName){
  const el=$("recentNameWarning");if(!el)return;
@@ -1571,13 +1589,28 @@ $("modal").addEventListener("input",e=>{if(e.target.matches(".vod-timeline-track
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
 
 
-// Persistent website settings: font and background.
+// Persistent website settings: font and adjustable text size.
 (()=>{
  const select=document.getElementById('fontChoice');
+ const sizeSelect=document.getElementById('fontSizeChoice');
+ const sizeLabel=document.getElementById('fontSizeLabel');
  const wrap=document.getElementById('settingsWrap');
  const toggle=document.getElementById('settingsToggle');
  if(!select||!wrap||!toggle)return;
- const fontKey='mcsr-stats-font';
+ const fontKey='mcsr-stats-font',sizeKey='mcsr-stats-font-size';
+ const originalSizes=new WeakMap();
+ function scaleText(root=document.body){
+  const scale=(Number(sizeSelect?.value||100)/100);
+  const nodes=[];
+  if(root.nodeType===Node.ELEMENT_NODE)nodes.push(root);
+  if(root.querySelectorAll)nodes.push(...root.querySelectorAll('*'));
+  for(const el of nodes){
+   if(/^(SCRIPT|STYLE|TEXTAREA)$/i.test(el.tagName)||el.closest('#settingsWrap'))continue;
+   if(!originalSizes.has(el)){const size=parseFloat(getComputedStyle(el).fontSize);if(Number.isFinite(size))originalSizes.set(el,size);}
+   const base=originalSizes.get(el);if(Number.isFinite(base))el.style.setProperty('font-size',(base*scale)+'px','important');
+  }
+  if(sizeLabel)sizeLabel.textContent=Math.round(scale*100)+'%';
+ }
  toggle.addEventListener('click',()=>{const opened=wrap.classList.toggle('open');toggle.setAttribute('aria-expanded',String(opened));});
  document.addEventListener('click',e=>{if(!wrap.contains(e.target)){wrap.classList.remove('open');toggle.setAttribute('aria-expanded','false')}});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'){wrap.classList.remove('open');toggle.setAttribute('aria-expanded','false')}});
@@ -1599,6 +1632,13 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
  applyFont(select.value);
  if(select.value==='sga')observer.observe(document.body,{subtree:true,childList:true,characterData:true});
  select.addEventListener('change',()=>{observer.disconnect();localStorage.setItem(fontKey,select.value);applyFont(select.value);if(select.value==='sga')observer.observe(document.body,{subtree:true,childList:true,characterData:true})});
+ if(sizeSelect){
+  sizeSelect.value=localStorage.getItem(sizeKey)||'100';
+  scaleText();
+  const sizeObserver=new MutationObserver(records=>{for(const r of records)for(const n of r.addedNodes)if(n.nodeType===Node.ELEMENT_NODE)scaleText(n);});
+  sizeObserver.observe(document.body,{subtree:true,childList:true});
+  sizeSelect.addEventListener('input',()=>{localStorage.setItem(sizeKey,sizeSelect.value);scaleText();});
+ }
 })();
 try{
  const result=route();
