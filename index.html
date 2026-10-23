@@ -1604,11 +1604,10 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
   const nodes=[];
   if(root.nodeType===Node.ELEMENT_NODE)nodes.push(root);
   if(root.querySelectorAll)nodes.push(...root.querySelectorAll('*'));
-  for(const el of nodes){
-   if(/^(SCRIPT|STYLE|TEXTAREA)$/i.test(el.tagName)||el.closest('#settingsWrap'))continue;
-   if(!originalSizes.has(el)){const size=parseFloat(getComputedStyle(el).fontSize);if(Number.isFinite(size))originalSizes.set(el,size);}
-   const base=originalSizes.get(el);if(Number.isFinite(base))el.style.setProperty('font-size',(base*scale)+'px','important');
-  }
+  const eligible=nodes.filter(el=>!(/^(SCRIPT|STYLE|TEXTAREA)$/i.test(el.tagName)||el.closest('#settingsWrap')));
+  // Capture every original computed size before changing any ancestor, so sizes do not compound.
+  for(const el of eligible)if(!originalSizes.has(el)){const size=parseFloat(getComputedStyle(el).fontSize);if(Number.isFinite(size))originalSizes.set(el,size);}
+  for(const el of eligible){const base=originalSizes.get(el);if(Number.isFinite(base))el.style.setProperty('font-size',(base*scale)+'px','important');}
   if(sizeLabel)sizeLabel.textContent=Math.round(scale*100)+'%';
  }
  toggle.addEventListener('click',()=>{const opened=wrap.classList.toggle('open');toggle.setAttribute('aria-expanded',String(opened));});
