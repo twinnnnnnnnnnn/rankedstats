@@ -1343,7 +1343,7 @@ function seekVod(uuid,ms){
 function layout(){const c=$("cardChart");if(c&&P)c.style.display=P.mode==="ranked"?"":"none"}
 
 /* ---------- leaderboard (season / all time, infinite scroll) ---------- */
-const T={sort:{k:"elo",d:-1},shown:20,lb:null,globalLb:null,countryLbCache:{},view:"season",country:"",currentSeason:12,requestId:0,historical:null,histCache:{},histLoading:new Set()};
+const T={sort:{k:"elo",d:-1},shown:20,lb:null,globalLb:null,countryLbCache:{},view:"season",country:"",currentSeason:12,requestId:0,historical:null,histCache:{},histLoading:new Set(),matchCycle:"normal",privateCounts:{}};
 const RC={};
 let lio=null;
 function calc(u,sc){
@@ -1382,6 +1382,11 @@ function loadRow(name){
     tick();
   });
 }
+function loadPrivateCount(r){
+ if(!r||r.state!=="d"||r.privateRooms!=null||r.privateLoading)return;
+ r.privateLoading=true;tick();
+ enqueue(async()=>{try{let count=0,before=null,lastCursor=null,pages=0;while(pages++<100){const batch=await fetchMatches(r.uuid||r.name,3,before,100,"newest",null);if(!batch.length)break;count+=batch.length;const last=batch[batch.length-1],cursor=last.date??last.id;if(cursor==null||String(cursor)===String(lastCursor)||batch.length<100)break;lastCursor=cursor;before=cursor;}r.privateRooms=count;}catch(e){r.privateRooms=null;r.privateError=true;}finally{r.privateLoading=false;tick();}});
+}
 let raf=0;
 function tick(){if(raf||!$("ptab"))return;raf=requestAnimationFrame(()=>{raf=0;renderPT()})}
 const shownNames=()=>{
@@ -1401,6 +1406,7 @@ async function showLeaderboard(view){
   const req=++T.requestId;
   T.view=view==="all"?"all":view==="season"?String(T.currentSeason):String(view);
   T.shown=20;
+  T.matchCycle="normal";
   T.historical=null;
   T.sort=T.view==="all"?{k:"wins",d:-1}:{k:"elo",d:-1};
   $("out").innerHTML=`<div class="card"><div class="ptools"><label for="lbseason">Leaderboard season</label><select id="lbseason" aria-label="Leaderboard season">${seasonOptions()}</select><label for="lbcountry">Country</label><select id="lbcountry" aria-label="Filter leaderboard by country">${countryOptions()}</select><span class="sp"></span><span class="mut" id="pstat"></span></div><div class="scroll" style="max-height:none"><div id="ptab"><div class="msg skel">Loading leaderboard…</div></div></div><div class="sent" id="lbsent"></div></div>`;
@@ -1451,22 +1457,23 @@ function renderPT(){
   const el=$("ptab");if(!el)return;
   const v=T.view==="all"?"all":"season",names=shownNames(),rows=names.map(n=>RC[n.toLowerCase()]).filter(Boolean).filter(r=>!T.country||r.country===T.country);
   const k=T.sort.k,d=T.sort.d;
-  const val=r=>{if(r.state!=="d")return null;if(k==="name")return r.name;if(k==="elo")return r.elo;const s=r[v];return s&&s[k]!=null?s[k]:null};
+  const val=r=>{if(r.state!=="d")return null;if(k==="name")return r.name;if(k==="elo")return r.elo;if(k==="games"&&T.matchCycle==="private")return r.privateRooms;const s=r[v];return s&&s[k]!=null?s[k]:null};
   const boardRanks=new Map();
   (T.lb?.users||[]).forEach((u,i)=>{
     const group=mergedPlayerGroup(u.nickname),key=(group?group.primary:u.nickname).toLowerCase(),entry={i,elo:u.seasonResult?.eloRate??u.eloRate,primary:!group||u.nickname.toLowerCase()===group.primary.toLowerCase()};
     const old=boardRanks.get(key);if(!old||entry.primary||!old.primary)boardRanks.set(key,entry);
   });
+  if(T.matchCycle==="private")rows.filter(r=>r.state==="d").forEach(loadPrivateCount);
   const sorted=rows.slice().sort((a,b)=>{if(k==="elo"&&v==="season"){const x=boardRanks.get(a.name.toLowerCase()),y=boardRanks.get(b.name.toLowerCase());return d*((x?.elo??-Infinity)-(y?.elo??-Infinity))||(x?.i??0)-(y?.i??0)}const x=val(a),y=val(b);if(x==null&&y==null)return 0;if(x==null)return 1;if(y==null)return -1;if(typeof x==="string")return d*x.localeCompare(y);return d*(x-y)});
   const lead=key=>{const a=rows.map(r=>r[v]&&r[v][key]).filter(x=>x!=null&&x>0);return a.length?Math.min(...a):null};
   const bpb=lead("pb"),bavg=lead("avg");
-  const cols=[["name","Player",""],["elo","Elo","num"],["wr","Win rate","num"],["games","Matches","num"],["wins","Wins","num"],["pb","PB","num"],["avg","Average","num"]];
+  const matchTitle=T.matchCycle==="private"?"Private rooms":T.matchCycle==="all"?"Matches (All-time)":"Matches";const cols=[["name","Player",""],["elo","Elo","num"],["wr","Win rate","num"],["games",matchTitle,"num"],["wins","Wins","num"],["pb","PB","num"],["avg","Average","num"]];
   el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr><th>#</th>${cols.map(c=>`<th class="${c[2]}" data-k="${c[0]}">${c[1]}${k===c[0]?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${sorted.map((r,i)=>{
     const s=r[v]||{},bad=r.state!=="d",wait=`<span class="mut">${r.state==="e"?"×":"…"}</span>`;
     const c=(x,f,cls)=>`<td class="num ${cls||""}">${bad?wait:x!=null?f(x):"—"}</td>`;
     return `<tr><td class="mut">${i+1}</td><td><span class="who">${`<span class="flag-slot">${flagSlot(r.country)}</span>`}<img class="head" alt="" width="40" height="40" loading="lazy" src="https://laby.net/api/v3/render/bust/${enc(r.uuid||r.name)}.webp?width=40&height=40"><a href="#${enc(r.name)}">${leaderboardPlayerLabel(r)}</a></span></td>`+
       `<td class="num"><span class="who">${bad?wait:icon(r.elo,22)+(r.elo!=null?r.elo:"—")}</span></td>`+
-      c(s.wr,x=>x.toFixed(1)+"%")+c(s.games,x=>x)+c(s.wins,x=>x)+
+      c(s.wr,x=>x.toFixed(1)+"%")+ (T.matchCycle==="private"?`<td class="num">${r.privateRooms!=null?r.privateRooms:r.privateError?"—":"…"}</td>`:c(s.games,x=>x))+c(s.wins,x=>x)+
       c(s.pb,fmtP,s.pb!=null&&s.pb===bpb?"best":"")+c(s.avg,fmtP,s.avg!=null&&s.avg===bavg?"best":"")+`</tr>`}).join("")}</tbody></table>`;
   const done=rows.filter(r=>r.state==="d"||r.state==="e").length;
   const ps=$("pstat");if(ps)ps.textContent=done+" / "+names.length+" players loaded";
@@ -1631,7 +1638,7 @@ out.addEventListener("click",e=>{
   const op=t.closest("[data-open]");if(op){openMatch(op.dataset.open);return}
   const md=t.closest("[data-pm]");if(md&&P&&P.st){if(P.mode!==md.dataset.pm){P.mode=md.dataset.pm;P.matchSort="recent";renderProfile()}return}
   const g=t.closest("[data-g]");if(g&&P&&P.st){setFull(g.dataset.g==="full");return}
-  const th=t.closest("th[data-k]");if(th){const k=th.dataset.k;if(T.sort.k===k){if(k!=="elo")T.sort.d*=-1;else T.sort.d=-1;}else T.sort={k,d:(k==="avg"||k==="pb"||k==="name")?1:-1};(T.historical?renderHistorical():renderPT());return}
+  const th=t.closest("th[data-k]");if(th){const k=th.dataset.k;if(k==="games"&&!T.historical&&T.view==="all"){T.matchCycle=T.matchCycle==="normal"?"all":T.matchCycle==="all"?"private":"all";T.sort={k:"games",d:-1};if(T.matchCycle==="private")shownNames().forEach(n=>loadPrivateCount(RC[n.toLowerCase()]));renderPT();return;}if(T.matchCycle!=="normal"&&k!=="games")T.matchCycle="normal";if(T.sort.k===k){if(k!=="elo")T.sort.d*=-1;else T.sort.d=-1;}else T.sort={k,d:(k==="avg"||k==="pb"||k==="name")?1:-1};(T.historical?renderHistorical():renderPT());return}
   const se=t.closest("#sent");if(se&&se.dataset.retry&&P&&P.st){P.st[P.mode].err=null;loadMore(P.mode);return}
   if(t.closest("a"))return;
   const tr=t.closest("tr.pt");
