@@ -771,7 +771,7 @@ function refreshSessionStats(){const el=$("sessionStats");if(!el)return;el.inner
 function setupProfileSkinViewer(uuid){
  const canvas=$("profilePlayerCanvas"),stage=$("profilePlayerModel");
  if(!canvas||!stage)return;
- if(window.profileSkinViewer){try{window.profileSkinViewer._profileResizeObserver?.disconnect();if(window.profileSkinViewer._profileWaveFrame)cancelAnimationFrame(window.profileSkinViewer._profileWaveFrame);window.profileSkinViewer.dispose()}catch(_){}window.profileSkinViewer=null}
+ if(window.profileSkinViewer){try{window.profileSkinViewer._profileResizeObserver?.disconnect();if(window.profileSkinViewer._profileWaveFrame)cancelAnimationFrame(window.profileSkinViewer._profileWaveFrame);if(window.profileSkinViewer._profilePoseFrame)cancelAnimationFrame(window.profileSkinViewer._profilePoseFrame);window.profileSkinViewer.dispose()}catch(_){}window.profileSkinViewer=null}
  let attempts=0;
  const render=()=>{
   if(!canvas.isConnected||!stage.isConnected)return;
