@@ -771,7 +771,7 @@ function refreshSessionStats(){const el=$("sessionStats");if(!el)return;el.inner
 function setupProfileSkinViewer(uuid){
  const canvas=$("profilePlayerCanvas"),stage=$("profilePlayerModel");
  if(!canvas||!stage)return;
- if(window.profileSkinViewer){try{window.profileSkinViewer._profileResizeObserver?.disconnect();window.profileSkinViewer.dispose()}catch(_){}window.profileSkinViewer=null}
+ if(window.profileSkinViewer){try{window.profileSkinViewer._profileResizeObserver?.disconnect();if(window.profileSkinViewer._profileWaveFrame)cancelAnimationFrame(window.profileSkinViewer._profileWaveFrame);window.profileSkinViewer.dispose()}catch(_){}window.profileSkinViewer=null}
  let attempts=0;
  const render=()=>{
   if(!canvas.isConnected||!stage.isConnected)return;
@@ -800,7 +800,7 @@ function setupProfileSkinViewer(uuid){
    const load=async()=>{
     let lastError;
     for(const src of sources){
-     try{await viewer.loadSkin(src);if(window.profileSkinViewer!==viewer)return;if(viewer.playerObject){viewer.playerObject.rotation.y=0;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0;}stage.dataset.skinError="false";canvas.style.visibility="visible";resize();return;}
+     try{await viewer.loadSkin(src);if(window.profileSkinViewer!==viewer)return;if(viewer.playerObject){viewer.playerObject.rotation.y=0;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0;const arm=skin.rightArm||skin.leftArm;if(arm){const wave=()=>{if(window.profileSkinViewer!==viewer||!canvas.isConnected)return;const t=performance.now();arm.rotation.z=-2.55+Math.sin(t/180)*0.38;arm.rotation.x=-0.25+Math.sin(t/260)*0.12;viewer._profileWaveFrame=requestAnimationFrame(wave)};wave();}}stage.dataset.skinError="false";canvas.style.visibility="visible";resize();return;}
      catch(e){lastError=e;}
     }
     stage.dataset.skinError="true";canvas.style.visibility="hidden";console.warn("Profile skin failed to load",lastError);
