@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700;800;900&family=Lora:wght@400;500;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
 <title>MCSR Ranked · Stats</title>
 <style>
 :root{--bg:#f4f5f9;--surface:#fff;--surface2:#eceef5;--text:#14162a;--muted:#6a6f8c;--line:#dfe2ee;--accent:#14b87a;--accent2:#6d5dfc;--loss:#e5484d;--win:#14b87a;--r:8px}
@@ -20,7 +20,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 60px}
 nav{display:flex;align-items:center;gap:12px;padding:6px 0 22px;flex-wrap:wrap}
 .settings-wrap{position:relative;margin-left:auto;flex:none}.settings-toggle{width:36px;height:36px;padding:0;display:grid;place-items:center;border-radius:9px;font-size:18px;background:var(--surface);border:1px solid var(--line);color:var(--text);box-shadow:0 2px 8px #00000012}.settings-toggle:hover{border-color:var(--accent2)}.settings-panel{display:none;position:absolute;right:0;top:43px;z-index:90;width:260px;max-width:calc(100vw - 32px);padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--text);box-shadow:0 12px 36px #0005}.settings-wrap.open .settings-panel{display:grid;gap:12px}.settings-title{font-size:14px;font-weight:750;margin:0 0 2px}.setting-field{display:grid;gap:5px}.setting-field label{font-size:12px;color:var(--muted)}.setting-field select{width:100%;padding:9px 10px}
-body.font-minecraft,body.font-minecraft button,body.font-minecraft input,body.font-minecraft select{font-family:"Press Start 2P",monospace!important}body.font-minecraft{font-size:15px}body.font-minecraft h1{font-size:20px;letter-spacing:0}body.font-minecraft td,body.font-minecraft th{font-size:10px}
+body.font-orbitron,body.font-orbitron button,body.font-orbitron input,body.font-orbitron select,body.font-orbitron textarea{font-family:"Orbitron",sans-serif!important}body.font-inter,body.font-inter button,body.font-inter input,body.font-inter select,body.font-inter textarea{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif!important}body.font-minecraft,body.font-minecraft button,body.font-minecraft input,body.font-minecraft select{font-family:"Press Start 2P",monospace!important}body.font-minecraft{font-size:15px}body.font-minecraft h1{font-size:20px;letter-spacing:0}body.font-minecraft td,body.font-minecraft th{font-size:10px}
 .logo{margin-right:auto;display:flex;align-items:center;position:relative;isolation:isolate}.logo img{width:58px;height:58px;border-radius:10px;image-rendering:pixelated;display:block;transition:transform .15s}.logo:hover img{transform:scale(1.06)}
 form{display:flex;gap:8px}
 input[type=text],button,select{background:var(--surface);border:1px solid var(--line);color:var(--text);border-radius:calc(var(--r)*.6);padding:9px 14px;font:inherit}
@@ -407,7 +407,7 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
     <button class="settings-toggle" id="settingsToggle" type="button" aria-label="Settings" title="Settings" aria-expanded="false">⚙</button>
     <section class="settings-panel" aria-label="Website settings">
       <h2 class="settings-title">Settings</h2>
-      <div class="setting-field"><label for="languageChoice">Language / 言語</label><select id="languageChoice" aria-label="Language"><option value="en">English</option><option value="ja">日本語</option></select></div><div class="setting-field"><label for="fontChoice">Font</label><select id="fontChoice" aria-label="Website font"><option value="default">Default</option><option value="minecraft">Minecraft font</option><option value="sga">Standard Galactic Alphabet</option></select></div><div class="setting-field"><label for="fontSizeChoice">Font size / 文字サイズ <span id="fontSizeLabel">100%</span></label><input id="fontSizeChoice" type="range" min="80" max="130" step="5" value="100" aria-label="Adjust font size" style="width:100%;padding:0;accent-color:var(--accent)"></div>
+      <div class="setting-field"><label for="languageChoice">Language / 言語</label><select id="languageChoice" aria-label="Language"><option value="en">English</option><option value="ja">日本語</option></select></div><div class="setting-field"><label for="fontChoice">Font</label><select id="fontChoice" aria-label="Website font"><option value="orbitron">Orbitron</option><option value="inter">Inter (previous default)</option><option value="minecraft">Minecraft font</option><option value="sga">Standard Galactic Alphabet</option></select></div><div class="setting-field"><label for="fontSizeChoice">Font size / 文字サイズ <span id="fontSizeLabel">100%</span></label><input id="fontSizeChoice" type="range" min="80" max="130" step="5" value="100" aria-label="Adjust font size" style="width:100%;padding:0;accent-color:var(--accent)"></div>
       
     </section>
   </div>
@@ -1726,10 +1726,12 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
  }
  let changing=false;
  const observer=new MutationObserver(records=>{if(changing||select.value!=='sga')return;changing=true;const mode=select.value;for(const r of records){for(const n of r.addedNodes)process(n,mode);if(r.type==='characterData')process(r.target,mode)}changing=false});
- function applyFont(mode){document.body.classList.toggle('font-minecraft',mode==='minecraft');changing=true;process(document.body,mode);changing=false;}
+ function applyFont(mode){document.body.classList.toggle('font-orbitron',mode==='orbitron');document.body.classList.toggle('font-inter',mode==='inter');document.body.classList.toggle('font-minecraft',mode==='minecraft');changing=true;process(document.body,mode);changing=false;}
  window.setAustralianMode=function(active){document.body.classList.toggle('au-upside-down',!!active);};
- select.value=localStorage.getItem(fontKey)||'default';
-  if(select.value==='upside'){select.value='default';localStorage.setItem(fontKey,'default');}
+ select.value=localStorage.getItem(fontKey)||'orbitron';
+  if(select.value==='default'){select.value='inter';localStorage.setItem(fontKey,'inter');}
+  if(!['orbitron','inter','minecraft','sga'].includes(select.value)){select.value='orbitron';localStorage.setItem(fontKey,'orbitron');}
+  if(select.value==='upside'){select.value='orbitron';localStorage.setItem(fontKey,'orbitron');}
  applyFont(select.value);
  if(select.value==='sga')observer.observe(document.body,{subtree:true,childList:true,characterData:true});
  select.addEventListener('change',()=>{observer.disconnect();localStorage.setItem(fontKey,select.value);applyFont(select.value);if(select.value==='sga')observer.observe(document.body,{subtree:true,childList:true,characterData:true})});
