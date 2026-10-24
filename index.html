@@ -673,7 +673,7 @@ function privTiles(list,uid){
     ["Matches",list.length,loaded],
     ["Wins",wins.length,pct(wins.length,list.length)+" of loaded matches"],
     ["Losses",losses.length,pct(losses.length,list.length)+" of loaded matches"],
-    ["Draws",draws.length,"matches without a recorded winner"],
+    ["DNF",draws.length,"matches without a recorded winner"],
     ["Forfeits",forfeits.length,"forfeit matches"],
     ["With VOD",vods.length,"streamed matches"]
   ];
@@ -727,11 +727,13 @@ function rowHTML(x){
   const roomWinner=P.mode==="private"&&roomPlayers.length>2&&x.result&&x.result.uuid?roomPlayers.find(p=>p.uuid===x.result.uuid):null;
   const shownOpp=roomWinner||opp;
   const roomExtra=roomWinner?Math.max(0,roomPlayers.length-2):0;
+  const resultLabel=P.mode==="private"&&i.draw?"DNF":i.res;
+  const resultTime=P.mode==="private"&&i.draw?"":i.time;
   if(i.dec)return `<tr class="pt decay-row" data-id="${x.id}"><td colspan="${r?7:6}"><div class="decay-bar"><span class="decay-roses" aria-hidden="true"></span><span class="decay-label">☠ DECAY${ch!=null?' · <span class="decay-elo">'+(ch>0?"+":"")+ch+" Elo</span>":""}</span><span class="decay-roses" aria-hidden="true"></span></div></td></tr>`;
-  return `<tr class="pt" data-id="${x.id}"><td><span class="res ${i.draw||i.dec?"d":i.won?"w":"l"}">${i.res}</span>${(x.forfeited||x.forfeit||x.disconnected||x.disconnect||x.result?.forfeited||x.result?.disconnected||(i.won&&!(Number(x.result?.time)>0)))?`<span class="ff-tag" title="Forfeit or disconnection">[FF]</span>`:""}</td>`+
+  return `<tr class="pt" data-id="${x.id}"><td><span class="res ${i.draw||i.dec?"d":i.won?"w":"l"}">${resultLabel}</span>${(x.forfeited||x.forfeit||x.disconnected||x.disconnect||x.result?.forfeited||x.result?.disconnected||(i.won&&!(Number(x.result?.time)>0)))?`<span class="ff-tag" title="Forfeit or disconnection">[FF]</span>`:""}</td>`+
   `<td>${i.dec?"":`<span class="who">${icon(shownOpp.eloRate,18)}<a href="#${enc(shownOpp.nickname||"")}">${esc(matchOpponentName(shownOpp))}</a>${roomWinner?` <span class="mut" title="${roomExtra} additional player${roomExtra===1?"":"s"}">+${roomExtra}</span>`:""}</span>`}</td>`+
   
-  `<td>${i.time}</td>`+
+  `<td>${resultTime}</td>`+
   (r?`<td class="${ch>0?"up":"down"}">${ch==null?"—":(ch>0?"+":"")+ch}</td>`:"")+
   `<td class="mut"><span class="seed-pair">${structureCell(i.seed,true)}${structureCell(i.bastion,false)}</span></td><td>${myVod?`<svg class="vod-twitch-icon" viewBox="0 0 24 24" width="15" height="15" style="width:15px!important;height:15px!important;min-width:15px!important;max-width:15px!important;display:inline-block!important;flex:none!important;vertical-align:middle!important;fill:#9146ff" aria-label="Twitch VOD" role="img"><path d="M4 2 1.5 6v15h5v3h4l3-3h4l5-5V2H4zm16 13-3 3h-5l-3 3v-3H4V4h16v11zM9 7h2v6H9zm5 0h2v6h-2z"/></svg>`:""}${oppVod?'<span title="Opponent VOD available" style="font-size:15px;margin-left:3px">⚔️<svg class="vod-twitch-icon" viewBox="0 0 24 24" width="15" height="15" style="width:15px!important;height:15px!important;min-width:15px!important;max-width:15px!important;display:inline-block!important;flex:none!important;vertical-align:middle!important;fill:#9146ff" aria-label="Twitch VOD" role="img"><path d="M4 2 1.5 6v15h5v3h4l3-3h4l5-5V2H4zm16 13-3 3h-5l-3 3v-3H4V4h16v11zM9 7h2v6H9zm5 0h2v6h-2z"/></svg></span>':""}</td><td class="mut">${ago(x.date)}</td></tr>`;
 }
