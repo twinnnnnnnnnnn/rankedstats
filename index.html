@@ -799,7 +799,7 @@ function setupProfileSkinViewer(uuid){
    if(window.ResizeObserver){const ro=new ResizeObserver(resize);ro.observe(stage);viewer._profileResizeObserver=ro}
    const skinId=id.replace(/-/g,"");
    const playerName=String(P?.u?.nickname||"").trim();
-   const sources=["https://mc-heads.net/skin/"+encodeURIComponent(skinId), "https://crafatar.com/skins/"+encodeURIComponent(skinId), ...(playerName?["https://mc-heads.net/skin/"+encodeURIComponent(playerName)]:[])];
+   const sources=[];
    const load=async()=>{
     let lastError;
     // Resolve the player's active Laby skin texture first; some skin renderers can silently return Steve.
