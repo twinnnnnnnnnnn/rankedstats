@@ -376,9 +376,9 @@ body,button,input,select,textarea{font-family:"Lora",Georgia,serif}
 @media(max-width:620px){.player-tribute{grid-template-columns:1fr;gap:14px;text-align:center;padding:22px 16px 34px}.player-tribute .tribute-art{width:132px;height:132px}.tribute-title{font-size:25px}.tribute-meta{justify-content:center}.player-tribute:after{left:8px;right:8px;text-align:center;font-size:7px}}
 
 
- .profile-model{width:112px;min-width:112px;height:156px;position:relative;align-self:center;overflow:hidden;background:transparent}
+ .profile-model{width:142px;min-width:142px;height:100%;min-height:190px;position:relative;align-self:stretch;overflow:hidden;background:transparent}
  .profile-model canvas{display:block;width:100%!important;height:100%!important;touch-action:none;cursor:grab;outline:none}
- @media(max-width:620px){.profile-model{width:76px;min-width:76px;height:120px}}
+ @media(max-width:620px){.profile-model{width:96px;min-width:96px;height:100%;min-height:145px}}
 /* Bottom site credits */
 .site-credits{margin:34px auto 0;padding:18px 0 8px;border-top:1px solid #252525;display:flex;justify-content:center;gap:30px;flex-wrap:wrap;color:#a3a3a3;font-size:12px}
 .site-credit{display:flex;align-items:center;gap:9px;min-width:0}
@@ -788,7 +788,7 @@ function setupProfileSkinViewer(uuid){
    viewer.renderer.setClearColor(0x000000,0);
    viewer.controls.enableRotate=true;viewer.controls.enableZoom=false;viewer.controls.enablePan=false;
    viewer.controls.enableDamping=true;viewer.controls.dampingFactor=0.12;
-   viewer.zoom=0.75;viewer.camera.position.set(0,0,65);viewer.controls.target.set(0,0,0);viewer.camera.lookAt(0,0,0);viewer.controls.update();
+   viewer.zoom=0.9;viewer.camera.position.set(0,0,65);viewer.controls.target.set(0,0,0);viewer.camera.lookAt(0,0,0);viewer.controls.update();
    canvas.style.touchAction="none";canvas.style.cursor="grab";
    canvas.addEventListener("pointerdown",()=>{canvas.style.cursor="grabbing"});
    canvas.addEventListener("pointerup",()=>{canvas.style.cursor="grab"});
