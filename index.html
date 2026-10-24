@@ -262,6 +262,8 @@ img[src*="laby.net/api/v3/render/bust/"]{object-fit:contain;image-rendering:auto
 @media(max-width:700px){.vod-race{padding-left:48px}.vod-race-name{display:none}}
 /* Ensure leaderboard 3D heads blend with row backgrounds. */
 table.pt2 img.head{background:transparent!important;border:0;box-shadow:none;mix-blend-mode:normal}
+/* Give player names enough descender space so g, j, p, q and y are not clipped. */
+table.pt2 tbody td{padding-top:5px!important;padding-bottom:6px!important;line-height:1.65;overflow:visible}table.pt2 td a{display:inline-block;line-height:1.65;padding-bottom:2px;vertical-align:baseline}table.pt2 .who{line-height:1.65;align-items:center}table.pt2 .who a{display:inline-block;line-height:1.65;padding-bottom:2px}
 .lb-player-label.twitch-name-default{color:#b49aff}
 .lb-live-dot{display:none;width:9px;height:9px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.16);vertical-align:middle;flex:none;margin-left:5px}.lb-live-dot.is-live{display:inline-block}
 .decay-row td{padding:5px 10px!important}.decay-bar{display:flex;align-items:center;gap:12px;min-height:34px;color:var(--muted);font-weight:700;letter-spacing:.12em}.decay-roses{flex:1;height:28px;background-image:url("https://mcasset.cloud/1.21.4/assets/minecraft/textures/block/wither_rose.png");background-repeat:repeat-x;background-position:center;background-size:28px 28px;image-rendering:pixelated;opacity:.75}.decay-label{white-space:nowrap}.decay-elo{color:var(--loss);font-weight:800}
