@@ -1219,10 +1219,10 @@ function initVodRaceModels(){
   for(const el of $("modal").querySelectorAll(".vod-race-runner[data-skin]")){
     const uuid=el.dataset.skin,canvas=el.querySelector("canvas");if(!uuid||!canvas)continue;
     try{
-      const viewer=new skinview3d.SkinViewer({canvas,width:48,height:64,skin:"https://mc-heads.net/skin/"+encodeURIComponent(uuid),background:null});
+      const viewer=new skinview3d.SkinViewer({canvas,width:48,height:64,background:null});
       viewer.renderer.setClearColor(0x000000,0);viewer.controls.enableRotate=false;viewer.controls.enableZoom=false;viewer.controls.enablePan=false;viewer.zoom=0.52;viewer.camera.position.set(0,0,38);viewer.controls.target.set(0,0,0);
       const faceRight=()=>{if(viewer.playerObject){viewer.playerObject.rotation.y=1.05;const skin=viewer.playerObject.skin||viewer.playerObject;if(skin.head)skin.head.rotation.x=0}};
-      faceRight();viewer.loadSkin("https://mc-heads.net/skin/"+encodeURIComponent(uuid)).then(faceRight).catch(()=>{});
+      faceRight();(async()=>{try{const response=await fetch("https://laby.net/api/v3/user/"+encodeURIComponent(uuid)+"/textures");if(!response.ok)return;const data=await response.json(),found=[],seen=new Set();const scan=(v,depth=0)=>{if(!v||typeof v!=="object"||depth>8||seen.has(v))return;seen.add(v);if(Array.isArray(v)){for(const x of v)scan(x,depth+1);return;}const type=String(v.type||v.textureType||"").toLowerCase();if(v.image_hash&&v.active===true&&(!type||type==="skin"))found.push(v.image_hash);for(const x of Object.values(v))scan(x,depth+1)};scan(data);if(!found.length)return;await viewer.loadSkin("https://laby.net/api/v3/render/skin/"+encodeURIComponent(found[found.length-1])+".png");faceRight()}catch(_){}})();
       if(skinview3d.RunningAnimation)viewer.animation=new skinview3d.RunningAnimation();else if(skinview3d.WalkingAnimation)viewer.animation=new skinview3d.WalkingAnimation();
       viewer.setSize(48,64);vodRaceViewers.push(viewer);
     }catch(_){ }
