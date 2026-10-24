@@ -663,9 +663,20 @@ function showProfile(name){
   });
 }
 function privTiles(list,uid){
-  const wins=list.filter(x=>x.result&&x.result.uuid===uid&&!x.decayed&&!x.forfeited),ts=wins.map(x=>Number(x.result.time)).filter(t=>Number.isFinite(t)&&t>0);
-  const best=ts.length?Math.min(...ts):null,avg=ts.length?ts.reduce((a,b)=>a+b,0)/ts.length:null;
-  return[["Matches loaded",list.length,P.st[P.mode].done?"all loaded":"scroll for more"],["Wins",wins.length,pct(wins.length,list.length)+" win rate"],["Best time",fmt(best),"fastest win loaded"],["Avg. finish",fmt(avg),ts.length+" wins timed"],["With VOD",list.filter(x=>x.vod&&x.vod.length).length,"streamed matches"]];
+  const wins=list.filter(x=>x.result&&x.result.uuid===uid&&!x.decayed&&!x.forfeited);
+  const losses=list.filter(x=>x.result&&x.result.uuid!==uid&&!x.decayed&&!x.forfeited);
+  const draws=list.filter(x=>!x.result||!x.result.uuid);
+  const forfeits=list.filter(x=>x.forfeited||x.result?.forfeited);
+  const vods=list.filter(x=>Array.isArray(x.vod)?x.vod.length>0:!!x.vod);
+  const loaded=P.st[P.mode].done?"all loaded":"scroll for more";
+  return[
+    ["Matches",list.length,loaded],
+    ["Wins",wins.length,pct(wins.length,list.length)+" of loaded matches"],
+    ["Losses",losses.length,pct(losses.length,list.length)+" of loaded matches"],
+    ["Draws",draws.length,"matches without a recorded winner"],
+    ["Forfeits",forfeits.length,"forfeit matches"],
+    ["With VOD",vods.length,"streamed matches"]
+  ];
 }
 function matchTimestamp(value){
  if(value==null)return 0;
@@ -918,29 +929,11 @@ function renderProfile(){
   if(!st.list.length&&!st.done&&!st.p&&!st.err)loadMore(P.mode);
   if(P.mode==="ranked")loadRankedTimeStats(P);
 }
-// Private rooms: keep Any% only, accepting the different category shapes used by the API.
+// Show every private-room match category; don't silently filter the player's history.
 function visibleMatches(mode,matches){
- if(mode!=="private")return matches;
- const isAnyPercent=value=>{
-  if(value==null)return false;
-  if(Array.isArray(value))return value.some(isAnyPercent);
-  if(typeof value==="object"){
-   for(const key of ["name","id","type","slug","value","displayName","category","gameMode","formatted"])if(key in value&&isAnyPercent(value[key]))return true;
-   return false;
-  }
-  const raw=String(value).trim().toLowerCase();
-  const normalized=raw.replace(/[^a-z0-9]/g,"");
-  return /any\s*%|anypercent/i.test(raw)||normalized==="anypercent"||normalized==="anypercentcategory";
- };
- return matches.filter(m=>{
-  const candidates=[
-   m.category,m.matchCategory,m.gameMode,m.categoryName,m.categoryId,m.categoryType,
-   m.settings?.category,m.settings?.gameMode,m.room?.category,m.room?.settings?.category,
-   m.metadata?.category,m.metadata?.gameMode
-  ];
-  return candidates.some(isAnyPercent);
- });
+ return matches;
 }
+
 function renderMatchRows(){
   if(!P||!P.st||!$("tb"))return;
   const list=visibleMatches(P.mode,P.st[P.mode].list);
