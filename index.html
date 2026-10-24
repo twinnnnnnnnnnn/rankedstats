@@ -1479,6 +1479,32 @@ function moreRows(){
   T.shown+=10;if(T.historical)renderHistorical();else{shownNames().forEach(loadRow);renderPT();}
   const se=$("lbsent");if(lio&&se){lio.unobserve(se);lio.observe(se)}
 }
+function renderHistorical(loadStats=true){
+  const el=$("ptab");if(!el||!T.historical)return;
+  const all=historicalRows(),k=T.sort.k,d=T.sort.d;
+  const value=r=>{const st=r.stats;if(k==="name")return r.u.nickname||r.u.name||"";if(k==="elo")return r.elo;if(k==="rank")return r.rank;return st&&!st.error?st[k]:null};
+  const sorted=all.slice().sort((a,b)=>{
+    const x=value(a),y=value(b);
+    if(x==null&&y==null)return a.i-b.i;
+    if(x==null)return 1;if(y==null)return -1;
+    if(typeof x==="string")return d*x.localeCompare(y);
+    return d*(Number(x)-Number(y))||(a.i-b.i);
+  });
+  const visible=sorted.slice(0,Math.max(20,T.shown));
+  const cols=[["rank","#","num"],["name","Player",""],["elo","Elo","num"],["wr","Win rate","num"],["games","Matches","num"],["wins","Wins","num"],["pb","PB","num"],["avg","Average","num"]];
+  const done=visible.filter(r=>r.stats&&!r.stats.error).length;
+  const nums=key=>visible.map(r=>r.stats&&!r.stats.error?r.stats[key]:null).filter(x=>x!=null&&x>0);
+  const bestPB=Math.min(...nums("pb"),Infinity),bestAvg=Math.min(...nums("avg"),Infinity);
+  el.innerHTML=`<table class="pt2" style="min-width:700px"><thead><tr>${cols.map(c=>`<th class="${c[2]}" data-k="${c[0]}">${c[1]}${k===c[0]?(d<0?" ▼":" ▲"):""}</th>`).join("")}</tr></thead><tbody>${visible.map((r,i)=>{
+    const u=r.u,st=r.stats||{},bad=!r.stats||r.stats.error,wait=`<span class="mut">${st.error?"×":"…"}</span>`,name=u.nickname||u.name||"Unknown",uuid=u.uuid||name;
+    const cell=(key,fmt,cls="")=>`<td class="num ${cls}">${bad?wait:st[key]!=null?fmt(st[key]):"—"}</td>`;
+    return `<tr><td class="mut">${r.rank??(r.i+1)}</td><td><span class="who"><span class="flag-slot">${flagSlot(countryCode(u))}</span><img class="head" alt="" width="40" height="40" loading="lazy" src="https://laby.net/api/v3/render/bust/${enc(uuid)}.webp?width=40&height=40"><a href="#${enc(name)}">${leaderboardPlayerLabel(name)}</a></span></td><td class="num"><span class="who">${icon(r.elo,22)}${r.elo??"—"}</span></td>${cell("wr",x=>x.toFixed(1)+"%")}${cell("games",x=>x)}${cell("wins",x=>x)}${cell("pb",fmtP,st.pb!=null&&st.pb===bestPB?"best":"")}${cell("avg",fmtP,st.avg!=null&&st.avg===bestAvg?"best":"")}</tr>`;
+  }).join("")}</tbody></table>`;
+  if(loadStats)loadHistoricalStats(visible);
+  const ps=$("pstat");if(ps)ps.textContent=done+" / "+visible.length+" players loaded";
+  const se=$("lbsent");if(se)se.textContent=visible.length>=all.length?"End of leaderboard · "+all.length+" players":"Loading more…";
+}
+
 function historicalRows(){
   if(!T.historical)return [];
   return T.historical.users.map((u,i)=>{
