@@ -788,7 +788,7 @@ function setupProfileSkinViewer(uuid){
    viewer.renderer.setClearColor(0x000000,0);
    viewer.controls.enableRotate=true;viewer.controls.enableZoom=false;viewer.controls.enablePan=false;
    viewer.controls.enableDamping=true;viewer.controls.dampingFactor=0.12;
-   viewer.zoom=0.9;viewer.camera.position.set(0,0,65);viewer.controls.target.set(0,0,0);viewer.camera.lookAt(0,0,0);viewer.controls.update();
+   viewer.zoom=1.26;viewer.camera.position.set(0,0,65);viewer.controls.target.set(0,0,0);viewer.camera.lookAt(0,0,0);viewer.controls.update();
    canvas.style.touchAction="none";canvas.style.cursor="grab";
    canvas.addEventListener("pointerdown",()=>{canvas.style.cursor="grabbing"});
    canvas.addEventListener("pointerup",()=>{canvas.style.cursor="grab"});
