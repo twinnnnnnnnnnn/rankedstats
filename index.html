@@ -744,6 +744,13 @@ function renderTiles(){
     const timeNote=P.st.ranked.done?"completed wins only":"loading completed wins…";
     const ws=g("currentWinStreak"),bws=g("highestWinStreak");
     tiles=[["Win rate",pct(wins,played),(wins||0)+"W · "+(loses||0)+"L · "+draws+"D · "+(forf||0)+" forfeits included"],["Matches",(wins!=null?wins:"—")+" wins / "+(comp!=null?comp:"—")+" completions",(played!=null?played:"—")+" total this season · including forfeits"],["Best time",P.st.ranked.done?fmt(best):"…",timeNote],["Avg. finish",P.st.ranked.done?fmt(avg):"…",P.st.ranked.done?times.length+" completed wins":timeNote],["Win streak",ws!=null?ws:"—","best "+(bws!=null?bws:"—")],["Forfeit rate",pct(forf,played),(forf||0)+" forfeits"]];
+    const seasonNumber=Number(P.profileSeason)||T.currentSeason;
+    const standing=u.seasonResult||{},total=u.statistics?.total||{};
+    const value=(...xs)=>{for(const x of xs){const raw=x&&typeof x==="object"?(x.ranked??x.value??x.eloRate):x;if(raw!=null&&raw!==""&&Number.isFinite(Number(raw)))return Number(raw).toLocaleString();}return "—";};
+    tiles.push(["Highest Elo ever",value(u.peakEloRate,u.highestEloRate,total.highestEloRate,total.peakEloRate,total.highestElo,total.peakElo,total.eloRatePeak),"All-time"]);
+    tiles.push(["Lowest Elo ever",value(u.lowestEloRate,u.minEloRate,total.lowestEloRate,total.minEloRate,total.lowestElo,total.minElo),"All-time"]);
+    tiles.push(["Season highest Elo",value(standing.highest,standing.highestEloRate,s.highestEloRate,s.peakEloRate),"Season "+seasonNumber]);
+    tiles.push(["Season lowest Elo",value(standing.lowest,standing.lowestEloRate,s.lowestEloRate,s.minEloRate),"Season "+seasonNumber]);
   }else tiles=privTiles(visibleMatches(P.mode,P.st[P.mode].list),u.uuid);
   t.innerHTML=tiles.map(x=>`<div class="tile"><div class="l">${esc(x[0])}</div><div class="v">${esc(x[1])}</div><div class="d">${esc(x[2])}</div></div>`).join("");
 }
