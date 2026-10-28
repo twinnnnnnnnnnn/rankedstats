@@ -929,6 +929,13 @@ function renderProfile(){
   // Historical profiles must never fall back to the live/current-season Elo.
   const elo=historicalSeason?(seasonStanding.last?.eloRate??null):u.eloRate;
   const peak=seasonStanding.highest??seasonStanding.highestEloRate??null;
+  const eloValue=(...values)=>{for(const value of values){const raw=value&&typeof value==="object"?(value.ranked??value.value??value.eloRate):value;const n=Number(raw);if(raw!=null&&raw!==""&&Number.isFinite(n))return n;}return null;};
+  const totalStats=u.statistics?.total||{},seasonStats=u.statistics?.season||{};
+  const allHigh=eloValue(u.peakEloRate,u.highestEloRate,totalStats.highestEloRate,totalStats.peakEloRate,totalStats.highestElo,totalStats.peakElo,totalStats.eloRatePeak);
+  const allLow=eloValue(u.lowestEloRate,u.minEloRate,totalStats.lowestEloRate,totalStats.minEloRate,totalStats.lowestElo,totalStats.minElo);
+  const seasonHigh=eloValue(seasonStanding.highest,seasonStanding.highestEloRate,seasonStats.highestEloRate,seasonStats.peakEloRate);
+  const seasonLow=eloValue(seasonStanding.lowest,seasonStanding.lowestEloRate,seasonStats.lowestEloRate,seasonStats.minEloRate);
+  const eloDisplay=v=>v==null?"—":v.toLocaleString();
   const r=rk(elo),rkd=P.mode==="ranked";
   const tier=elo!=null?rk(elo).n.split(" ")[0].toLowerCase():"none";
   const connections=u.connections||{};
@@ -953,7 +960,10 @@ function renderProfile(){
      <div><small class="mut">Matches</small><strong>${nz(at("playedMatches"))}</strong></div>
      <div><small class="mut">Wins / Completions</small><strong>${nz(at("wins"))} / ${nz(atc)}</strong></div>
      <div><small class="mut">Win rate</small><strong>${at("playedMatches")>0&&at("wins")!=null?(at("wins")/at("playedMatches")*100).toFixed(1)+"%":"—"}</strong>${at("playedMatches")>0&&at("wins")!=null?'<div class="session-winrate-track"><span style="width:'+Math.max(0,Math.min(100,at("wins")/at("playedMatches")*100)).toFixed(2)+'%"></span></div>':""}</div>
-     <div><small class="mut">All-time peak Elo</small><strong>${nz(u.peakEloRate??u.highestEloRate??u.statistics?.total?.highestEloRate?.ranked??u.statistics?.total?.peakEloRate?.ranked??u.statistics?.total?.highestElo?.ranked??u.statistics?.total?.peakElo?.ranked??u.statistics?.total?.eloRatePeak?.ranked)}</strong></div>
+     <div><small class="mut">Highest Elo ever</small><strong>${eloDisplay(allHigh)}</strong></div>
+     <div><small class="mut">Lowest Elo ever</small><strong>${eloDisplay(allLow)}</strong></div>
+     <div><small class="mut">Season ${selectedSeason} highest Elo</small><strong>${eloDisplay(seasonHigh)}</strong></div>
+     <div><small class="mut">Season ${selectedSeason} lowest Elo</small><strong>${eloDisplay(seasonLow)}</strong></div>
      <div><small class="mut">Personal best</small><strong>${fmtP(at("bestTime"))}</strong></div>
      <div><small class="mut">Average finish</small><strong>${atc&&att!=null?fmtP(att/atc):"—"}</strong></div>
     </div></details>
