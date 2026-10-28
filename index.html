@@ -747,10 +747,7 @@ function renderTiles(){
     const seasonNumber=Number(P.profileSeason)||T.currentSeason;
     const standing=u.seasonResult||{},total=u.statistics?.total||{};
     const value=(...xs)=>{for(const x of xs){const raw=x&&typeof x==="object"?(x.ranked??x.value??x.eloRate):x;if(raw!=null&&raw!==""&&Number.isFinite(Number(raw)))return Number(raw).toLocaleString();}return "—";};
-    tiles.push(["Highest Elo ever",value(u.peakEloRate,u.highestEloRate,total.highestEloRate,total.peakEloRate,total.highestElo,total.peakElo,total.eloRatePeak),"All-time"]);
-    tiles.push(["Lowest Elo ever",value(u.lowestEloRate,u.minEloRate,total.lowestEloRate,total.minEloRate,total.lowestElo,total.minElo),"All-time"]);
-    tiles.push(["Season highest Elo",value(standing.highest,standing.highestEloRate,s.highestEloRate,s.peakEloRate),"Season "+seasonNumber]);
-    tiles.push(["Season lowest Elo",value(standing.lowest,standing.lowestEloRate,s.lowestEloRate,s.minEloRate),"Season "+seasonNumber]);
+
   }else tiles=privTiles(visibleMatches(P.mode,P.st[P.mode].list),u.uuid);
   t.innerHTML=tiles.map(x=>`<div class="tile"><div class="l">${esc(x[0])}</div><div class="v">${esc(x[1])}</div><div class="d">${esc(x[2])}</div></div>`).join("");
 }
@@ -956,7 +953,7 @@ function renderProfile(){
   $("out").innerHTML=
   `<section class="hero"><div class="profile-model" id="profilePlayerModel"><img class="profile-player-skin" alt="" width="128" height="180" loading="lazy" src="https://laby.net/api/v3/render/bust/${enc(uid)}.webp?width=128&amp;height=180"></div>
    <div><h1>${elo==null?`<span class="profile-rank"># -</span> `:(historicalSeason?seasonStanding.eloRank:u.eloRank)!=null?`<span class="profile-rank ${[1,2,3].includes(Number(historicalSeason?seasonStanding.eloRank:u.eloRank))?`podium-${historicalSeason?seasonStanding.eloRank:u.eloRank}`:""}">#${historicalSeason?seasonStanding.eloRank:u.eloRank}</span> `:""}${flag(u.country)?flag(u.country)+" ":""}<span class="profile-username t-${tier}${elo==null?" unranked-gradient":""}">${emojiName(u.nickname||"—",u)}</span></h1><div id="recentNameWarning"></div>${socials}</div>
-   <div class="elo"><div class="mut" style="font-size:12px;margin-bottom:5px">${historicalSeason?"End-of-season Elo":"Current Elo"}</div><div class="n t-${tier}">${elo!=null?elo.toLocaleString():"—"}${!historicalSeason&&elo!=null&&peak!=null&&Number(elo)===Number(peak)?'<span class="peak-flame" title="Current Elo equals peak Elo">🔥</span>':""}</div><div class="r">${icon(elo,26)}<span>${elo!=null?r.n:'<span class="unranked-gradient">Unranked</span>'} · Peak Elo ${peak!=null?peak.toLocaleString():"—"}</span></div></div></section>
+   <div class="elo"><div class="mut" style="font-size:12px;margin-bottom:5px">${historicalSeason?"End-of-season Elo":"Current Elo"}</div><div class="n t-${tier}">${elo!=null?elo.toLocaleString():"—"}${!historicalSeason&&elo!=null&&peak!=null&&Number(elo)===Number(peak)?'<span class="peak-flame" title="Current Elo equals peak Elo">🔥</span>':""}</div><div class="r">${icon(elo,26)}<span>${elo!=null?r.n:'<span class="unranked-gradient">Unranked</span>'} · Peak Elo ${peak!=null?peak.toLocaleString():"—"}</span></div><div class="mut" style="font-size:11px;line-height:1.6;margin-top:5px">All-time high ${eloDisplay(allHigh)} · All-time low ${eloDisplay(allLow)}<br>Season ${selectedSeason} high ${eloDisplay(seasonHigh)} · Season ${selectedSeason} low ${eloDisplay(seasonLow)}</div></div></section>
    
     <div class="bar"><label for="profileSeason">Profile season</label><select id="profileSeason">${Array.from({length:T.currentSeason},(_,i)=>{const n=T.currentSeason-i;return `<option value="${n}" ${String(P.profileSeason)===String(n)||P.profileSeason==="current"&&n===T.currentSeason?"selected":""}>Season ${n}${n===T.currentSeason?" (current)":""}</option>`}).join("")}</select></div>
    <div class="tiles" id="tiles"></div>
